@@ -1,0 +1,10 @@
+{
+    "include": ["."],
+    "exclude": ["**/__pycache__"],
+    "defineConstant": {},
+    "pythonPlatform": "Linux",
+    "useLibraryCodeForTypes": true,
+    "maxLineLength": 88,
+    "verboseOutput": false,
+    "enableTypeIgnoreComments": true
+}

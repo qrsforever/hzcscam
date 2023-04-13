@@ -1,0 +1,3 @@
+[submodule "nanomq"]
+	path = extern/nanomq
+	url = https://github.com/emqx/nanomq
