@@ -11,7 +11,6 @@
 
     nanomq start
 
-
 # Client
 
     pip3 install paho-mqtt
