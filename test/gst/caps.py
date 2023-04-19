@@ -5,7 +5,8 @@ import os
 import gi
 gi.require_version("Gst", "1.0")
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gst, GObject, Gtk
+from gi.repository import Gst, Gtk
+
 
 class GTK_Main_1:
 
@@ -51,14 +52,14 @@ class GTK_Main_1:
         print(filter)
         # ------------- not work --------------
         caps = filter.get_property("caps")
-        print(dir(caps))
+        print('caps:', dir(caps))
         # print(caps.to_string())
         # print('-'*100)
-        structure = caps.steal_structure(0)
-        print(structure)
-        # structure = caps.get_structure(0)
+        # structure = caps.steal_structure(0)
+        structure = caps.get_structure(0)
+        print('structure:', structure, structure.get_name())
         # print("1:", structure, structure.name)
-        # print(dir(structure))
+        print('structure:', dir(structure))
         # if structure.has_field('width'):
         #     print(structure.get_value('width'))
         #     structure.set_value('width', 640)
