@@ -9,7 +9,7 @@ from paho.mqtt import client as mqtt_client
 
 BROKER = '127.0.0.1'
 PORT = 1883
-TOPIC = "python-mqtt/tcp"
+TOPIC = "python-mqtt/#"
 # generate client ID with pub prefix randomly
 CLIENT_ID = "python-mqtt-tcp-sub-{id}".format(id=random.randint(0, 1000))
 USERNAME = 'emqx'
@@ -31,7 +31,7 @@ def on_message(client, userdata, msg):
 
 def connect_mqtt():
     client = mqtt_client.Client(CLIENT_ID)
-    client.username_pw_set(USERNAME, PASSWORD)
+    # client.username_pw_set(USERNAME, PASSWORD)
     client.on_connect = on_connect
     client.on_message = on_message
     client.connect(BROKER, PORT)

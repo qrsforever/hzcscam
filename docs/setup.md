@@ -49,6 +49,9 @@
     test:
        gst-launch-1.0 v4l2src device=/dev/video1 io-mode=4 ! queue ! videoconvert ! x264enc bframes=0 speed-preset=veryfast key-int-max=30 ! flvmux streamable=true ! queue ! rtmpsink location=rtmp://srs.hzcsdata.com/live/orangepi3?vhost=seg.30s
 
+
+    pip3 install paho-mqtt pyudev
+
 8. setup wifi ap
 
     IFNAME="wlan0" && CON_NAME="testap" && PASSWD="test1234" \
