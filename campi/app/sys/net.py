@@ -10,6 +10,7 @@
 import asyncio
 import random
 from . import EventDetector
+from campi.topics import tNetwork
 
 
 async def _net_ping(ip, port=53):
@@ -20,7 +21,8 @@ class NetEventDetector(EventDetector):
     subsystem = 'net'
     device_types = [None]
 
-    def __init__(self):
+    def __init__(self, mqtt):
+        super().__init__(mqtt)
         self.ping_hosts = ('8.8.8.8', '1.1.1.1')
         self.ping_trycnt = 3
         self.ping_timeout = 3
@@ -33,12 +35,13 @@ class NetEventDetector(EventDetector):
             try:
                 task = asyncio.create_task(_net_ping(ip))
                 await asyncio.wait_for(task, timeout=self.ping_timeout)
-                print(self.ping_interval)
+                print('ping interval:', self.ping_interval)
                 self.ping_interval = min(self.ping_max_interval, self.ping_interval * 2)
-                break
+                self.mqtt.publish(tNetwork.CONNECTED, "test")
+                return
             except asyncio.TimeoutError:
                 self.ping_interval = 1
+        self.mqtt.publish(tNetwork.DISCONNECTED, "test")
 
-    async def handle_event(self, device):
-        if device is None:
-            return await self.on_ping()
+    async def handle_event(self, device):  # pyright: ignore
+        pass

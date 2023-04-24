@@ -11,7 +11,7 @@
 import asyncio
 
 
-class AsyncTask():
+class AsyncTask(object):
     async def run(self):
         raise NotImplementedError
 

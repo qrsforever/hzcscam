@@ -9,6 +9,30 @@
 
 import random
 import socket
+import fcntl
+import struct
+
+
+def util_get_mac(ifname='eth0'):
+    # try:
+    #     with open(f'/sys/class/net/{device}/address', 'r') as fr:
+    #         mac = fr.readline().strip().replace(':', '')
+    # except Exception:
+    #     mac = "000000000000"
+    # return mac
+    val = '000000000000'
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        val = fcntl.ioctl(
+                s.fileno(),
+                0x8927,
+                struct.pack('256s', bytes(ifname[:15], 'utf-8')))[18:24]
+        val = ''.join(['%02x' % b for b in val])
+    except Exception:
+        pass
+    finally:
+        s.close()
+    return val
 
 
 def util_net_ping(hosts=('8.8.8.8', '1.1.1.1'), port=53, timeout=3):
@@ -26,3 +50,5 @@ def util_net_ping(hosts=('8.8.8.8', '1.1.1.1'), port=53, timeout=3):
     s.close()
     socket.setdefaulttimeout(def_timeout)
     return val
+
+MAC = util_get_mac()
