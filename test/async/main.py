@@ -156,12 +156,32 @@ class TestDD(TestD):
 async def main6():
     await TestDD()
 
+async def communicate():
+    reader, writer = await asyncio.open_connection('hostname', 1234)
+    writer.write(b'hello')
+    await writer.drain()
+    data = await reader.read(100)
+    writer.close()
+    await writer.wait_closed()
+    return data
+
+async def main7():
+    task = asyncio.create_task(communicate())
+    try:
+        result = await asyncio.wait_for(task, timeout=5)
+    except asyncio.TimeoutError:
+        print('Timeout!')
+    else:
+        print(result)
+
 if __name__ == "__main__":
-    asyncio.run(main6())
+    asyncio.run(main7())
     # loop = asyncio.new_event_loop()
     # asyncio.set_event_loop(loop)
     # try:
     #     loop.run_until_complete(main6(loop=loop))
     # except KeyboardInterrupt:
     #     pass
+
 # https://myapollo.com.tw/blog/begin-to-asyncio/
+# https://python.hotexamples.com/site/file?hash=0xeb0dc2df99f6a7155f6706f5509a1b89336e71d120f8710370b290734b17da77

@@ -8,15 +8,35 @@
 # @date 2023-04-20 18:14
 
 
-from campi.core.atask import AsyncTask
-from campi.app.sys import UMonitor
+import os
+import subprocess
+from . import EventDetector
 
 
-class BlkEventDetector(UMonitor, AsyncTask):
-    def __init__(self):
-        super(BlkEventDetector, self).__init__()
-        self.monitor.filter_by(subsystem='block', device_type='partition')
+class BlkEventDetector(EventDetector):
+    subsystem = 'block'
+    device_types = ['partition']
 
-    async def run(self):
-        for device in iter(self.monitor.poll, None):
-            self.info(device)
+    def on_mount(self, devnode, mntdir):
+        if not os.path.isdir(mntdir):
+            os.mkdir(mntdir)
+        try:
+            subprocess.call(f'mount {devnode} {mntdir}', shell=True)
+            if os.path.ismount(mntdir):
+                print('mount ok')
+        except Exception:
+            pass
+
+    def on_umount(self, devnode, mntdir):  # pyright:ignore
+        if os.path.ismount(mntdir):
+            subprocess.call(f'umount -l {mntdir}', shell=True)
+            print('umount ok')
+
+    async def handle_event(self, device):
+        if device.device_type == 'partition':
+            if not device.device_node.startswith('/dev/sd'):
+                return
+            if device.action == 'add':
+                return self.on_mount(device.device_node, f'/mnt/{device.sys_name}')
+            elif device.action == 'remove':
+                return self.on_umount(device.device_node, f'/mnt/{device.sys_name}')
