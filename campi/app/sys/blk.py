@@ -27,7 +27,6 @@ class BlkEventDetector(EventDetector):
         try:
             subprocess.call(f'mount {devnode} {mntdir}', shell=True)
             if os.path.ismount(mntdir):
-                print('mount ok')
                 self.mqtt.publish(tUsbDisk.MOUNTED, "test")
         except Exception:
             pass
@@ -35,7 +34,6 @@ class BlkEventDetector(EventDetector):
     def on_umount(self, devnode, mntdir):  # pyright:ignore
         if os.path.ismount(mntdir):
             subprocess.call(f'umount -l {mntdir}', shell=True)
-            print('umount ok')
             self.mqtt.publish(tUsbDisk.UMOUNTED, "test")
 
     async def handle_event(self, device):

@@ -11,6 +11,10 @@
 import asyncio
 
 
+class AsyncFatalError(Exception):
+    pass
+
+
 class AsyncTask(object):
     async def run(self):
         raise NotImplementedError

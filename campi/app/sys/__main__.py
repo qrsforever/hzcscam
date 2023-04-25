@@ -14,6 +14,8 @@ from pyudev import Context, Monitor
 from campi.core.atask import AsyncTask
 from campi.core.amqtt import AsyncMqtt
 
+from campi.topics import tSystem
+
 from campi.app.sys.usb import UsbEventDetector
 from campi.app.sys.blk import BlkEventDetector
 from campi.app.sys.net import NetEventDetector
@@ -23,7 +25,7 @@ DEBUG = 1
 
 class SystemEventMonitor(AsyncTask):
     def __init__(self, loop):
-        # self.queue = asyncio.Queue()
+        self.queue = asyncio.Queue()
         self.loop = loop
         self.mqtt = AsyncMqtt('SystemEventMonitor', loop=loop)
         self.monitor = Monitor.from_netlink(Context(), source='udev')
@@ -36,6 +38,7 @@ class SystemEventMonitor(AsyncTask):
         if d is not None:
             if DEBUG:
                 print(f'[{threading.current_thread().ident}]: subsystem:{d.subsystem}, device_type:{d.device_type}, action:{d.action}, device_path:{d.device_path}, device_node:{d.device_node}, sys_name:{d.sys_name}')
+
             async def do_task(d):
                 if d.subsystem == self.eusb.subsystem:
                     await self.eusb.handle_event(d)
@@ -44,10 +47,10 @@ class SystemEventMonitor(AsyncTask):
                 elif d.subsystem == self.enet.subsystem:
                     await self.enet.handle_event(d)
             asyncio.create_task(do_task(d))
-            # asyncio.ensure_future(self.queue.put(d))
 
     def handle_mqtt_event(self, topic, message):
-        print(topic, message)
+        if topic == tSystem.SHUTDOWN:
+            asyncio.ensure_future(self.queue.put('q'))
 
     async def run(self):
         if DEBUG:
@@ -55,13 +58,18 @@ class SystemEventMonitor(AsyncTask):
         self.monitor.start()
         loop = asyncio.get_running_loop()
         loop.add_reader(self.monitor.fileno(), self.handle_udev_event)
-        self.mqtt.subscribe([
-            "/python-mqtt/#",
-            ], self.handle_mqtt_event)
+        self.mqtt.subscribe([tSystem.SHUTDOWN], self.handle_mqtt_event)
+        await self.mqtt.connect()
+        self.loop.call_later(self.enet.ping_interval, self.queue.put_nowait, 'p')
         while True:
-            # d = await self.queue.get()
-            await self.enet.on_ping()
-            await asyncio.sleep(self.enet.ping_interval)
+            r = await self.queue.get()
+            if r == 'q':
+                print("system quit")
+                break
+            elif r == 'p':
+                await self.enet.on_ping()
+                self.loop.call_later(self.enet.ping_interval, self.queue.put_nowait, 'p')
+
 
 if __name__ == "__main__":
     async def system_event_monitor():

@@ -3,7 +3,7 @@
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 TOP_DIR=$(dirname $CUR_DIR)
 
-SERVICE=nanomq.service
+SERVICE=campi_nanomq.service
 
 USER=root
 ROOT_DIR=/campi

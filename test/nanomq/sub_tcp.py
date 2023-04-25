@@ -40,6 +40,10 @@ def connect_mqtt():
 
 def run():
     client = connect_mqtt()
+
+    import time
+    time.sleep(3)
+    client.subscribe('t')
     client.loop_forever()
 
 

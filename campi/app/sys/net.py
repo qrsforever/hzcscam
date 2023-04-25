@@ -14,7 +14,7 @@ from campi.topics import tNetwork
 
 
 async def _net_ping(ip, port=53):
-    reader, writer = await asyncio.open_connection(ip, port)  # pyright:ignore
+    reader, writer = await asyncio.open_connection(ip, port)
 
 
 class NetEventDetector(EventDetector):
@@ -35,13 +35,17 @@ class NetEventDetector(EventDetector):
             try:
                 task = asyncio.create_task(_net_ping(ip))
                 await asyncio.wait_for(task, timeout=self.ping_timeout)
-                print('ping interval:', self.ping_interval)
+                self.mqtt.logi(f'ping interval: {self.ping_interval}')
+                if self.ping_interval == 1:
+                    self.mqtt.publish(tNetwork.CONNECTED, "connection")
                 self.ping_interval = min(self.ping_max_interval, self.ping_interval * 2)
-                self.mqtt.publish(tNetwork.CONNECTED, "test")
                 return
-            except asyncio.TimeoutError:
+            except ConnectionRefusedError as cerr:
+                self.mqtt.logw(f'ping {ip} refused: [{cerr}]')
+            except asyncio.TimeoutError as terr:
+                self.mqtt.logw(f'ping {ip} timeout: [{terr}]')
                 self.ping_interval = 1
-        self.mqtt.publish(tNetwork.DISCONNECTED, "test")
+        self.mqtt.publish(tNetwork.DISCONNECTED, "disconnection")
 
-    async def handle_event(self, device):  # pyright: ignore
+    async def handle_event(self, device):
         pass

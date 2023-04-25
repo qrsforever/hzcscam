@@ -11,7 +11,8 @@ from paho.mqtt.client import MQTTv5
 
 BROKER = '127.0.0.1'
 PORT = 1883
-TOPIC = "python-mqtt/tcp"
+# TOPIC = "python-mqtt/tcp"
+TOPIC = "t"
 # generate client ID with pub prefix randomly
 CLIENT_ID = "python-mqtt-tcp-pub-{id}".format(id=random.randint(0, 1000))
 USERNAME = 'emqx'

@@ -2,6 +2,8 @@
 
 ## orangepi3-lts `source /etc/orangepi-release`
 
+echo "start hostap..."
+
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 TOP_DIR=$(dirname $(dirname ${CUR_DIR}))
 ETC_DIR=${TOP_DIR}/etc/orangepi3-lts
@@ -12,6 +14,8 @@ WIRELESS_ADAPTER=${WIFI_DEVICE:-"wlan0"}
 WIFI_SSID="CamPi-$(cat /sys/class/net/${DEFAULT_ADAPTER}/address | cut -d: -f5- | sed 's/://g')"
 WIFI_PASS="88888888"
 WIFI_WPSK=$(wpa_passphrase ${WIFI_SSID} ${WIFI_PASS} | grep '[^#]psk=' | grep psk | cut -d= -f2-)
+
+echo "hostap ssid: ${WIFI_SSID} password: ${WIFI_PASS}"
 
 __echo_and_run() {
     echo "$*"
@@ -73,15 +77,17 @@ WantedBy=sysinit.target
 EOF
 systemctl enable orangepi-restore-iptables.service
 
-ifdown $WIRELESS_ADAPTER 2> /dev/null
-sleep 2
-ifup $WIRELESS_ADAPTER 2> /dev/null
+__echo_and_run ifdown $WIRELESS_ADAPTER 2> /dev/null
+sleep 1
+__echo_and_run ifup $WIRELESS_ADAPTER 2> /dev/null
 
 # reload services
-systemctl daemon-reload
-systemctl enable dnsmasq; sleep 1
-service NetworkManager stop >/dev/null 2>&1; sleep 1
-service dnsmasq start; sleep 1
-service hostapd start; sleep 1
-service NetworkManager start >/dev/null 2>&1; sleep 1
-systemctl restart systemd-resolved.service
+__echo_and_run systemctl daemon-reload
+# __echo_and_run systemctl enable dnsmasq; sleep 1
+__echo_and_run service NetworkManager stop >/dev/null 2>&1; sleep 1
+__echo_and_run service dnsmasq start; sleep 1
+__echo_and_run service hostapd start; sleep 1
+__echo_and_run service NetworkManager start >/dev/null 2>&1; sleep 1
+__echo_and_run systemctl restart systemd-resolved.service
+
+echo "start hostap end..."
