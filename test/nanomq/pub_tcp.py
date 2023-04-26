@@ -6,7 +6,7 @@ import random
 import time
 
 from paho.mqtt import client as mqtt_client
-from paho.mqtt.client import MQTTv5
+# from paho.mqtt.client import MQTTv5
 
 
 BROKER = '127.0.0.1'
@@ -53,6 +53,7 @@ def publish(client):
             print("Failed to send message to topic {topic}".format(topic=TOPIC))
         msg_count += 1
         time.sleep(1)
+        break
 
 
 def run():
@@ -66,4 +67,7 @@ def run():
 
 
 if __name__ == '__main__':
+    import sys
+    if len(sys.argv) > 1:
+        TOPIC = sys.argv[1]
     run()

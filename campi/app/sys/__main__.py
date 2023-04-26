@@ -28,6 +28,8 @@ class SystemEventMonitor(AsyncTask):
         self.queue = asyncio.Queue()
         self.loop = loop
         self.mqtt = AsyncMqtt('SystemEventMonitor', loop=loop)
+        self.mqtt.connect_sync()
+        self.mqtt.subscribe([tSystem.SHUTDOWN], self.handle_mqtt_event)
         self.monitor = Monitor.from_netlink(Context(), source='udev')
         self.eusb = UsbEventDetector(self.mqtt).filter_by(self.monitor)
         self.eblk = BlkEventDetector(self.mqtt).filter_by(self.monitor)
@@ -58,8 +60,6 @@ class SystemEventMonitor(AsyncTask):
         self.monitor.start()
         loop = asyncio.get_running_loop()
         loop.add_reader(self.monitor.fileno(), self.handle_udev_event)
-        self.mqtt.subscribe([tSystem.SHUTDOWN], self.handle_mqtt_event)
-        await self.mqtt.connect()
         self.loop.call_later(self.enet.ping_interval, self.queue.put_nowait, 'p')
         while True:
             r = await self.queue.get()

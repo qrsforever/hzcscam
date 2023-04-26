@@ -1,3 +1,6 @@
 [submodule "nanomq"]
 	path = extern/nanomq
 	url = https://github.com/emqx/nanomq
+[submodule "quart"]
+	path = extern/quart
+	url = https://github.com/pallets/quart

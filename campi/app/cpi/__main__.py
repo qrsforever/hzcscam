@@ -12,11 +12,15 @@ import asyncio
 from campi.app.cpi.sys import SystemMessageHandler
 from campi.app.cpi.log import LoggerMessageHandler
 
-async def main_core():
+async def main():
     sys_h = SystemMessageHandler()  # noqa
     log_h = LoggerMessageHandler()  # noqa
 
-    await asyncio.sleep(1000)
+    while True:
+        r = await sys_h.queue.get()
+        if r == 'q':
+            print("system quit")
+            break
 
 if __name__ == "__main__":
-    asyncio.run(main_core())
+    asyncio.run(main())

@@ -5,7 +5,7 @@
 # @brief
 # @author QRS
 # @version 1.0
-# @date 2023-04-25 16:26
+# @date 2023-04-26 15:08
 
 
 import abc
@@ -17,7 +17,6 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(leve
 
 
 class MessageHandler(metaclass=abc.ABCMeta):
-    queue = asyncio.Queue()
     mqtt: AsyncMqtt = None
     callbacks1 = {}  # /topic/#
     callbacks2 = {}
@@ -41,9 +40,6 @@ class MessageHandler(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def handle_message(self, topic, message):
         pass
-
-    def send_message(self, message):
-        asyncio.ensure_future(self.queue.put(message))
 
     @classmethod
     def dispatch_message(cls, topic, message):

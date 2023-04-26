@@ -61,21 +61,21 @@ __echo_and_run iptables-save | awk '/^[*]/ { print $1 } /^:[A-Z]+ [^-]/ { print 
 __echo_and_run iptables -t nat -A POSTROUTING -o $DEFAULT_ADAPTER -j MASQUERADE
 __echo_and_run iptables -A FORWARD -i $DEFAULT_ADAPTER -o $WIRELESS_ADAPTER -m state --state RELATED,ESTABLISHED -j ACCEPT
 __echo_and_run iptables -A FORWARD -i $WIRELESS_ADAPTER -o $DEFAULT_ADAPTER -j ACCEPT
-__echo_and_run iptables-save > /etc/iptables.ipv4.nat
-systemctl stop orangepi-restore-iptables.service
-systemctl disable orangepi-restore-iptables.service
-cat <<-EOF > /etc/systemd/system/orangepi-restore-iptables.service
-[Unit]
-Description="Restore IP tables"
-[Timer]
-OnBootSec=20Sec
-[Service]
-Type=oneshot
-ExecStart=/sbin/iptables-restore /etc/iptables.ipv4.nat
-[Install]
-WantedBy=sysinit.target
-EOF
-systemctl enable orangepi-restore-iptables.service
+# __echo_and_run iptables-save > /etc/iptables.ipv4.nat
+# systemctl stop orangepi-restore-iptables.service
+# systemctl disable orangepi-restore-iptables.service
+# cat <<-EOF > /etc/systemd/system/orangepi-restore-iptables.service
+# [Unit]
+# Description="Restore IP tables"
+# [Timer]
+# OnBootSec=20Sec
+# [Service]
+# Type=oneshot
+# ExecStart=/sbin/iptables-restore /etc/iptables.ipv4.nat
+# [Install]
+# WantedBy=sysinit.target
+# EOF
+# systemctl enable orangepi-restore-iptables.service
 
 __echo_and_run ifdown $WIRELESS_ADAPTER 2> /dev/null
 sleep 1

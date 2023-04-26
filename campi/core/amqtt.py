@@ -111,17 +111,21 @@ class AsyncMqtt(object):
             return self.client.publish(topic, message, qos)
 
     def logd(self, message):
+        print(message)
         if self.ok:
             self.client.publish(LOG.DEBUG, f'{log_prefix()} - {message}')
 
     def logi(self, message):
+        print(message)
         if self.ok:
             self.client.publish(LOG.INFO, f'{log_prefix()} - {message}')
 
     def logw(self, message):
+        print(message)
         if self.ok:
             self.client.publish(LOG.WARN, f'{log_prefix()} - {message}')
 
     def loge(self, message):
+        print(message)
         if self.ok:
             self.client.publish(LOG.ERROR, f'{log_prefix()} - {message}')
