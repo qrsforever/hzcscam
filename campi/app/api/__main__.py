@@ -8,10 +8,11 @@
 # @date 2023-04-26 15:08
 
 
-# import asyncio
+import asyncio
 from quart import Quart, render_template
 from campi.constants import WS_ROOT 
 from campi.app.api.routers import api_network
+from campi.core.amqtt import AsyncMqtt
 
 app = Quart(__name__, root_path=f'{WS_ROOT}/asset')
 app.register_blueprint(api_network, url_prefix='/apis/network')
@@ -19,12 +20,14 @@ app.register_blueprint(api_network, url_prefix='/apis/network')
 
 @app.before_serving
 async def startup():
-    pass
+    loop = asyncio.get_running_loop()
+    app.mqtt = AsyncMqtt('api', loop=loop)
+    await app.mqtt.connect()
 
 
 @app.after_serving
 async def shutdown():
-    pass
+    app.mqtt.close()
 
 
 @app.route("/")

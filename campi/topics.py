@@ -33,3 +33,9 @@ class tLogger:
     INFO = '/logger/info'
     WARN = '/logger/warn'
     ERROR = '/logger/error'
+
+
+class tApis:
+    SET_WIFI = '/apis/set_wifi'
+    
+

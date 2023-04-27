@@ -90,6 +90,9 @@ class AsyncMqtt(object):
         await self.loop.run_in_executor(None, self.client.connect, host, port)
         await asyncio.wait_for(self._connected, timeout=timeout)
 
+    def close(self):
+        self.client.close()
+
     def _on_message(self, client, userdata, message):
         # print("[{current_thread}]: Received `{payload}` from `{topic}` topic".format(
         #     current_thread=threading.current_thread().ident,

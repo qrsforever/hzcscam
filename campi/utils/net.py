@@ -11,6 +11,7 @@ import random
 import socket
 import fcntl
 import struct
+import subprocess
 
 
 def util_get_mac(ifname='eth0'):
@@ -50,5 +51,24 @@ def util_net_ping(hosts=('8.8.8.8', '1.1.1.1'), port=53, timeout=3):
     s.close()
     socket.setdefaulttimeout(def_timeout)
     return val
+
+
+def util_wifi_connect(ssid, passwd, device='wlan0'):
+    try:
+        cmds = [
+            'nmcli device disconnect %s 2>/dev/null' % device,
+            'nmcli connection delete %s 2>/dev/null' % ssid,
+            'nmcli device wifi rescan'
+        ]
+        subprocess.call(';'.join(cmds), shell=True)
+        output = subprocess.check_output(f'nmcli device wifi connect {ssid} password {passwd}', shell=True)
+        if 'successfully activated' in output.decode('utf-8').strip():
+            return 0
+    except subprocess.CalledProcessError as err:
+        return err.returncode
+    except Exception:
+        pass
+    return -1
+
 
 MAC = util_get_mac()

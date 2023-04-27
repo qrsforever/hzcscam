@@ -27,7 +27,7 @@ class NetEventDetector(EventDetector):
         self.ping_trycnt = 3
         self.ping_timeout = 3
         self.ping_interval = 1
-        self.ping_max_interval = 56
+        self.ping_max_interval = 120
 
     async def on_ping(self):
         for _ in range(self.ping_trycnt):

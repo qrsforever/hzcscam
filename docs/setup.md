@@ -65,6 +65,11 @@
     systemctl mask systemd-resolved
     systemctl disable systemd-resolved
 
+9. GPIO
+    apt install -y i2c-tools
+    git clone https://github.com/orangepi-xunlong/wiringOP; ./build; gpio readall
+    pip3 install --upgrade OPi.GPIO
+
 # References
 
 - https://gstreamer.freedesktop.org/documentation/tutorials/index.html?gi-language=python
