@@ -11,6 +11,7 @@ __echo_and_run systemctl daemon-reload
 __echo_and_run nmcli con delete $(nmcli --fields NAME,UUID,TYPE con | grep wifi | awk '{print $2}') > /dev/null 2>&1
 __echo_and_run rm -f /etc/network/interfaces.d/orangepi.ap.*
 __echo_and_run rm -f /etc/dnsmasq.conf
+__echo_and_run rm -f /etc/hostapd.conf
 __echo_and_run rm -f /etc/NetworkManager/conf.d/10-ignore-interfaces.conf
 __echo_and_run systemctl stop dnsmasq
 # __echo_and_run systemctl disable dnsmasq

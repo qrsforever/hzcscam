@@ -12,6 +12,7 @@ import socket
 import fcntl
 import struct
 import subprocess
+import os
 
 
 def util_get_mac(ifname='eth0'):
@@ -53,22 +54,62 @@ def util_net_ping(hosts=('8.8.8.8', '1.1.1.1'), port=53, timeout=3):
     return val
 
 
+def util_get_lanip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(('8.8.8.8', 80))
+        return s.getsockname()[0]
+    finally:
+        s.close()
+    return ''
+
+def util_get_netip():
+    result = os.popen('curl -s http://txt.go.sohu.com/ip/soip | grep -P -o -i "(\d+\.\d+.\d+.\d+)"', 'r') # noqa
+    if result:
+        return result.read().strip('\n')
+    return ''
+
 def util_wifi_connect(ssid, passwd, device='wlan0'):
     try:
         cmds = [
             'nmcli device disconnect %s 2>/dev/null' % device,
             'nmcli connection delete %s 2>/dev/null' % ssid,
-            'nmcli device wifi rescan'
+            'nmcli device wifi rescan', 'sleep 5'
         ]
         subprocess.call(';'.join(cmds), shell=True)
         output = subprocess.check_output(f'nmcli device wifi connect {ssid} password {passwd}', shell=True)
         if 'successfully activated' in output.decode('utf-8').strip():
             return 0
-    except subprocess.CalledProcessError as err:
-        return err.returncode
-    except Exception:
-        pass
+    except subprocess.CalledProcessError as perr:
+        print(perr)
+        return perr.returncode
+    except Exception as err:
+        print(err)
     return -1
 
 
 MAC = util_get_mac()
+
+
+def util_send_mail(msg):
+    import smtplib
+    from email.mime.text import MIMEText
+
+    EMAIL_SENDER = 'erlangai@qq.com'
+    EMAIL_PASSWD = 'napynuczfljubffa'
+    EMAIL_RECVER = 'erlang47@qq.com'
+
+    text = MIMEText(msg, 'plain', 'utf-8')
+    text['From'] = EMAIL_SENDER
+    text['To'] = EMAIL_RECVER
+    text['Subject'] = 'orangepi'
+
+    try:
+        smtp = smtplib.SMTP('smtp.qq.com')
+        smtp.login(EMAIL_SENDER, EMAIL_PASSWD)
+        smtp.send_message(text)
+        smtp.quit()
+    except smtplib.SMTPException as e:
+        print(e)
+    except Exception as e:
+        print(e)

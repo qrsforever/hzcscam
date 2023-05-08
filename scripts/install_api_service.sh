@@ -3,7 +3,7 @@
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 TOP_DIR=$(dirname $CUR_DIR)
 
-SERVICE=campi_nanomq.service
+SERVICE=campi_api.service
 
 USER=root
 ROOT_DIR=/campi
@@ -14,7 +14,7 @@ DST_DIR=/etc/systemd/system/
 
 cat > ${SRC_DIR}/$SERVICE <<EOF
 [Unit]
-    Description=NanoMQ
+    Description=System Api for WebPage
     Documentation=http://campi.hzcsai.com
     StartLimitIntervalSec=120
     StartLimitBurst=5
@@ -25,13 +25,12 @@ cat > ${SRC_DIR}/$SERVICE <<EOF
     User=$USER
     Group=$USER
     UMask=0000
-    WorkingDirectory=$ROOT_DIR
+    WorkingDirectory=${ROOT_DIR}
+    Environment="PYTHONPATH=${ROOT_DIR}"
     Restart=always
     RestartSec=3
-    ExecStart=${TOP_DIR}/bin/${BOARD}/nanomq start
-    ExecStop=${TOP_DIR}/bin/${BOARD}/nanomq stop
+    ExecStart=python3 ${ROOT_DIR}/campi/app/api
     TimeoutStartSec=3
-    TimeoutStopSec=3
 
 [Install]
     WantedBy=multi-user.target

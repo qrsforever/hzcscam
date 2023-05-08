@@ -8,6 +8,9 @@
 # @date 2023-04-25 16:20
 
 
+import sys
+sys.path.append('/campi')
+
 import asyncio
 from campi.app.cpi.sys import SystemMessageHandler
 from campi.app.cpi.log import LoggerMessageHandler

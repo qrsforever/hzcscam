@@ -45,6 +45,9 @@ class NetEventDetector(EventDetector):
             except asyncio.TimeoutError as terr:
                 self.mqtt.logw(f'ping {ip} timeout: [{terr}]')
                 self.ping_interval = 1
+            except Exception as err:
+                self.mqtt.logw(f'ping {ip} error: [{err}]')
+            await asyncio.sleep(3)
         self.mqtt.publish(tNetwork.DISCONNECTED, "disconnection")
 
     async def handle_event(self, device):

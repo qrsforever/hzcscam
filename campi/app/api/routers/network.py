@@ -15,12 +15,12 @@ from campi.topics import tApis
 
 api_network = Blueprint("network", __name__)
 
-
 @api_network.route('/save', methods=['POST'])
 async def _set_network():
     pass
 
-@api_network.route('/wifi', methods=['POST'])
+
+@api_network.route('/set_wifi', methods=['POST'])
 async def _set_wifi():
     form = await request.form
     wifissid = form['wifissid']

@@ -28,11 +28,9 @@ cat > ${SRC_DIR}/$SERVICE <<EOF
     WorkingDirectory=${ROOT_DIR}
     Environment="PYTHONPATH=${ROOT_DIR}"
     Restart=always
-    RestartSec=3
+    RestartSec=5
     ExecStart=python3 ${ROOT_DIR}/campi/app/sys
     TimeoutStartSec=3
-    StandardOutput=syslog
-    StandardError=syslog
 
 [Install]
     WantedBy=multi-user.target

@@ -36,7 +36,6 @@ class MessageHandler(metaclass=abc.ABCMeta):
             else:
                 cbs[topic].append(self.handle_message)
             self.mqtt.subscribe(topic)
-        print(self.callbacks1, self.callbacks2)
 
     @abc.abstractmethod
     def handle_message(self, topic, message):

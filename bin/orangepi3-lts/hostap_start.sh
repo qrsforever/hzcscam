@@ -4,9 +4,10 @@
 
 echo "start hostap..."
 
+source /etc/orangepi-release
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 TOP_DIR=$(dirname $(dirname ${CUR_DIR}))
-ETC_DIR=${TOP_DIR}/etc/orangepi3-lts
+ETC_DIR=${TOP_DIR}/etc/${BOARD}
 
 DEFAULT_ADAPTER="eth0"
 WIRELESS_ADAPTER=${WIFI_DEVICE:-"wlan0"}
@@ -85,9 +86,11 @@ __echo_and_run ifup $WIRELESS_ADAPTER 2> /dev/null
 __echo_and_run systemctl daemon-reload
 # __echo_and_run systemctl enable dnsmasq; sleep 1
 __echo_and_run service NetworkManager stop >/dev/null 2>&1; sleep 1
-__echo_and_run service dnsmasq start; sleep 1
-__echo_and_run service hostapd start; sleep 1
-__echo_and_run service NetworkManager start >/dev/null 2>&1; sleep 1
+__echo_and_run service dnsmasq stop; sleep 1
+__echo_and_run service hostapd stop; sleep 1
+__echo_and_run service dnsmasq start; sleep 2
+__echo_and_run service hostapd start; sleep 2
+__echo_and_run service NetworkManager start >/dev/null 2>&1; sleep 2
 __echo_and_run systemctl restart systemd-resolved.service
 
 echo "start hostap end..."

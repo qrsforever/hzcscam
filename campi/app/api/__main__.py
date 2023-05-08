@@ -31,8 +31,13 @@ async def shutdown():
 
 
 @app.route("/")
-async def home():
+async def _home_page():
     return await render_template("index.html")
+
+
+@app.route("/wifiap")
+async def _wifiap_page():
+    return await render_template("wifiap.html")
 
 
 if __name__ == "__main__":
