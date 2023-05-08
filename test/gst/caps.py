@@ -1,12 +1,12 @@
-
 #!/usr/bin/env python
 
 import os
+
 import gi
+
 gi.require_version("Gst", "1.0")
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gst, Gtk
-
 
 class GTK_Main_1:
 
@@ -16,8 +16,9 @@ class GTK_Main_1:
         window.set_default_size(300, -1)
         window.connect("destroy", Gtk.main_quit, "WM destroy")
         vbox = Gtk.VBox()
+
         window.add(vbox)
-        self.button = Gtk.Button(label = "Start")
+        self.button = Gtk.Button(label="Start")
         self.button.connect("clicked", self.start_stop)
         self.btn_reset_resolution = Gtk.Button(label = "Reset Resolution")
         self.btn_reset_resolution.connect("clicked", self.reset_resolution)
@@ -91,6 +92,7 @@ class GTK_Main_1:
             print("on message error: %s" % err, debug)
             self.player.set_state(Gst.State.NULL)
             self.button.set_label("Start")
+           
 
     def on_sync_message(self, bus, message):
         print("on sync message:", message.get_structure().get_name())
@@ -108,7 +110,7 @@ class GTK_Main_2:
         vbox = Gtk.VBox()
         window.add(vbox)
         self.entry = Gtk.Entry()
-        vbox.pack_start(child = self.entry, expand = False, fill = True, padding = 0)
+        vbox.pack_start(child=self.entry, expand=False, fill=True, padding=0)
         self.button = Gtk.Button(label = "Check")
         self.button.connect("clicked", self.start_stop)
         vbox.add(self.button)
