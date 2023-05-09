@@ -72,6 +72,8 @@ class SystemEventMonitor(AsyncTask):
 
 
 if __name__ == "__main__":
+    print("Start monitor...")
+
     async def system_event_monitor():
         await SystemEventMonitor(loop=asyncio.get_running_loop())
     asyncio.run(system_event_monitor())

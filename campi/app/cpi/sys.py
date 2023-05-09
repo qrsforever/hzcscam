@@ -41,10 +41,12 @@ class SystemMessageHandler(MessageHandler):
         ])
 
         self.wifiap_running = False
+        self.network_connected = False
 
     def on_network_connected(self, message):
         # TODO
         self.wifiap_running = False
+        self.network_connected = True
 
         util_send_mail(json.dumps({
             'mac': util_get_mac(),
@@ -53,6 +55,7 @@ class SystemMessageHandler(MessageHandler):
         }))
 
     def on_network_disconnect(self, message):
+        self.network_connected = False
         if self.wifiap_running:
             self.logger.info('hostapd already running')
             return

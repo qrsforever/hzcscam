@@ -3,7 +3,7 @@
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 TOP_DIR=$(dirname $CUR_DIR)
 
-SERVICE=hotspot.service
+SERVICE=campi_nmq.service
 
 USER=root
 ROOT_DIR=/campi
@@ -14,10 +14,11 @@ DST_DIR=/etc/systemd/system/
 
 cat > ${SRC_DIR}/$SERVICE <<EOF
 [Unit]
-    Description=AP
+    Description=NanoMQ
     Documentation=http://campi.hzcsai.com
     StartLimitIntervalSec=120
     StartLimitBurst=5
+    OnFailure=jetsos.service
 
 [Service]
     Type=simple
@@ -27,26 +28,24 @@ cat > ${SRC_DIR}/$SERVICE <<EOF
     WorkingDirectory=$ROOT_DIR
     Restart=always
     RestartSec=3
-    ExecStart=$ROOT_DIR/bin/${BOARD}/hostap_start.sh
-    ExecStop=$ROOT_DIR/bin/${BOARD}/hostap_stop.sh
-    TimeoutStartSec=120
-    TimeoutStopSec=30
-    StandardOutput=syslog
-    StandardError=syslog
+    ExecStart=${TOP_DIR}/bin/${BOARD}/nanomq start
+    ExecStop=${TOP_DIR}/bin/${BOARD}/nanomq stop
+    TimeoutStartSec=3
+    TimeoutStopSec=3
 
 [Install]
     WantedBy=multi-user.target
 EOF
 
-# systemctl stop $SERVICE 2>&1 >/dev/null
+systemctl stop $SERVICE 2>&1 /dev/null
 cp ${SRC_DIR}/$SERVICE $DST_DIR
 systemctl daemon-reload
-# systemctl enable $SERVICE
-# systemctl restart $SERVICE
-# systemctl status $SERVICE
-# journalctl -u $SERVICE --no-pager -n 10
-# echo "-------------------------------"
-# echo ""
-# echo "journalctl -u $SERVICE -f -n 100"
-# echo ""
-# echo "-------------------------------"
+systemctl enable $SERVICE
+systemctl restart $SERVICE
+systemctl status $SERVICE
+journalctl -u $SERVICE --no-pager -n 10
+echo "-------------------------------"
+echo ""
+echo "journalctl -u $SERVICE -f -n 100"
+echo ""
+echo "-------------------------------"
