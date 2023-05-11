@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 *-
 
 # @file shell.py
 # @brief
@@ -64,3 +64,14 @@ def util_kill_tree(pid, including_parent=True):
     if including_parent:
         parent.kill()
     return gone, alive
+
+
+def util_get_uptime():
+    try:
+        f = open('/proc/uptime', 'r')
+        up = int(float(f.readline().split()[0]))
+        f.close()
+        return up
+    except (IOError, ValueError):
+        pass
+    return 0

@@ -56,13 +56,15 @@ sed -i "s/iface .* inet*/iface $WIRELESS_ADAPTER inet/" /etc/network/interfaces.
 sed -i "s/^DAEMON_CONF=.*/DAEMON_CONF=\/etc\/hostapd.conf/" /etc/init.d/hostapd
 
 # iptables
+#
 sed -i "/net.ipv4.ip_forward=/c\net.ipv4.ip_forward=1" /etc/sysctl.conf
 echo 1 > /proc/sys/net/ipv4/ip_forward
 __echo_and_run iptables-save | awk '/^[*]/ { print $1 } /^:[A-Z]+ [^-]/ { print $1 " ACCEPT" ; } /COMMIT/ { print $0; }' | iptables-restore
 __echo_and_run iptables -t nat -A POSTROUTING -o $DEFAULT_ADAPTER -j MASQUERADE
 __echo_and_run iptables -A FORWARD -i $DEFAULT_ADAPTER -o $WIRELESS_ADAPTER -m state --state RELATED,ESTABLISHED -j ACCEPT
 __echo_and_run iptables -A FORWARD -i $WIRELESS_ADAPTER -o $DEFAULT_ADAPTER -j ACCEPT
-# __echo_and_run iptables-save > /etc/iptables.ipv4.nat
+__echo_and_run iptables-save > /etc/iptables.ipv4.nat
+
 # systemctl stop orangepi-restore-iptables.service
 # systemctl disable orangepi-restore-iptables.service
 # cat <<-EOF > /etc/systemd/system/orangepi-restore-iptables.service
