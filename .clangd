@@ -1,0 +1,4 @@
+CompileFlags:
+  Add: 
+    - -working-directory=/data/source/hzcsai_com/hzcscam
+    - -Iextern/wiringOP/wiringPi

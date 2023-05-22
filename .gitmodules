@@ -4,3 +4,6 @@
 [submodule "quart"]
 	path = extern/quart
 	url = https://github.com/pallets/quart
+[submodule "wiringOP"]
+	path = extern/wiringOP
+	url = https://github.com/orangepi-xunlong/wiringOP.git
