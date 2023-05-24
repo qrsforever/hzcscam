@@ -65,6 +65,8 @@ class SystemMessageHandler(MessageHandler):
 
     def on_network_disconnect(self, message):
         self.network_connected = False
+        # TODO
+        return
 
         def _start_wifiap():
             self.logger.error(f'start wifiap: {self.wifiap_state}')

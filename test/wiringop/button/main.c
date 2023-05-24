@@ -1,5 +1,6 @@
 #include <wiringPi.h>
 #include <stdio.h>
+#include <time.h>
 
 #define BtnPin      2
 #define Gpin        10

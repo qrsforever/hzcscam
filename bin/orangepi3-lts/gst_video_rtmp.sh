@@ -2,7 +2,7 @@
 
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 
-# http://101.42.139.3:30808/players/rtc_player.html?vhost=seg.300s&ip=192.168.152.185&api=31985&app=live&stream=02004a1a29a8
+# http://101.42.139.3:30808/players/rtc_player.html?vhost=seg.300s&ip=192.168.152.185&api=31985&app=live&stream=02004a1a29a8&autostart=true
 # v4l2-ctl -d /dev/video0 --all
 # gst-launch-1.0 v4l2src device=/dev/video0 io-mode=4 ! videoscale  ! video/x-raw, width=640, height=480, framerate=15/1 ! videoconvert  ! clockoverlay time-format="%H:%M:%S" halignment=right font-desc="normal 12" ! textoverlay text='12456789' valignment=top halignment=left font-desc="normal 12" ! autovideosink
 
