@@ -7,3 +7,6 @@
 [submodule "wiringOP"]
 	path = extern/wiringOP
 	url = https://github.com/orangepi-xunlong/wiringOP.git
+[submodule "mqttc"]
+	path = extern/paho.mqtt.c
+	url = https://github.com/eclipse/paho.mqtt.c.git
