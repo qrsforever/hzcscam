@@ -3,7 +3,7 @@
 #include "unistd.h"
 #include "MQTTClient.h"
 
-#define ADDRESS     "tcp://http://82.157.36.183/:1883"
+#define ADDRESS     "tcp://82.157.36.183:1883"
 #define USERNAME    "orangepi"
 #define PASSWORD    "orangepi"
 #define CLIENTID    "test"
@@ -26,7 +26,7 @@ void publish(MQTTClient client, char *topic, char *payload)
 
 int on_message(void *context, char *topicName, int topicLen, MQTTClient_message *message)
 {
-    char *payload = message->payload;
+    char *payload = (char*)message->payload;
     printf("Received `%s` from `%s` topic \n", payload, topicName);
     MQTTClient_freeMessage(&message);
     MQTTClient_free(topicName);
@@ -34,6 +34,7 @@ int on_message(void *context, char *topicName, int topicLen, MQTTClient_message 
 }
 
 int main(int argc, char *argv[]) {
+    printf("main run\n");
     int rc;
     MQTTClient client;
 
