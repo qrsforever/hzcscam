@@ -3,12 +3,13 @@
 #include "unistd.h"
 #include "MQTTClient.h"
 
-#define ADDRESS     "tcp://82.157.36.183:1883"
-#define USERNAME    "orangepi"
-#define PASSWORD    "orangepi"
-#define CLIENTID    "test"
+// #define ADDRESS     "tcp://82.157.36.183:1883"
+#define ADDRESS     "tcp://0.0.0.0:1883"
+#define USERNAME    "campi"
+#define PASSWORD    "123456"
+#define CLIENTID    "localhost"
 #define QOS         0
-#define TOPIC       "emqx/c-test"
+#define TOPIC       (char*)"campi/c-test"
 #define TIMEOUT     10000L
 
 void publish(MQTTClient client, char *topic, char *payload)
@@ -51,10 +52,10 @@ int main(int argc, char *argv[]) {
     }
     // subscribe topic
     MQTTClient_subscribe(client, TOPIC, QOS);
-    char payload[16];
+    char payload[32];
     for (int i = 0; i < 100; i += 1) {
         // publish message to broker
-        snprintf(payload, 16, "message-%d", i);
+        snprintf(payload, 32, "{\"test\": \"message-%d\"}", i);
         publish(client, TOPIC, payload);
         sleep(1);
     }

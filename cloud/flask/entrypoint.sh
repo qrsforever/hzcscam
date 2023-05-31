@@ -3,5 +3,5 @@
 while (( 1 ))
 do
     python3 webhook.py
-    sleep 1
+    sleep 3
 done

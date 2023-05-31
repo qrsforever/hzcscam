@@ -34,7 +34,6 @@ services:
       MYSQL_ROOT_PASSWORD: 123456
       MYSQL_USER: campi
       MYSQL_PASSWORD: 123456
-      MYSQL_DATABASE: aiot
     ports:
       - 3306:3306
     volumes:
