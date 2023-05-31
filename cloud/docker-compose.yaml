@@ -1,0 +1,89 @@
+version: '3'
+
+services:
+  # docker run -d --name emqx -p 1883:1883 -p 8083:8083 -p 8084:8084 -p 8883:8883 -p 18083:18083  emqx:5.0.26
+  emqx:
+    image: emqx/emqx:5.0.26
+    restart: always
+    container_name: emqx5
+    environment:
+      EMQX_NAME: emqx
+      EMQX_HOST: 127.0.0.1
+    ports:
+      - 1883:1883
+      - 8883:8883
+      - 8083:8083
+      - 8084:8084
+      - 18083:18083
+    user: 1000:1000
+    volumes:
+      - ./emqx/data:/opt/emqx/data
+      - ./emqx/etc:/opt/emqx/etc
+      - ./emqx/plugins:/opt/emqx/plugins
+    networks:
+      - bridge-emqx
+      - bridge-mysql
+    depends_on:
+      - mysql
+      
+  mysql:
+    image: mysql:8
+    restart: always
+    container_name: mysql8
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_USER: campi
+      MYSQL_PASSWORD: 123456
+      MYSQL_DATABASE: aiot
+    ports:
+      - 3306:3306
+    volumes:
+      - ./mysql/etc/:/etc/mysql
+      - ./mysql/data:/var/lib/mysq
+      - ./mysql/files:/var/lib/mysql-files
+      - ./mysql/initdb:/docker-entrypoint-initdb.d
+    networks:
+      - bridge-mysql
+
+  adminer:
+    image: adminer:4
+    restart: always
+    container_name: adminer4
+    networks:
+      - bridge-mysql
+    depends_on:
+      - mysql
+    ports:
+      - 8787:8080
+
+  flaskapp:
+    image: flaskapp
+    build:
+      context: ./flask
+      dockerfile: Dockerfile
+    restart: always
+    container_name: flaskapp
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: aiot
+      DB_USER: root
+      DB_PASSWORD: 123456
+    networks:
+      - bridge-emqx
+      - bridge-mysql
+    depends_on:
+      - mysql
+    ports:
+      - 8686:8686
+    volumes:
+      - ./flask/app:/app
+      - ./flask/entrypoint.sh:/entrypoint.sh
+    entrypoint: /entrypoint.sh
+
+networks:
+  bridge-emqx:
+    driver: bridge
+
+  bridge-mysql:
+    driver: bridge

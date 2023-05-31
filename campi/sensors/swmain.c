@@ -98,6 +98,35 @@ static void do_vibration_switch(int task)
 }
 
 
+static void do_vibration_switch_2(int task)
+{
+    fprintf(stderr, "do_vibration_switch2");
+    pinMode(TSKPIN, INPUT);
+    const int threshold = 200; // ms
+    int value = 0, count = 0;
+    int sumtimer = 0;
+    while (g_current_task == task) {
+        value = digitalRead(TSKPIN);
+        if (0 == value) { // vibrate
+            sumtimer = 0;
+            switch_to(black);
+            do {
+                if (value == digitalRead(TSKPIN))
+                    sumtimer = 0;
+                else
+                    sumtimer += 20;
+                delay(20);
+                printf("sumtimer = %d\n", sumtimer);
+            } while(g_current_task == task && sumtimer < threshold);
+            switch_to(g_current_color);
+            count++;
+            printf("count = %d\n", count);
+        }
+        delay(20);
+    }
+}
+
+
 static void do_passive_infrared_detect(int task)
 {
     fprintf(stderr, "do_passive_infrared_detect");
@@ -106,6 +135,7 @@ static void do_passive_infrared_detect(int task)
     int current_state = 0, previous_state = -1; // 0: detected 1: no detected
     while (g_current_task == task) {
         current_state = digitalRead(TSKPIN);
+        printf("%d\n", current_state);
         if (current_state != previous_state) {
             if (0 == current_state) {
                 // motion detect
@@ -118,6 +148,34 @@ static void do_passive_infrared_detect(int task)
             previous_state = current_state;
         }
         delay(200);
+    }
+}
+
+
+static void do_passive_infrared_detect_2(int task)
+{
+    fprintf(stderr, "do_passive_infrared_detect_2");
+    pinMode(TSKPIN, INPUT);
+    int count = 0;
+    time_t pre_time = time(0), cur_time = -1;
+    int current_state = 0, previous_state = -1; // 1: detected 0: no detected
+    while (g_current_task == task) {
+        current_state = digitalRead(TSKPIN);
+        if (current_state != previous_state) {
+            if (1 == current_state) {
+                pre_time = time(0);
+                // motion detect
+                switch_to(g_current_color);
+            } else {
+                cur_time = time(0);
+                switch_to(black);
+                count ++;
+                printf("count = %d %ld %ld\n", count, cur_time, cur_time - pre_time);
+                pre_time = cur_time;
+            }
+            previous_state = current_state;
+        }
+        delay(500);
     }
 }
 
@@ -136,7 +194,8 @@ static void *loop_task(void *arg)
                 do_photoelectric(task);
                 break;
             case TASK_VIBRATSW:
-                do_vibration_switch(task);
+                do_passive_infrared_detect_2(task);
+                // do_vibration_switch(task);
                 break;
             case TASK_PIR:
                 do_passive_infrared_detect(task);
@@ -153,6 +212,13 @@ void schedule_task(int duration, int boot)
     if (1 == boot)
         pthread_mutex_lock(&task_mutex);
     switch (duration) {
+        case 0:
+            switch_to(blue);
+            if (1 == boot) {
+                g_current_task = TASK_VIBRATSW;
+                g_current_color = (int*)blue;
+            }
+            break;
         case 1:
         case 2:
             switch_to(red);
@@ -213,7 +279,6 @@ void schedule_task(int duration, int boot)
 
 int main(int argc, char *argv[])
 {
-    printf("main run\n");
     fprintf(stderr, "main run");
     if(wiringPiSetup() == -1) {
         printf("setup of wiringPi failed !\n");
@@ -227,6 +292,8 @@ int main(int argc, char *argv[])
 
     time_t press_timer = time(0);
     int btnvalue = BTN_RELEASE, duration = 0;
+    schedule_task(0, 0);
+    schedule_task(0, 1);
     while (1) {
         duration = 0;
         btnvalue = digitalRead(BTNPIN);
