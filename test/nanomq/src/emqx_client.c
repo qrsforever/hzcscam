@@ -3,8 +3,8 @@
 #include "unistd.h"
 #include "MQTTClient.h"
 
-// #define ADDRESS     "tcp://82.157.36.183:1883"
-#define ADDRESS     "tcp://0.0.0.0:1883"
+#define ADDRESS     "tcp://aiot.hzcsdata.com:1883"
+/* #define ADDRESS     "tcp://0.0.0.0:1883" */
 #define USERNAME    "campi"
 #define PASSWORD    "123456"
 #define CLIENTID    "localhost"
