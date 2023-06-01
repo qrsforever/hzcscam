@@ -105,7 +105,7 @@ rule_engine {
       enable = true
       metadata {created_at = 1685529146599}
       name = ""
-      sql = "SELECT\n  *\nFROM\n  \"campi/#\""
+      sql = "SELECT\n  *\nFROM\n  \"campi/#\",\n  \"$events/client_connected\",\n  \"$events/client_disconnected\""
     }
   }
 }

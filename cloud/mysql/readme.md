@@ -41,3 +41,52 @@ INSERT INTO mqtt_acl(username, permission, action, topic) VALUES ('user123', 'al
     "clientid":"localhost"
 }
 ```
+
+```
+{
+    "username": "campi",
+    "timestamp": 1685620198222,
+    "sockname": "192.168.48.3:1883",
+    "receive_maximum": 32,
+    "proto_ver": 4,
+    "proto_name": "MQTT",
+    "peername": "192.168.48.1:48254",
+    "node": "emqx@127.0.0.1",
+    "mountpoint": "undefined",
+    "metadata": {
+        "rule_id": "hook_campi"
+    },
+    "keepalive": 60,
+    "is_bridge": false,
+    "expiry_interval": 0,
+    "event": "client.connected",
+    "connected_at": 1685620198222,
+    "conn_props": {
+        "User-Property": {}
+    },
+    "clientid": "localhost",
+    "clean_start": true
+}
+```
+
+```
+{
+    "username": "campi",
+    "timestamp": 1685620199596,
+    "sockname": "192.168.48.3:1883",
+    "reason": "tcp_closed",
+    "proto_ver": 4,
+    "proto_name": "MQTT",
+    "peername": "192.168.48.1:48254",
+    "node": "emqx@127.0.0.1",
+    "metadata": {
+        "rule_id": "hook_campi"
+    },
+    "event": "client.disconnected",
+    "disconnected_at": 1685620199596,
+    "disconn_props": {
+        "User-Property": {}
+    },
+    "clientid": "localhost"
+}
+```

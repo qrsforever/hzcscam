@@ -25,11 +25,13 @@ services:
       - bridge-mysql
     depends_on:
       - mysql
-      
+
   mysql:
     image: mysql:8
     restart: always
     container_name: mysql8
+    cap_add:
+      - SYS_NICE
     environment:
       MYSQL_ROOT_PASSWORD: 123456
       MYSQL_USER: campi

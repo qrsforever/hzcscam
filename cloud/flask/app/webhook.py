@@ -2,12 +2,15 @@
 # -*- coding: utf-8 -*-
 
 import os
-import json
 import aiomysql
 import logging
 from quart import Quart, request, Response
+from sql import TableMessagePublish, TableClientConnected, TableClientDisconnected
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    level=logging.INFO,
+    datefmt='%Y-%m-%d %H:%M:%S')
 
 app = Quart(__name__)
 app.dbpool = None
@@ -47,19 +50,18 @@ async def _mqtt_msg():# {{{
     jdata = await request.get_json()
     app.logger.info(f'{jdata}')
     event = jdata.get('event')
-    async with app.dbpool.acquire() as conn:
-        cursor = await conn.cursor()
-        app.logger.info(f'{type(jdata["qos"])}')
+    try:
         if event == 'message.publish':
-            await cursor.execute(
-                'insert into message_publish values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
-                (
-                    jdata['id'], jdata['username'], jdata['clientid'], jdata['qos'],
-                    jdata['topic'], json.dumps(jdata['payload']), jdata['peerhost'],
-                    jdata['publish_received_at'], jdata['timestamp'],
-                    jdata['node'], json.dumps(jdata['flags'])
-                ))
-        await conn.commit()
+            table = TableMessagePublish(app.dbpool, app.logger)
+            await table.insert(jdata)
+        elif event == 'client.connected':
+            table = TableClientConnected(app.dbpool, app.logger)
+            await table.insert(jdata)
+        elif event == 'client.disconnected':
+            table = TableClientDisconnected(app.dbpool, app.logger)
+            await table.insert(jdata)
+    except Exception:
+        return Response(status=401)
     return Response(status=200)
 # }}}
 
