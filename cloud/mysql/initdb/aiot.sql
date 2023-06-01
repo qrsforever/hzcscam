@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS `client_connected` (
     `is_bridge` TINYINT(1) NOT NULL,
     `clean_start` TINYINT(1) NOT NULL,
     `proto_name` VARCHAR(16) NOT NULL,
-    `proto_var` TINYINT(2) NOT NULL,
+    `proto_ver` TINYINT(2) NOT NULL,
     `connected_at` DATETIME NOT NULL,
     `create_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS `client_disconnected` (
     `id` BIGINT unsigned NOT NULL AUTO_INCREMENT,
     `clientid` VARCHAR(100) NOT NULL,
     `username` VARCHAR(100) NOT NULL,
-    `reason` VARCHAR NOT NULL,
+    `reason` VARCHAR(64) NOT NULL,
     `disconnected_at` DATETIME NOT NULL,
     `create_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)

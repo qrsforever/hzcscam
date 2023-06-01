@@ -37,5 +37,3 @@ class tLogger:
 
 class tApis:
     SET_WIFI = '/apis/set_wifi'
-    
-

@@ -27,7 +27,7 @@ class TableBase(ABC):
         pass
 
     async def execute(self, sql, values):
-        # self.logger.info(sql)
+        self.logger.info(sql)
         async with self.dbpool.acquire() as conn:
             cursor = await conn.cursor()
             await cursor.execute(sql, values)
@@ -65,7 +65,7 @@ class TableClientConnected(TableBase):
     feilds = (
         'clientid', 'username', 'sockname', 'peername',
         'node', 'receive_maximum', 'keepalive', 'expiry_interval',
-        'is_bridge', 'clean_start', 'proto_name', 'proto_var', 'connected_at'
+        'is_bridge', 'clean_start', 'proto_name', 'proto_ver', 'connected_at'
     )
     colnum = len(feilds)
     tabel_name = 'client_connected'

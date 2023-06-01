@@ -60,7 +60,8 @@ async def _mqtt_msg():# {{{
         elif event == 'client.disconnected':
             table = TableClientDisconnected(app.dbpool, app.logger)
             await table.insert(jdata)
-    except Exception:
+    except Exception as err:
+        app.logger.error(f'{err}')
         return Response(status=401)
     return Response(status=200)
 # }}}
