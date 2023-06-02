@@ -1,10 +1,10 @@
 # Build
 
-    git clone https://github.com/emqx/nanomq.git 
+    git clone https://github.com/emqx/nanomq.git
     cd nanomq
     git submodule update --init --recursive
     mkdir build && cd build
-    cmake .. 
+    cmake ..
     make
 
 # Run

@@ -69,7 +69,7 @@ fi
 
 __echo_and_run() {
     echo "$*"
-    /bin/bash -c "$*"
+    # /bin/bash -c "$*"
 }
 
 while (( 1 ))

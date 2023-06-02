@@ -18,7 +18,7 @@ cat > ${SRC_DIR}/$SERVICE <<EOF
     Documentation=http://campi.hzcsai.com
     StartLimitIntervalSec=120
     StartLimitBurst=5
-    OnFailure=jetsos.service
+    # OnFailure=jetsos.service
 
 [Service]
     Type=simple
