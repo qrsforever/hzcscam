@@ -3,7 +3,7 @@
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 TOP_DIR=$(dirname $CUR_DIR)
 
-SERVICE=campi_api.service
+SERVICE=campi_sos.service
 
 USER=root
 ROOT_DIR=/campi
@@ -14,23 +14,17 @@ DST_DIR=/etc/systemd/system/
 
 cat > ${SRC_DIR}/$SERVICE <<EOF
 [Unit]
-    Description=System Api for WebPage
+    Description=System SOS
     Documentation=http://campi.hzcsai.com
-    StartLimitIntervalSec=120
-    StartLimitBurst=5
-    OnFailure=campi_sos.service
+    After=multi-user.target
 
 [Service]
-    Type=simple
+    Type=oneshot
     User=$USER
     Group=$USER
     UMask=0000
-    WorkingDirectory=${ROOT_DIR}
-    Environment="PYTHONPATH=${ROOT_DIR}"
-    Restart=always
-    RestartSec=3
-    ExecStart=python3 ${ROOT_DIR}/campi/app/api
-    TimeoutStartSec=3
+    WorkingDirectory=$ROOT_DIR
+    ExecStart=$ROOT_DIR/bin/${BOARD}/sos_recovery.sh
 
 [Install]
     WantedBy=multi-user.target

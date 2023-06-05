@@ -59,7 +59,8 @@ int main(int argc, char *argv[]) {
         publish(client, TOPIC, payload);
         sleep(1);
     }
-    MQTTClient_disconnect(client, TIMEOUT);
-    MQTTClient_destroy(&client);
+    MQTTClient_yield();
+    // MQTTClient_disconnect(client, TIMEOUT);
+    // MQTTClient_destroy(&client);
     return rc;
 }
