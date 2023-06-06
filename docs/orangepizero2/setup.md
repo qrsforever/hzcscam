@@ -7,6 +7,7 @@
 
 # apt & pip
     apt update
+    apt install make cmake libssl-dev
     apt install -y dnsmasq
     apt install -y python3-dev python3-pip libx264-dev libjpeg-dev
     apt install -y gstreamer1.0-tools gstreamer1.0-alsa \

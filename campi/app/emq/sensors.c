@@ -19,16 +19,16 @@
 #include "emqc.h"
 
 #define BTNPIN   2
-#define TSKPIN   13
+#define TSKPIN   6
 
-#define REDLED   9
-#define BLUELED  8
-#define GREENLED 10
+#define REDLED   5
+#define BLUELED  7
+#define GREENLED 8
 
 #define BTN_ONPRESS 0
 #define BTN_RELEASE 1
 
-#define STATE_FILE   "campi/runtime/emq_sensor.state"
+#define STATE_FILE   "/campi/runtime/emq_sensor.state"
 #define SENSOR_TOPIC "campi/sensors"
 
 extern int sensor_init();
@@ -72,8 +72,8 @@ static int _RGB[8][3] = {
     {1, 1, 1},  // white
 };
 
-static int g_current_color = COLOR_BLACK;
-static int g_current_sensor = SENSOR_NONE;
+static int g_current_color = COLOR_RED;
+static int g_current_sensor = SENSOR_VIBRATSW;
 static pthread_t g_thread_id;
 static pthread_mutex_t g_mutex;
 
@@ -108,7 +108,7 @@ static void _save_current_state()
 
 static void _load_current_state()
 {/*{{{*/
-    int fd = open(STATE_FILE, O_RDONLY | O_CREAT);
+    int fd = open(STATE_FILE, O_RDONLY | O_CREAT, 0644);
     if (fd < 0) {
         syslog(LOG_ERR, "read file %s error\n", STATE_FILE);
         exit(-1);
@@ -124,18 +124,16 @@ static void _load_current_state()
 
 static void _change_color_to(int c)
 {/*{{{*/
-    if (c != g_current_color) {
-        digitalWrite(REDLED   , _RGB[c][0]);
-        digitalWrite(GREENLED , _RGB[c][1]);
-        digitalWrite(BLUELED  , _RGB[c][2]);
-        g_current_color = c;
-    }
+    digitalWrite(REDLED   , _RGB[c][0]);
+    digitalWrite(GREENLED , _RGB[c][1]);
+    digitalWrite(BLUELED  , _RGB[c][2]);
 }/*}}}*/
 
-static void _change_sensor_to(int s)
+static void _change_sensor_to(int c, int s)
 {/*{{{*/
     if (s != g_current_sensor) {
         pthread_mutex_lock(&g_mutex);
+        g_current_color = c;
         g_current_sensor = s;
         pthread_mutex_unlock(&g_mutex);
         _save_current_state();
@@ -162,7 +160,7 @@ static void _sensor_vibration_switch(int s)
                 delay(20);
             } while(g_current_sensor == s && sumtimer < threshold);
             _change_color_to(g_current_color);
-            snprintf(payload, 63, "{\"threshold\": \"%d\"}", threshold);
+            snprintf(payload, 63, "{\"threshold\": %d}", threshold);
             _emq_report(payload);
         }
         delay(200);
@@ -212,70 +210,48 @@ int sensor_init()
 
 void sensor_detect()
 {/*{{{*/
-    int duration = 0;
+    int duration = 0, color = COLOR_BLACK;
     if (BTN_RELEASE == digitalRead(BTNPIN))
         return;
 
     time_t press_timer = time(0);
     while (BTN_ONPRESS == digitalRead(BTNPIN)) {
         duration = time(0) - press_timer;
+
         switch (duration) {
-            case 0: {
-                _change_color_to(COLOR_BLACK);
-                break;
-            }
+            case 0: color = COLOR_BLACK; break;
             case 1:
-            case 2: {
-                _change_color_to(COLOR_RED);
-                break;
-            }
+            case 2: color = COLOR_RED; break;
             case 3:
-            case 4: {
-                _change_color_to(COLOR_GREEN);
-                break;
-            }
+            case 4: color = COLOR_GREEN; break;
             case 5:
-            case 6: {
-                _change_color_to(COLOR_BLUE);
-                break;
-            }
+            case 6: color = COLOR_BLUE; break;
             case 7:
-            case 8: {
-                _change_color_to(COLOR_YELLOW);
-                break;
-            }
+            case 8: color = COLOR_YELLOW; break;
             case 9:
-            case 10: {
-                _change_color_to(COLOR_CYAN);
-                break;
-            }
+            case 10: color = COLOR_CYAN; break;
             case 11:
-            case 12: {
-                _change_color_to(COLOR_MAGENTA);
-                break;
-            }
-            default: {
-                _change_color_to(COLOR_WHITE);
-                break;
-            }
+            case 12: color = COLOR_MAGENTA; break;
+            default: color = COLOR_WHITE;
         }
+        _change_color_to(color);
         delay(10);
     }
-    switch (g_current_color) {
+    switch (color) {
         case COLOR_RED: {
-            _change_sensor_to(SENSOR_VIBRATSW);
+            _change_sensor_to(color, SENSOR_VIBRATSW);
             break;
         }
         case COLOR_GREEN: {
-            _change_sensor_to(SENSOR_PIR);
+            _change_sensor_to(color, SENSOR_PIR);
             break;
         }
         case COLOR_BLUE: {
-            _change_sensor_to(SENSOR_PHOTOELE);
+            _change_sensor_to(color, SENSOR_PHOTOELE);
             break;
         }
         default: {
-            _change_sensor_to(SENSOR_NONE);
+            _change_sensor_to(color, SENSOR_NONE);
             break;
         }
     }
