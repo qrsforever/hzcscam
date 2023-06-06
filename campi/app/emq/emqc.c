@@ -1,16 +1,42 @@
-#include "stdlib.h"
+/******************************************************************************
+* File:             emqc.c
+*
+* Author:
+* Created:          06/06/23
+* Description:
+*****************************************************************************/
+
 #include "string.h"
 #include "unistd.h"
 #include "MQTTClient.h"
 #include "emqc.h"
+#include <stdlib.h>
+#include <time.h>
+#include <syslog.h>
+
+#define MAX_MESSAGE_HANDLERS 20
 
 static MQTTClient s_mqttc = 0;
+
+struct MessageHandlers
+{
+    const char* topic;
+    void (*fp) (const char* topic, const char* payload);
+} s_messageHandlers[MAX_MESSAGE_HANDLERS];
 
 
 static int on_message(void *context, char *topic, int length, MQTTClient_message *message)
 {
     char *payload = (char*)message->payload;
-    printf("Received `%s` from `%s` topic \n", payload, topic);
+    syslog(LOG_DEBUG, "Received `%s` from `%s` topic \n", payload, topic);
+    // printf("Received `%s` from `%s` topic \n", payload, topic);
+    for (int i = 0; i < MAX_MESSAGE_HANDLERS; ++i) {
+        if (s_messageHandlers[i].topic != NULL && strcmp(s_messageHandlers[i].topic, topic) == 0) {
+            if (s_messageHandlers[i].fp != NULL) {
+                s_messageHandlers[i].fp(topic, payload);
+            }
+        }
+    }
     MQTTClient_freeMessage(&message);
     MQTTClient_free(topic);
     return 0;
@@ -27,10 +53,12 @@ int emqc_connect(const char* host, int port, const char* client_id, const char* 
     conn_opts.password = password;
     MQTTClient_setCallbacks(s_mqttc, NULL, NULL, on_message, NULL);
     if ((rc = MQTTClient_connect(s_mqttc, &conn_opts)) != MQTTCLIENT_SUCCESS) {
-        printf("Failed to connect, return code %d\n", rc);
+        syslog(LOG_ERR, "Failed to connect, return code %d\n", rc);
+        // printf("Failed to connect, return code %d\n", rc);
         exit(-1);
     } else {
-        printf("Connected to MQTT Broker!\n");
+        syslog(LOG_DEBUG, "Connected to MQTT Broker!\n");
+        // printf("Connected to MQTT Broker!\n");
     }
     return 0;
 }
@@ -45,18 +73,25 @@ int emqc_pub(const char* topic, const char* payload)
     MQTTClient_deliveryToken token;
     MQTTClient_publishMessage(s_mqttc, topic, &message, &token);
     MQTTClient_waitForCompletion(s_mqttc, token, 4000L);
-    printf("Send `%s` to topic `%s` \n", payload, topic);
+    syslog(LOG_DEBUG, "Send `%s` to topic `%s` \n", payload, topic);
+    // printf("Send `%s` to topic `%s` \n", payload, topic);
     return 0;
 }
 
-int emqc_sub(const char* topic, void *(cb)(const char*))
+int emqc_sub(const char* topic, void (*cb)(const char*, const char*))
 {
-    return 0;
-}
-
-void emqc_loop()
-{
-    while (1) {
-        MQTTClient_yield();
+    MQTTClient_subscribe(s_mqttc, topic, 0);
+    for (int i = 0; i < MAX_MESSAGE_HANDLERS; ++i) {
+        if (s_messageHandlers[i].topic == NULL) {
+            s_messageHandlers[i].topic = topic;
+            s_messageHandlers[i].fp = cb;
+            break;
+        }
     }
+    return 0;
+}
+
+void emqc_yield()
+{
+    MQTTClient_yield();
 }

@@ -1,0 +1,324 @@
+/******************************************************************************
+* File:             sensors.c
+*
+* Author:
+* Created:          06/06/23
+* Description:
+*****************************************************************************/
+
+#include <stdlib.h>
+#include <string.h>
+#include <wiringPi.h>
+#include <stdio.h>
+#include <time.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <pthread.h>
+#include <syslog.h>
+
+#include "emqc.h"
+
+#define BTNPIN   2
+#define TSKPIN   13
+
+#define REDLED   9
+#define BLUELED  8
+#define GREENLED 10
+
+#define BTN_ONPRESS 0
+#define BTN_RELEASE 1
+
+#define STATE_FILE   "campi/runtime/emq_sensor.state"
+#define SENSOR_TOPIC "campi/sensors"
+
+extern int sensor_init();
+extern void sensor_detect();
+
+enum {
+    COLOR_BLACK = 0,
+    COLOR_RED,
+    COLOR_GREEN,
+    COLOR_BLUE,
+    COLOR_YELLOW,
+    COLOR_CYAN,
+    COLOR_MAGENTA,
+    COLOR_WHITE
+};
+
+enum {
+    SENSOR_NONE = 0,
+    SENSOR_VIBRATSW,
+    SENSOR_PIR,
+    SENSOR_PHOTOELE,
+    SENSOR_MAGNETSW
+};
+
+static char SENSOR_NAMES[][16] = {
+    "none",
+    "vibratsw",
+    "pir",
+    "photoele",
+    "magnetsw",
+};
+
+static int _RGB[8][3] = {
+    {0, 0, 0},  // black
+    {1, 0, 0},
+    {0, 1, 0},
+    {0, 0, 1},
+    {1, 1, 0},  // yellow
+    {0, 1, 1},
+    {1, 0, 1},
+    {1, 1, 1},  // white
+};
+
+static int g_current_color = COLOR_BLACK;
+static int g_current_sensor = SENSOR_NONE;
+static pthread_t g_thread_id;
+static pthread_mutex_t g_mutex;
+
+void _emq_report(const char* payload)
+{
+    char buff[32];
+    sprintf(buff, "%s/%s", SENSOR_TOPIC, SENSOR_NAMES[g_current_sensor]);
+    if (payload == NULL)
+        emqc_pub(buff, "{}");
+    else
+        emqc_pub(buff, payload);
+}
+
+void _emq_on_message(const char* topic, const char* payload)
+{/*{{{*/
+    syslog(LOG_DEBUG, "receive [%s]: %s\n", topic, payload);
+}/*}}}*/
+
+static void _save_current_state()
+{/*{{{*/
+    int fd = open(STATE_FILE, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd < 0) {
+        syslog(LOG_ERR, "write file %s error\n", STATE_FILE);
+        exit(-1);
+    }
+    char buff[8] = { 0 };
+    sprintf(buff, "%d,%d", g_current_color, g_current_sensor);
+    int sz = write(fd, buff, strlen(buff));
+    syslog(LOG_DEBUG, "[%d] save state %d %d\n", sz, g_current_color, g_current_sensor);
+    close(fd);
+}/*}}}*/
+
+static void _load_current_state()
+{/*{{{*/
+    int fd = open(STATE_FILE, O_RDONLY | O_CREAT);
+    if (fd < 0) {
+        syslog(LOG_ERR, "read file %s error\n", STATE_FILE);
+        exit(-1);
+    }
+    char buff[8] = { 0 };
+    int sz =read(fd, buff, 8);
+    if (sz > 0) {
+        sscanf(buff, "%d,%d", &g_current_color, &g_current_sensor);
+        syslog(LOG_DEBUG, "[%d] load state %d %d\n", sz, g_current_color, g_current_sensor);
+    }
+    close(fd);
+}/*}}}*/
+
+static void _change_color_to(int c)
+{/*{{{*/
+    if (c != g_current_color) {
+        digitalWrite(REDLED   , _RGB[c][0]);
+        digitalWrite(GREENLED , _RGB[c][1]);
+        digitalWrite(BLUELED  , _RGB[c][2]);
+        g_current_color = c;
+    }
+}/*}}}*/
+
+static void _change_sensor_to(int s)
+{/*{{{*/
+    if (s != g_current_sensor) {
+        pthread_mutex_lock(&g_mutex);
+        g_current_sensor = s;
+        pthread_mutex_unlock(&g_mutex);
+        _save_current_state();
+    }
+}/*}}}*/
+
+static void _sensor_vibration_switch(int s)
+{/*{{{*/
+    syslog(LOG_DEBUG, "sensor vibrate switch\n");
+    pinMode(TSKPIN, INPUT);
+    const int threshold = 200; // ms
+    int value = 0, sumtimer = 0;
+    char payload[64] = { 0 };
+    while (g_current_sensor == s) {
+        value = digitalRead(TSKPIN);
+        if (1 == value) { // vibrate
+            sumtimer = 0;
+            _change_color_to(COLOR_BLACK);
+            do {
+                if (value == digitalRead(TSKPIN))
+                    sumtimer = 0;
+                else
+                    sumtimer += 20;
+                delay(20);
+            } while(g_current_sensor == s && sumtimer < threshold);
+            _change_color_to(g_current_color);
+            snprintf(payload, 63, "{\"threshold\": \"%d\"}", threshold);
+            _emq_report(payload);
+        }
+        delay(200);
+    }
+}/*}}}*/
+
+static void *_sensor_worker(void *arg)
+{/*{{{*/
+    while (1) {
+        pthread_mutex_lock(&g_mutex);
+        int s = g_current_sensor;
+        pthread_mutex_unlock(&g_mutex);
+        switch (s) {
+            case SENSOR_VIBRATSW:
+                _sensor_vibration_switch(s);
+                break;
+            case SENSOR_PIR:
+            case SENSOR_PHOTOELE:
+            case SENSOR_MAGNETSW:
+            default:
+                break;
+        }
+        delay(1000);
+    }
+    return 0;
+}/*}}}*/
+
+int sensor_init()
+{/*{{{*/
+    syslog(LOG_DEBUG, "sensor_init\n");
+    if(wiringPiSetup() == -1) {
+        syslog(LOG_ERR, "setup of wiringPi failed !\n");
+        return -1;
+    }
+
+    pinMode(BTNPIN, INPUT);
+    pinMode(REDLED, OUTPUT);
+    pinMode(BLUELED, OUTPUT);
+    pinMode(GREENLED, OUTPUT);
+
+    pthread_create(&g_thread_id, NULL, _sensor_worker, NULL);
+    _load_current_state();
+    _change_color_to(g_current_color);
+    emqc_sub("/campi/sensors/set", _emq_on_message);
+    return 0;
+}/*}}}*/
+
+void sensor_detect()
+{/*{{{*/
+    int duration = 0;
+    if (BTN_RELEASE == digitalRead(BTNPIN))
+        return;
+
+    time_t press_timer = time(0);
+    while (BTN_ONPRESS == digitalRead(BTNPIN)) {
+        duration = time(0) - press_timer;
+        switch (duration) {
+            case 0: {
+                _change_color_to(COLOR_BLACK);
+                break;
+            }
+            case 1:
+            case 2: {
+                _change_color_to(COLOR_RED);
+                break;
+            }
+            case 3:
+            case 4: {
+                _change_color_to(COLOR_GREEN);
+                break;
+            }
+            case 5:
+            case 6: {
+                _change_color_to(COLOR_BLUE);
+                break;
+            }
+            case 7:
+            case 8: {
+                _change_color_to(COLOR_YELLOW);
+                break;
+            }
+            case 9:
+            case 10: {
+                _change_color_to(COLOR_CYAN);
+                break;
+            }
+            case 11:
+            case 12: {
+                _change_color_to(COLOR_MAGENTA);
+                break;
+            }
+            default: {
+                _change_color_to(COLOR_WHITE);
+                break;
+            }
+        }
+        delay(10);
+    }
+    switch (g_current_color) {
+        case COLOR_RED: {
+            _change_sensor_to(SENSOR_VIBRATSW);
+            break;
+        }
+        case COLOR_GREEN: {
+            _change_sensor_to(SENSOR_PIR);
+            break;
+        }
+        case COLOR_BLUE: {
+            _change_sensor_to(SENSOR_PHOTOELE);
+            break;
+        }
+        default: {
+            _change_sensor_to(SENSOR_NONE);
+            break;
+        }
+    }
+    delay(200);
+}/*}}}*/
+
+// static void do_passive_infrared_detect(int task)
+// {
+//     fprintf(stderr, "do_passive_infrared_detect");
+//     pinMode(TSKPIN, INPUT);
+//     int count = 0;
+//     int current_state = 0, previous_state = -1; // 0: detected 1: no detected
+//     while (g_current_task == task) {
+//         current_state = digitalRead(TSKPIN);
+//         printf("%d\n", current_state);
+//         if (current_state != previous_state) {
+//             if (0 == current_state) {
+//                 // motion detect
+//                 switch_to(g_current_color);
+//             } else {
+//                 switch_to(black);
+//                 count ++;
+//                 printf("count = %d\n", count);
+//             }
+//             previous_state = current_state;
+//         }
+//         delay(200);
+//     }
+// }
+
+// static void do_photoelectric(int task)
+// {
+//     fprintf(stderr, "do_photoelectric");
+// 	pinMode(TSKPIN, INPUT);
+//     int count = 0;
+//     while (g_current_task == task) {
+//         if (0 == digitalRead(TSKPIN)) {
+//             switch_to(black);
+//             while (g_current_task == task && 0 == digitalRead(TSKPIN)) delay(200);
+//             switch_to(g_current_color);
+//             count++;
+//             printf("count = %d\n", count);
+//         }
+//         delay(200);
+//     }
+// }
