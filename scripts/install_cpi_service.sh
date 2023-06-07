@@ -1,7 +1,6 @@
 #!/bin/bash
 
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
-TOP_DIR=$(dirname $CUR_DIR)
 
 SERVICE=campi_cpi.service
 
@@ -9,7 +8,7 @@ USER=root
 ROOT_DIR=/campi
 
 BOARD=$(cat /etc/orangepi-release | grep BOARD= | cut -d= -f2)
-SRC_DIR=${TOP_DIR}/runtime
+SRC_DIR=${ROOT_DIR}/runtime
 DST_DIR=/etc/systemd/system/
 
 cat > ${SRC_DIR}/$SERVICE <<EOF

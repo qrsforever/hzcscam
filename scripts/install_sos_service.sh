@@ -1,7 +1,6 @@
 #!/bin/bash
 
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
-TOP_DIR=$(dirname $CUR_DIR)
 
 SERVICE=campi_sos.service
 
@@ -9,7 +8,7 @@ USER=root
 ROOT_DIR=/campi
 
 BOARD=$(cat /etc/orangepi-release | grep BOARD= | cut -d= -f2)
-SRC_DIR=${TOP_DIR}/runtime
+SRC_DIR=${ROOT_DIR}/runtime
 DST_DIR=/etc/systemd/system/
 
 cat > ${SRC_DIR}/$SERVICE <<EOF
@@ -23,8 +22,8 @@ cat > ${SRC_DIR}/$SERVICE <<EOF
     User=$USER
     Group=$USER
     UMask=0000
-    WorkingDirectory=$ROOT_DIR
-    ExecStart=$ROOT_DIR/board/${BOARD}/bin/sos_recovery.sh $ROOT_DIR
+    WorkingDirectory=${ROOT_DIR}
+    ExecStart=${ROOT_DIR}/board/${BOARD}/bin/sos_recovery.sh ${ROOT_DIR}
 
 [Install]
     WantedBy=multi-user.target

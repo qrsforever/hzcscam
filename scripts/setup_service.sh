@@ -6,9 +6,15 @@ FORCE_INSTALL=0
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 TOP_DIR=$(cd ${CUR_DIR}/..; pwd)
 
-source ${TOP_DIR}/_env
+rm -rf /campi
+ln -s ${TOP_DIR} /campi
+
+source /campi/_env
 
 mkdir -p /campi/runtime
+
+cp ${SYSROOT}/etc/nmwifi.json /campi/runtime
+cp ${SYSROOT}/etc/gst_rtmp.env /campi/runtime
 
 gst_bin=$(command -v gst-launch-1.0)
 if [[ x$gst_bin == 1 || ${FORCE_INSTALL} == 1 ]]
@@ -32,9 +38,5 @@ fi
 # install service
 for svc in ${CAMPI_ORDER_SVCS[@]}
 do
-    ${TOP_DIR}/scripts/install_${svc}_service.sh
+    /campi/scripts/install_${svc}_service.sh
 done
-
-
-rm -rf /campi
-ln -s ${TOP_DIR} /campi

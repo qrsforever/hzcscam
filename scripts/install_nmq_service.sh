@@ -1,7 +1,6 @@
 #!/bin/bash
 
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
-TOP_DIR=$(dirname $CUR_DIR)
 
 SERVICE=campi_nmq.service
 
@@ -9,7 +8,7 @@ USER=root
 ROOT_DIR=/campi
 
 BOARD=$(cat /etc/orangepi-release | grep BOARD= | cut -d= -f2)
-SRC_DIR=${TOP_DIR}/runtime
+SRC_DIR=${ROOT_DIR}/runtime
 DST_DIR=/etc/systemd/system/
 
 cat > ${SRC_DIR}/$SERVICE <<EOF
@@ -28,8 +27,8 @@ cat > ${SRC_DIR}/$SERVICE <<EOF
     WorkingDirectory=$ROOT_DIR
     Restart=always
     RestartSec=3
-    ExecStart=${TOP_DIR}/board/${BOARD}/bin/nanomq start
-    ExecStop=${TOP_DIR}/board/${BOARD}/bin/nanomq stop
+    ExecStart=${ROOT_DIR}/board/${BOARD}/bin/nanomq start
+    ExecStop=${ROOT_DIR}/board/${BOARD}/bin/nanomq stop
     TimeoutStartSec=3
     TimeoutStopSec=3
 

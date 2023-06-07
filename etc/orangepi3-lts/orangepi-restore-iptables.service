@@ -1,9 +1,0 @@
-[Unit]
-Description="Restore IP tables"
-[Timer]
-OnBootSec=20Sec
-[Service]
-Type=oneshot
-ExecStart=/sbin/iptables-restore /etc/iptables.ipv4.nat
-[Install]
-WantedBy=sysinit.target

@@ -75,7 +75,7 @@ PLAY_TEST="http://101.42.139.3:30808/players/rtc_player.html?vhost=${SRSOS_VHOST
 
 while (( 1 ))
 do
-    if [[ -e ${VIDEO_DVICE} ]]
+    if [[ -e ${VIDEO_DEVICE} ]]
     then
         if [[ x${RTMP_DOMAIN} != x ]]
         then
@@ -86,8 +86,8 @@ do
                 __echo_and_run gst-launch-1.0 ${GSTSRC} ${VIDEO_CONVERT} ${GSTSINK}
             fi
         fi
-    else
-        __echo_and_run gst-launch-1.0 ${GSTSRC} ${VIDEO_CONVERT} ${GSTSINK}
+    # else
+    #     __echo_and_run gst-launch-1.0 ${GSTSRC} ${VIDEO_CONVERT} ${GSTSINK}
     fi
     sleep 5
 done

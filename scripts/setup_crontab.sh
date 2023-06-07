@@ -1,20 +1,11 @@
 #!/bin/bash
 
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
-TOP_DIR=$(dirname $CUR_DIR)
 
 BOARD=$(cat /etc/orangepi-release | grep BOARD= | cut -d= -f2)
-BINDIR=${TOP_DIR}/board/${BOARD}/bin
+BINDIR=/campi/board/${BOARD}/bin
 
-CRONTAB_DIR=/campi/
-
-if [[ ! -d $TOP_DIR/runtime ]]
-then
-    mkdir -p $TOP_DIR/runtime
-    chmod 777 $TOP_DIR/runtime
-fi
-
-cat > $TOP_DIR/runtime/crontab <<EOF
+cat > /campi/runtime/crontab <<EOF
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
@@ -24,7 +15,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 47 6	* * 7	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )
 52 6	1 * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
 
-@reboot root test -x ${BINDIR}/sys_reboot.sh && ${BINDIR}/sys_reboot.sh ${TOP_DIR}
+@reboot root test -x ${BINDIR}/sys_reboot.sh && ${BINDIR}/sys_reboot.sh /campi
 EOF
 
-cp $TOP_DIR/runtime/crontab /etc/crontab
+cp /campi/runtime/crontab /etc/crontab

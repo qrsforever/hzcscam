@@ -1,6 +1,6 @@
 #!/bin/bash
 
-remote_hostnames=('orange')
+remote_hostnames=('orange', 'orange')
 remote_relative_path=('/campi' '/var/campi/archives/default')
 
 cd $(dirname $0)
