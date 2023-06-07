@@ -72,10 +72,12 @@ static int _RGB[8][3] = {
     {1, 1, 1},  // white
 };
 
-static int g_current_color = COLOR_RED;
-static int g_current_sensor = SENSOR_VIBRATSW;
 static pthread_t g_thread_id;
 static pthread_mutex_t g_mutex;
+static int g_current_color = COLOR_RED;
+static int g_current_sensor = SENSOR_VIBRATSW;
+static unsigned int g_repeat_count = 0;
+
 
 void _emq_report(const char* payload)
 {
@@ -159,8 +161,9 @@ static void _sensor_vibration_switch(int s)
                     sumtimer += 20;
                 delay(20);
             } while(g_current_sensor == s && sumtimer < threshold);
+            g_repeat_count += 1;
             _change_color_to(g_current_color);
-            snprintf(payload, 63, "{\"threshold\": %d}", threshold);
+            snprintf(payload, 63, "{\"threshold\": %d, \"count\": %d}", threshold, g_repeat_count);
             _emq_report(payload);
         }
         delay(200);
@@ -204,7 +207,7 @@ int sensor_init()
     pthread_create(&g_thread_id, NULL, _sensor_worker, NULL);
     _load_current_state();
     _change_color_to(g_current_color);
-    emqc_sub("/campi/sensors/set", _emq_on_message);
+    emqc_sub(SENSOR_TOPIC"/set", _emq_on_message);
     return 0;
 }/*}}}*/
 

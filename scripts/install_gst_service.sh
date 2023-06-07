@@ -24,7 +24,7 @@ cat > ${SRC_DIR}/$SERVICE <<EOF
     UMask=0000
     WorkingDirectory=${ROOT_DIR}
     Environment="PYTHONPATH=${ROOT_DIR}"
-    ExecStart=bash ${TOP_DIR}/bin/${BOARD}/gst_video_rtmp.sh
+    ExecStart=bash ${TOP_DIR}/board/${BOARD}/bin/gst_video_rtmp.sh
 
 [Install]
     WantedBy=multi-user.target

@@ -22,7 +22,7 @@ cat > ${SRC_DIR}/$SERVICE <<EOF
     Group=$USER
     UMask=0000
     WorkingDirectory=${ROOT_DIR}
-    ExecStart=bash ${TOP_DIR}/bin/${BOARD}/frpc_start.sh
+    ExecStart=bash ${TOP_DIR}/board/${BOARD}/bin/frpc_start.sh
 
 [Install]
     WantedBy=multi-user.target

@@ -24,7 +24,7 @@ cat > ${SRC_DIR}/$SERVICE <<EOF
     Group=$USER
     UMask=0000
     WorkingDirectory=$ROOT_DIR
-    ExecStart=$ROOT_DIR/bin/${BOARD}/sos_recovery.sh
+    ExecStart=$ROOT_DIR/board/${BOARD}/bin/sos_recovery.sh
 
 [Install]
     WantedBy=multi-user.target

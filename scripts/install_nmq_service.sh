@@ -28,8 +28,8 @@ cat > ${SRC_DIR}/$SERVICE <<EOF
     WorkingDirectory=$ROOT_DIR
     Restart=always
     RestartSec=3
-    ExecStart=${TOP_DIR}/bin/${BOARD}/nanomq start
-    ExecStop=${TOP_DIR}/bin/${BOARD}/nanomq stop
+    ExecStart=${TOP_DIR}/board/${BOARD}/bin/nanomq start
+    ExecStop=${TOP_DIR}/board/${BOARD}/bin/nanomq stop
     TimeoutStartSec=3
     TimeoutStopSec=3
 
