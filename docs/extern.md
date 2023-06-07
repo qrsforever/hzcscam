@@ -54,3 +54,11 @@ mkdir build; cd build
 cmake -DPAHO_WITH_SSL=FALSE -DPAHO_ENABLE_TESTING=FALSE -DCMAKE_PREFIX_PATH=/campi/board/orangepizero2 ../
 make package
 ```
+
+## cjson
+
+```
+mkdir build; cd build
+cmake ../-DENABLE_CJSON_TEST=Off -DENABLE_CJSON_UTILS=Off -DBUILD_SHARED_AND_STATIC_LIBS=Off -DCMAKE_INSTALL_PREFIX=/campi/board/orangepizero2/ ../
+
+```

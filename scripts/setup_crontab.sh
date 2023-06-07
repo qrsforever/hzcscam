@@ -2,7 +2,11 @@
 
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 TOP_DIR=$(dirname $CUR_DIR)
-CRONTAB_DIR=/campi/etc/crontab
+
+BOARD=$(cat /etc/orangepi-release | grep BOARD= | cut -d= -f2)
+BINDIR=${TOP_DIR}/board/${BOARD}/bin
+
+CRONTAB_DIR=/campi/
 
 if [[ ! -d $TOP_DIR/runtime ]]
 then
@@ -20,9 +24,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 47 6	* * 7	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )
 52 6	1 * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
 
-17 *	* * *	root    test -x $CRONTAB_DIR/jetrep.hourly && $CRONTAB_DIR/jetrep.hourly
-
-@reboot root test -x $CRONTAB_DIR/reboot && $CRONTAB_DIR/reboot
+@reboot root test -x ${BINDIR}/sys_reboot.sh && ${BINDIR}/sys_reboot.sh ${TOP_DIR}
 EOF
 
-$XRUN cp $TOP_DIR/runtime/crontab /etc/crontab
+cp $TOP_DIR/runtime/crontab /etc/crontab

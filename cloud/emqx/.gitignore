@@ -3,3 +3,4 @@ data/configs/vm.*.args
 data/**/**/*.LOG
 data/**/**/*.DCD
 data/**/**/*.DCL
+**/**/*emqx@127.0.0.1*

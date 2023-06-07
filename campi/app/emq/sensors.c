@@ -16,14 +16,16 @@
 #include <pthread.h>
 #include <syslog.h>
 
+#include "cjson/cJSON.h"
+
 #include "emqc.h"
 
-#define BTNPIN   2
-#define TSKPIN   6
+#define BTNPIN   2    // PC9
+#define TSKPIN   6    // PC11
 
-#define REDLED   5
-#define BLUELED  7
-#define GREENLED 8
+#define REDLED   5    // PC6
+#define BLUELED  7    // PC5
+#define GREENLED 8    // PC8
 
 #define BTN_ONPRESS 0
 #define BTN_RELEASE 1
@@ -77,21 +79,37 @@ static pthread_mutex_t g_mutex;
 static int g_current_color = COLOR_RED;
 static int g_current_sensor = SENSOR_VIBRATSW;
 static unsigned int g_repeat_count = 0;
+static unsigned int g_thresh_quiet = 200;
 
 
 void _emq_report(const char* payload)
 {
-    char buff[32];
-    sprintf(buff, "%s/%s", SENSOR_TOPIC, SENSOR_NAMES[g_current_sensor]);
-    if (payload == NULL)
-        emqc_pub(buff, "{}");
-    else
-        emqc_pub(buff, payload);
+    char topic[32];
+    sprintf(topic, "%s/%s", SENSOR_TOPIC, SENSOR_NAMES[g_current_sensor]);
+    if (payload == NULL) {
+        char data[64] = { 0 };
+        snprintf(data, 63, "{\"threshold\": %d, \"count\": %d}", g_thresh_quiet, g_repeat_count);
+        emqc_pub(topic, data);
+    } else {
+        emqc_pub(topic, payload);
+    }
 }
 
 void _emq_on_message(const char* topic, const char* payload)
 {/*{{{*/
     syslog(LOG_DEBUG, "receive [%s]: %s\n", topic, payload);
+    cJSON* cjson = cJSON_Parse(payload);
+    if (cjson == NULL) {
+        syslog(LOG_ERR, "cjson parse error!\n");
+        return;
+    }
+    cJSON* jcount = cJSON_GetObjectItem(cjson, "count");
+    if (cJSON_IsNumber(jcount))
+        g_repeat_count = jcount->valueint;
+    cJSON* jthres = cJSON_GetObjectItem(cjson, "threshold");
+    if (cJSON_IsNumber(jthres))
+        g_thresh_quiet = jthres->valueint;
+    cJSON_Delete(cjson);
 }/*}}}*/
 
 static void _save_current_state()
@@ -146,9 +164,7 @@ static void _sensor_vibration_switch(int s)
 {/*{{{*/
     syslog(LOG_DEBUG, "sensor vibrate switch\n");
     pinMode(TSKPIN, INPUT);
-    const int threshold = 200; // ms
     int value = 0, sumtimer = 0;
-    char payload[64] = { 0 };
     while (g_current_sensor == s) {
         value = digitalRead(TSKPIN);
         if (1 == value) { // vibrate
@@ -160,11 +176,10 @@ static void _sensor_vibration_switch(int s)
                 else
                     sumtimer += 20;
                 delay(20);
-            } while(g_current_sensor == s && sumtimer < threshold);
+            } while(g_current_sensor == s && sumtimer < g_thresh_quiet);
             g_repeat_count += 1;
             _change_color_to(g_current_color);
-            snprintf(payload, 63, "{\"threshold\": %d, \"count\": %d}", threshold, g_repeat_count);
-            _emq_report(payload);
+            _emq_report(NULL);
         }
         delay(200);
     }

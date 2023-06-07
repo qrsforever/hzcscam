@@ -28,8 +28,8 @@ struct MessageHandlers
 static int on_message(void *context, char *topic, int length, MQTTClient_message *message)
 {
     char *payload = (char*)message->payload;
-    syslog(LOG_DEBUG, "Received `%s` from `%s` topic \n", payload, topic);
-    // printf("Received `%s` from `%s` topic \n", payload, topic);
+    // syslog(LOG_DEBUG, "Received `%s` from `%s` topic \n", payload, topic);
+    printf("Received `%s` from `%s` topic \n", payload, topic);
     for (int i = 0; i < MAX_MESSAGE_HANDLERS; ++i) {
         if (s_messageHandlers[i].topic != NULL && strcmp(s_messageHandlers[i].topic, topic) == 0) {
             if (s_messageHandlers[i].fp != NULL) {
@@ -37,8 +37,8 @@ static int on_message(void *context, char *topic, int length, MQTTClient_message
             }
         }
     }
-    MQTTClient_freeMessage(&message);
-    MQTTClient_free(topic);
+    // MQTTClient_freeMessage(&message);
+    // MQTTClient_free(topic);
     return 0;
 }
 

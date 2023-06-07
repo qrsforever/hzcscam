@@ -2,4 +2,9 @@
 
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 
-export PYTHONPATH=${CUR_DIR}:$PYTHONPATH
+BOARD=$(cat /etc/orangepi-release | grep BOARD= | cut -d= -f2)
+SYSROOT=${CUR_DIR}/board/${BOARD}
+CAMPI_ORDER_SVCS=("nmq" "cpi" "sys" "api" "gst")
+LD_LIBRARY_PATH=${SYSROOT}/lib:${LD_LIBRARY_PATH}
+# PATH=${SYSROOT}/bin:${PATH}
+PYTHONPATH=${CUR_DIR}:$PYTHONPATH
