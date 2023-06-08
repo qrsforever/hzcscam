@@ -26,6 +26,9 @@ class tUsbDisk:
     MOUNTED = '/usbdisk/mounted'
     UMOUNTED = '/usbdisk/umounted'
 
+class TCloud:
+    ALL = '/cloud/#'
+    OTA = '/cloud/ota'
 
 class tLogger:
     ALL = '/logger/#'
