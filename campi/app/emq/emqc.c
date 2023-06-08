@@ -37,9 +37,9 @@ static int on_message(void *context, char *topic, int length, MQTTClient_message
             }
         }
     }
-    // MQTTClient_freeMessage(&message);
-    // MQTTClient_free(topic);
-    return 0;
+    MQTTClient_freeMessage(&message);
+    MQTTClient_free(topic);
+    return 1;
 }
 
 int emqc_connect(const char* host, int port, const char* client_id, const char* username, const char* password)

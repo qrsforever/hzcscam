@@ -2,13 +2,22 @@
 
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 
+source /campi/_env
+
+__echo_and_run() {
+    echo "$*" >> /tmp/gst_rtmp.log
+    /bin/bash -c "$*"
+}
+
 # v4l2-ctl -d /dev/video0 --all
 # gst-launch-1.0 v4l2src device=/dev/video0 io-mode=4 ! videoscale  ! video/x-raw, width=640, height=480, framerate=15/1 ! videoconvert  ! clockoverlay time-format="%H:%M:%S" halignment=right font-desc="normal 12" ! textoverlay text='12456789' valignment=top halignment=left font-desc="normal 12" ! autovideosink
 
-if [[ -e /campi/runtime/gst_rtmp.env ]]
+if [[ ! -e /campi/runtime/gst_rtmp.env ]]
 then
-    source /campi/runtime/gst_rtmp.env
+    cp ${SYSROOT}/etc/gst_rtmp.env /campi/runtime/campi_gst_rtmp.env
 fi
+
+source /campi/runtime/gst_rtmp.env
 
 INTERFACE=${INTERFACE:-eth0}
 ADDRESS=$(cat /sys/class/net/${INTERFACE}/address | sed 's/://g')
@@ -66,11 +75,6 @@ then
     VIDEO_CONVERT="${VIDEO_CONVERT} textoverlay text=\"${TEXT_TITLE}\" halignment=${TEXT_HALIGNMENT} valignment=${TEXT_VALIGNMENT} font-desc=\"normal ${OVERLAY_FONT}\" !"
 fi
 
-__echo_and_run() {
-    echo "$*"
-    /bin/bash -c "$*"
-}
-
 PLAY_TEST="http://101.42.139.3:30808/players/rtc_player.html?vhost=${SRSOS_VHOST}&ip=192.168.152.185&api=31985&app=live&stream=${ADDRESS}&autostart=true"
 
 while (( 1 ))
@@ -82,12 +86,15 @@ do
             netok=$(ping -c 1 -W 2 ${RTMP_DOMAIN} 2>/dev/null | grep -o "received")
             if [[ x${netok} != x ]]
             then
-                echo ${PLAY_TEST}
+                echo ${PLAY_TEST} > /tmp/campi_gst_rtmp.log
                 __echo_and_run gst-launch-1.0 ${GSTSRC} ${VIDEO_CONVERT} ${GSTSINK}
+            else
+                echo "ping ${RTMP_DOMAIN} not received!"
             fi
         fi
-    # else
-    #     __echo_and_run gst-launch-1.0 ${GSTSRC} ${VIDEO_CONVERT} ${GSTSINK}
+    else
+        echo "camera [${VIDEO_DEVICE}] is not exist!"
+        # __echo_and_run gst-launch-1.0 ${GSTSRC} ${VIDEO_CONVERT} ${GSTSINK}
     fi
     sleep 5
 done

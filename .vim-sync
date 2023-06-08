@@ -1,12 +1,13 @@
 #!/bin/bash
 
-remote_hostnames=('orange', 'orange')
+remote_hostnames=('orange' 'orange')
 remote_relative_path=('/campi' '/var/campi/archives/default')
 
 cd $(dirname $0)
 
 for (( i=0; i<${#remote_hostnames[@]}; i++ ))
 do
+    echo "${remote_relative_path[$i]}" >> /tmp/vim-sync.info
     rsync -azcul --exclude ".git" --relative "$2/$3" "${remote_hostnames[$i]}:${remote_relative_path[$i]}" 2>> /tmp/vim-sync.err
 done
 

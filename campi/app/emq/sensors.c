@@ -24,8 +24,8 @@
 #define TSKPIN   6    // PC11
 
 #define REDLED   5    // PC6
-#define BLUELED  7    // PC5
-#define GREENLED 8    // PC8
+#define GREENLED 7    // PC5
+#define BLUELED  8    // PC8
 
 #define BTN_ONPRESS 0
 #define BTN_RELEASE 1
@@ -88,9 +88,10 @@ void _emq_report(const char* payload)
     sprintf(topic, "%s/%s", SENSOR_TOPIC, SENSOR_NAMES[g_current_sensor]);
     if (payload == NULL) {
         char data[64] = { 0 };
-        snprintf(data, 63, "{\"threshold\": %d, \"count\": %d}", g_thresh_quiet, g_repeat_count);
+        snprintf(data, 63, "{\"count\": %d}", g_repeat_count);
         emqc_pub(topic, data);
     } else {
+        syslog(LOG_DEBUG, "sub [%s]: %s\n", topic, payload);
         emqc_pub(topic, payload);
     }
 }
@@ -155,6 +156,7 @@ static void _change_sensor_to(int c, int s)
         pthread_mutex_lock(&g_mutex);
         g_current_color = c;
         g_current_sensor = s;
+        g_repeat_count = 0;
         pthread_mutex_unlock(&g_mutex);
         _save_current_state();
     }
@@ -165,6 +167,7 @@ static void _sensor_vibration_switch(int s)
     syslog(LOG_DEBUG, "sensor vibrate switch\n");
     pinMode(TSKPIN, INPUT);
     int value = 0, sumtimer = 0;
+    char payload[64] = { 0 };
     while (g_current_sensor == s) {
         value = digitalRead(TSKPIN);
         if (1 == value) { // vibrate
@@ -179,11 +182,54 @@ static void _sensor_vibration_switch(int s)
             } while(g_current_sensor == s && sumtimer < g_thresh_quiet);
             g_repeat_count += 1;
             _change_color_to(g_current_color);
-            _emq_report(NULL);
+            snprintf(payload, 63, "{\"threshold\": %d, \"count\": %d}", g_thresh_quiet, g_repeat_count);
+            _emq_report(payload);
         }
         delay(200);
     }
 }/*}}}*/
+
+static void _sensor_passive_infrared(int s)/*{{{*/
+{
+    syslog(LOG_DEBUG, "sensor passive infrared detection\n");
+    pinMode(TSKPIN, INPUT);
+    int current_state = 0, previous_state = -1; // 1: detected 0: no detected
+    time_t detect_time = time(0);
+    char payload[64] = { 0 };
+    while (g_current_sensor == s) {
+        current_state = digitalRead(TSKPIN);
+        if (current_state != previous_state) {
+            if (1 == current_state) {
+                // motion detect
+                detect_time = time(0);
+                _change_color_to(g_current_color);
+            } else {
+                g_repeat_count += 1;
+                _change_color_to(COLOR_BLACK);
+                snprintf(payload, 63, "{\"count\": %d, \"stay_time\": %ld}", g_repeat_count, time(0) - detect_time);
+                _emq_report(payload);
+            }
+            previous_state = current_state;
+        }
+        delay(500);
+    }
+}
+/*}}}*/
+static void _sensor_photoelectric_or_magnet(int s)
+{
+    syslog(LOG_DEBUG, "sensor photo electirc or magnat\n");
+	pinMode(TSKPIN, INPUT);
+    while (g_current_sensor == s) {
+        if (0 == digitalRead(TSKPIN)) {
+            _change_color_to(COLOR_BLACK);
+            while (g_current_sensor == s && 0 == digitalRead(TSKPIN)) delay(200);
+            _change_color_to(g_current_color);
+            g_repeat_count++;
+            _emq_report(NULL);
+        }
+        delay(200);
+    }
+}
 
 static void *_sensor_worker(void *arg)
 {/*{{{*/
@@ -196,8 +242,12 @@ static void *_sensor_worker(void *arg)
                 _sensor_vibration_switch(s);
                 break;
             case SENSOR_PIR:
+                _sensor_passive_infrared(s);
+                break;
             case SENSOR_PHOTOELE:
             case SENSOR_MAGNETSW:
+                _sensor_photoelectric_or_magnet(s);
+                break;
             default:
                 break;
         }
@@ -268,6 +318,10 @@ void sensor_detect()
             _change_sensor_to(color, SENSOR_PHOTOELE);
             break;
         }
+        case COLOR_YELLOW: {
+            _change_sensor_to(color, SENSOR_MAGNETSW);
+            break;
+        }
         default: {
             _change_sensor_to(color, SENSOR_NONE);
             break;
@@ -275,44 +329,3 @@ void sensor_detect()
     }
     delay(200);
 }/*}}}*/
-
-// static void do_passive_infrared_detect(int task)
-// {
-//     fprintf(stderr, "do_passive_infrared_detect");
-//     pinMode(TSKPIN, INPUT);
-//     int count = 0;
-//     int current_state = 0, previous_state = -1; // 0: detected 1: no detected
-//     while (g_current_task == task) {
-//         current_state = digitalRead(TSKPIN);
-//         printf("%d\n", current_state);
-//         if (current_state != previous_state) {
-//             if (0 == current_state) {
-//                 // motion detect
-//                 switch_to(g_current_color);
-//             } else {
-//                 switch_to(black);
-//                 count ++;
-//                 printf("count = %d\n", count);
-//             }
-//             previous_state = current_state;
-//         }
-//         delay(200);
-//     }
-// }
-
-// static void do_photoelectric(int task)
-// {
-//     fprintf(stderr, "do_photoelectric");
-// 	pinMode(TSKPIN, INPUT);
-//     int count = 0;
-//     while (g_current_task == task) {
-//         if (0 == digitalRead(TSKPIN)) {
-//             switch_to(black);
-//             while (g_current_task == task && 0 == digitalRead(TSKPIN)) delay(200);
-//             switch_to(g_current_color);
-//             count++;
-//             printf("count = %d\n", count);
-//         }
-//         delay(200);
-//     }
-// }

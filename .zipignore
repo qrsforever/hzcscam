@@ -1,0 +1,11 @@
+*.git*
+*.flake8
+*.zipignore
+*.clangd
+*.vim-sync
+*.ycm_extra_conf_py.py
+*docs*
+*test*
+*cloud*
+*extern*
+*__pycache__*

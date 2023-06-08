@@ -2,7 +2,7 @@
 
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 
-SERVICE=campi_gst.service
+SERVICE=campi_emq.service
 
 USER=root
 ROOT_DIR=/campi
@@ -13,17 +13,23 @@ DST_DIR=/etc/systemd/system/
 
 cat > ${SRC_DIR}/$SERVICE <<EOF
 [Unit]
-    Description=System Gstreamer
+    Description=NanoMQ
     Documentation=http://campi.hzcsai.com
+    StartLimitIntervalSec=120
+    StartLimitBurst=5
+    OnFailure=campi_sos.service
 
 [Service]
     Type=simple
     User=$USER
     Group=$USER
     UMask=0000
-    WorkingDirectory=${ROOT_DIR}
-    Environment="PYTHONPATH=${ROOT_DIR}"
-    ExecStart=bash ${ROOT_DIR}/board/${BOARD}/bin/rtmp_start.sh
+    WorkingDirectory=$ROOT_DIR
+    Restart=always
+    RestartSec=3
+    ExecStart=${ROOT_DIR}/board/${BOARD}/bin/emqx_start.sh
+    TimeoutStartSec=3
+    TimeoutStopSec=3
 
 [Install]
     WantedBy=multi-user.target
