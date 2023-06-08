@@ -29,13 +29,13 @@ cat > ${SRC_DIR}/$SERVICE <<EOF
     WantedBy=multi-user.target
 EOF
 
-systemctl stop $SERVICE 2>&1 /dev/null
+systemctl stop $SERVICE 2>&1 > /dev/null
 cp ${SRC_DIR}/$SERVICE $DST_DIR
 systemctl daemon-reload
 # systemctl enable $SERVICE
 systemctl restart $SERVICE
 systemctl status $SERVICE
-journalctl -u $SERVICE --no-pager -n 10
+# journalctl -u $SERVICE --no-pager -n 10
 echo "-------------------------------"
 echo ""
 echo "journalctl -u $SERVICE -f -n 100"

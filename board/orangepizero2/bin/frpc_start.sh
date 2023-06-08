@@ -2,6 +2,8 @@
 
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 
+source /campi/_env
+
 __echo_and_run() {
     echo "$*"
     /bin/bash -c "$*"
@@ -9,11 +11,9 @@ __echo_and_run() {
 
 TEST_DOMAIN="www.baidu.com"
 
-if [ ! -e /etc/frp/frpc.ini ]
+if [[ ! -e /campi/runtime/frpc.ini ]]
 then
-    mkdir -p /etc/frp/
-    __echo_and_run cp /campi/extern/frp/arm64_c/frpc /usr/bin/frpc
-    __echo_and_run cp /campi/extern/frp/arm64_c/frpc.ini /etc/frp/frpc.ini
+    cp ${SYSROOT}/etc/frpc.ini /campi/runtime/frpc.ini
 fi
 
 while (( 1 ))
@@ -23,7 +23,7 @@ do
         netok=$(ping -c 1 -W 2 ${TEST_DOMAIN} 2>/dev/null | grep -o "received")
         if [[ x${netok} != x ]]
         then
-            __echo_and_run /usr/bin/frpc -c /etc/frp/frpc.ini
+            __echo_and_run ${SYSROOT}/bin/frpc -c /campi/runtime/frpc.ini
         fi
     fi
     sleep 10

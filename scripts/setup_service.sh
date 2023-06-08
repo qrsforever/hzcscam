@@ -17,7 +17,7 @@ cp ${SYSROOT}/etc/nmwifi.json /campi/runtime
 cp ${SYSROOT}/etc/gst_rtmp.env /campi/runtime
 
 gst_bin=$(command -v gst-launch-1.0)
-if [[ x$gst_bin == 1 || ${FORCE_INSTALL} == 1 ]]
+if [[ x$gst_bin == x || ${FORCE_INSTALL} == 1 ]]
 then
     systemctl stop systemd-resolved
     systemctl disable systemd-resolved
@@ -29,10 +29,10 @@ then
     apt install -y gstreamer1.0-tools gstreamer1.0-alsa \
          gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
          gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
-         gstreamer1.0-libav
+         gstreamer1.0-libav gstreamer1.0-x
     apt install -y python3-gst-1.0
 
-    pip3 install pyudev paho-mqtt quart PyEmail
+    pip3 install psutil pyudev paho-mqtt quart PyEmail
 fi
 
 # install service

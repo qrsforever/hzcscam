@@ -96,5 +96,5 @@ do
         echo "camera [${VIDEO_DEVICE}] is not exist!"
         # __echo_and_run gst-launch-1.0 ${GSTSRC} ${VIDEO_CONVERT} ${GSTSINK}
     fi
-    sleep 5
+    sleep 10
 done
