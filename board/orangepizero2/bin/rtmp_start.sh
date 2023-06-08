@@ -5,7 +5,7 @@ CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 source /campi/_env
 
 __echo_and_run() {
-    echo "$*" >> /tmp/gst_rtmp.log
+    echo "$*" >> /tmp/campi_gst_rtmp.log
     /bin/bash -c "$*"
 }
 
@@ -14,7 +14,7 @@ __echo_and_run() {
 
 if [[ ! -e /campi/runtime/gst_rtmp.env ]]
 then
-    cp ${SYSROOT}/etc/gst_rtmp.env /campi/runtime/campi_gst_rtmp.env
+    cp ${SYSROOT}/etc/gst_rtmp.env /campi/runtime/gst_rtmp.env
 fi
 
 source /campi/runtime/gst_rtmp.env
