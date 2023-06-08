@@ -10,7 +10,7 @@ __run_and_log() {
     /bin/bash -c "$*" >> /tmp/campi_reboot.log
 }
 
-if [[ ! -e ${TOP_DIR}/runtime/nmwifi.json]]
+if [[ ! -e ${TOP_DIR}/runtime/nmwifi.json ]]
 then
     mkdir -p ${TOP_DIR}/runtime
     cp ${SYSROOT}/etc/nmwifi.json ${TOP_DIR}/runtime/nmwifi.json
