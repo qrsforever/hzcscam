@@ -11,7 +11,7 @@
 import json
 from quart import Blueprint, request, Response
 from quart import current_app as app
-from campi.topics import tApis
+from campi.topics import TApis
 
 api_network = Blueprint("network", __name__)
 
@@ -28,6 +28,6 @@ async def _set_wifi():
 
     jdata = json.dumps({'wifissid':wifissid, 'password': password})
     app.mqtt.logi(jdata)
-    app.mqtt.publish(tApis.SET_WIFI, jdata)
+    app.mqtt.publish(TApis.SET_WIFI, jdata)
 
     return Response(status=200)

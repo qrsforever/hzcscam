@@ -11,7 +11,7 @@
 import os
 import subprocess
 from . import EventDetector
-from campi.topics import tUsbDisk
+from campi.topics import TUsbDisk
 
 
 class BlkEventDetector(EventDetector):
@@ -27,14 +27,14 @@ class BlkEventDetector(EventDetector):
         try:
             subprocess.call(f'mount {devnode} {mntdir}', shell=True)
             if os.path.ismount(mntdir):
-                self.mqtt.publish(tUsbDisk.MOUNTED, "test")
+                self.mqtt.publish(TUsbDisk.MOUNTED, "test")
         except Exception:
             pass
 
     def on_umount(self, devnode, mntdir):  # pyright:ignore
         if os.path.ismount(mntdir):
             subprocess.call(f'umount -l {mntdir}', shell=True)
-            self.mqtt.publish(tUsbDisk.UMOUNTED, "test")
+            self.mqtt.publish(TUsbDisk.UMOUNTED, "test")
 
     async def handle_event(self, device):
         if device.device_type == 'partition':

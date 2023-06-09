@@ -10,7 +10,7 @@
 import asyncio
 import random
 from . import EventDetector
-from campi.topics import tNetwork
+from campi.topics import TNetwork
 
 
 async def _dnsnet_ping(ip, port=53):
@@ -39,7 +39,7 @@ class NetEventDetector(EventDetector):
                 self.mqtt.logi(f'ping interval: {i} {ip}: {self.ping_interval}')
                 if not self.connected:
                     self.connected = True
-                    self.mqtt.publish(tNetwork.CONNECTED, "connection")
+                    self.mqtt.publish(TNetwork.CONNECTED, "connection")
                 self.ping_interval = min(self.ping_max_interval, self.ping_interval * 2)
                 return
             except ConnectionRefusedError as cerr:
@@ -52,7 +52,7 @@ class NetEventDetector(EventDetector):
 
         self.connected = False
         self.ping_interval = 1
-        self.mqtt.publish(tNetwork.DISCONNECTED, "disconnection")
+        self.mqtt.publish(TNetwork.DISCONNECTED, "disconnection")
 
     async def handle_event(self, device):
         pass

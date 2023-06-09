@@ -272,7 +272,7 @@ int sensor_init()
     pthread_create(&g_thread_id, NULL, _sensor_worker, NULL);
     _load_current_state();
     _change_color_to(g_current_color);
-    emqc_sub(SENSOR_TOPIC"/set", _emq_on_message);
+    emqc_sub("cloud/sensors/set", _emq_on_message);
     return 0;
 }/*}}}*/
 

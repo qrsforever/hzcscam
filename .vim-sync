@@ -5,6 +5,8 @@ remote_relative_path=('/campi' '/var/campi/archives/default')
 
 cd $(dirname $0)
 
+date > /tmp/vim-sync.info
+
 for (( i=0; i<${#remote_hostnames[@]}; i++ ))
 do
     echo "${remote_relative_path[$i]}" >> /tmp/vim-sync.info

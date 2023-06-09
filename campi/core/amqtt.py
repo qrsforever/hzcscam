@@ -12,7 +12,7 @@ import sys
 import os
 import asyncio
 import paho.mqtt.client as paho_mqtt
-from campi.topics import tLogger as LOG
+from campi.topics import TLogger as LOG
 from campi.constants import MAIN_PID
 
 

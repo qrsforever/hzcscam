@@ -14,10 +14,12 @@ sys.path.append('/campi')
 import asyncio
 from campi.app.cpi.sys import SystemMessageHandler
 from campi.app.cpi.log import LoggerMessageHandler
+from campi.app.cpi.ota import OtaMessageHandler
 
 async def main():
     sys_h = SystemMessageHandler()  # noqa
     log_h = LoggerMessageHandler()  # noqa
+    ota_h = OtaMessageHandler()     # noqa
 
     while True:
         r = await sys_h.queue.get()

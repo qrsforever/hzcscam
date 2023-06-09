@@ -16,7 +16,8 @@
 
 #define MAX_MESSAGE_HANDLERS 20
 
-static MQTTClient s_mqttc = 0;
+static MQTTClient r_client = 0;
+static MQTTClient l_client = 0;
 
 struct MessageHandlers
 {
@@ -26,41 +27,23 @@ struct MessageHandlers
 
 static int on_message(void *context, char *topic, int length, MQTTClient_message *message);
 
-static int _emqc_connect(MQTTClient *client, const char* host, int port, const char* client_id, const char* username, const char* password)
+static int _emqc_connect(MQTTClient client, const char* username, const char* password)
 {
-    int rc = 0;
-    char address[64] = {0};
-    snprintf(address, 63, "tcp://%s:%d", host, port);
-    MQTTClient_create(client, address, client_id, 0, NULL);
+    int rc = -1;
     MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
     conn_opts.username = username;
     conn_opts.password = password;
-    MQTTClient_setCallbacks(*client, NULL, NULL, on_message, NULL);
-    if ((rc = MQTTClient_connect(*client, &conn_opts)) != MQTTCLIENT_SUCCESS) {
-        syslog(LOG_ERR, "Failed to connect [%s:%d], return code %d\n", host, port, rc);
-        return -1;
-    }
-    syslog(LOG_DEBUG, "Connected to MQTT Broker!\n");
-    return 0;
+    return MQTTClient_connect(client, &conn_opts);
 }
 
 static int on_message(void *context, char *topic, int length, MQTTClient_message *message)
 {
     char *payload = (char*)message->payload;
     syslog(LOG_DEBUG, "Received `%s` from `%s` topic \n", payload, topic);
-    if (strncmp(topic, "/cloud/", 7) == 0) {
-        // MQTTClient client;
-        // int rc = _emqc_connect(&client, "127.0.0.1", 1883, "emqc", "emqx", "public");
-        // if (rc < 0) {
-        //     syslog(LOG_ERR, "emqc connect local emqx [%d] fail!\n", rc);
-        // } else {
-        //     MQTTClient_message message = MQTTClient_message_initializer;
-        //     message.payload = (void*)payload;
-        //     message.payloadlen = strlen(payload);
-        //     MQTTClient_deliveryToken token;
-        //     MQTTClient_publishMessage(client, topic, &message, &token);
-        //     MQTTClient_waitForCompletion(client, token, 2000L);
-        // }
+    if (strncmp(topic, "cloud/service/", 14) == 0) {
+        MQTTClient_deliveryToken token;
+        MQTTClient_publishMessage(l_client, topic, message, &token);
+        MQTTClient_waitForCompletion(l_client, token, 2000L);
     } else {
         for (int i = 0; i < MAX_MESSAGE_HANDLERS; ++i) {
             if (s_messageHandlers[i].topic != NULL && strcmp(s_messageHandlers[i].topic, topic) == 0) {
@@ -83,8 +66,8 @@ int emqc_pub(const char* topic, const char* payload)
     message.qos = 0;
     message.retained = 0;
     MQTTClient_deliveryToken token;
-    MQTTClient_publishMessage(s_mqttc, topic, &message, &token);
-    MQTTClient_waitForCompletion(s_mqttc, token, 4000L);
+    MQTTClient_publishMessage(r_client, topic, &message, &token);
+    MQTTClient_waitForCompletion(r_client, token, 4000L);
     syslog(LOG_DEBUG, "Send `%s` to topic `%s` \n", payload, topic);
     // printf("Send `%s` to topic `%s` \n", payload, topic);
     return 0;
@@ -92,7 +75,7 @@ int emqc_pub(const char* topic, const char* payload)
 
 int emqc_sub(const char* topic, void (*cb)(const char*, const char*))
 {
-    MQTTClient_subscribe(s_mqttc, topic, 0);
+    MQTTClient_subscribe(r_client, topic, 0);
     for (int i = 0; i < MAX_MESSAGE_HANDLERS; ++i) {
         if (s_messageHandlers[i].topic == NULL) {
             s_messageHandlers[i].topic = topic;
@@ -105,10 +88,27 @@ int emqc_sub(const char* topic, void (*cb)(const char*, const char*))
 
 int emqc_init(const char* host, int port, const char* client_id, const char* username, const char* password)
 {
-    int rc = _emqc_connect(&s_mqttc, host, port, client_id, username, password);
-    if (rc < 0)
+    int rc = 0;
+
+    MQTTClient_create(&l_client, "tcp://127.0.0.1:1883", "campi_emq", 0, NULL);
+    rc = _emqc_connect(l_client, "eqmx", "public");
+    if (rc != MQTTCLIENT_SUCCESS) {
+        syslog(LOG_ERR, "Failed to connect local emqx, return code %d\n", rc);
         exit(-1);
-    MQTTClient_subscribe(s_mqttc, "/cloud/#", 0);
+    }
+    syslog(LOG_DEBUG, "Connected to Local MQTT Broker!\n");
+
+    char address[64] = {0};
+    snprintf(address, 63, "tcp://%s:%d", host, port);
+    MQTTClient_create(&r_client, address, client_id, 0, NULL);
+    MQTTClient_setCallbacks(r_client, NULL, NULL, on_message, NULL);
+    rc = _emqc_connect(r_client, username, password);
+    if (rc != MQTTCLIENT_SUCCESS) {
+        syslog(LOG_ERR, "Failed to connect [%s:%d], return code %d\n", host, port, rc);
+        exit(-1);
+    }
+    syslog(LOG_DEBUG, "Connected to Cloud MQTT Broker!\n");
+    MQTTClient_subscribe(r_client, "cloud/service/#", 0);
     return 0;
 }
 

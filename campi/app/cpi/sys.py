@@ -15,22 +15,22 @@ import os
 
 from . import MessageHandler
 from campi.topics import (
-        tNetwork,
-        tUsbDisk,
-        tSystem,
-        tApis)
+    TNetwork,
+    TUsbDisk,
+    TSystem,
+    TApis)
 
 from campi.constants import (
-        SCRIPT_OF_SET_WIFI,
-        SCRIPT_OF_START_AP,
-        SCRIPT_OF_STOP_AP,
-        WIFI_NM_CONF)
+    SCRIPT_OF_SET_WIFI,
+    SCRIPT_OF_START_AP,
+    SCRIPT_OF_STOP_AP,
+    WIFI_NM_CONF)
 
 from campi.utils.net import (
-        util_get_mac,
-        util_get_lanip,
-        util_get_netip,
-        util_send_mail)
+    util_get_mac,
+    util_get_lanip,
+    util_get_netip,
+    util_send_mail)
 
 from campi.utils.shell import util_get_uptime
 
@@ -44,10 +44,10 @@ WIFIAP_STOPING = 2
 class SystemMessageHandler(MessageHandler):
     def __init__(self):
         super().__init__([
-            tNetwork.ALL,
-            tUsbDisk.ALL,
-            tSystem.SHUTDOWN,
-            tApis.SET_WIFI,
+            TNetwork.ALL,
+            TUsbDisk.ALL,
+            TSystem.SHUTDOWN,
+            TApis.SET_WIFI,
         ])
         self.wifiap_state = WIFIAP_NOSTATE
         self.network_connected = False
@@ -135,14 +135,14 @@ class SystemMessageHandler(MessageHandler):
     def handle_message(self, topic, message):
         self.logger.info(f'{topic} {message}')
 
-        if topic == tSystem.SHUTDOWN:
+        if topic == TSystem.SHUTDOWN:
             self.send_message('q')
 
-        if topic == tNetwork.DISCONNECTED:
+        if topic == TNetwork.DISCONNECTED:
             return self.on_network_disconnect(message)
 
-        if topic == tNetwork.CONNECTED:
+        if topic == TNetwork.CONNECTED:
             return self.on_network_connected(message)
 
-        if topic == tApis.SET_WIFI:
+        if topic == TApis.SET_WIFI:
             return self.on_network_setwifi(message)

@@ -14,7 +14,7 @@ from pyudev import Context, Monitor
 from campi.core.atask import AsyncTask
 from campi.core.amqtt import AsyncMqtt
 
-from campi.topics import tSystem
+from campi.topics import TSystem
 
 from campi.app.sys.usb import UsbEventDetector
 from campi.app.sys.blk import BlkEventDetector
@@ -29,7 +29,7 @@ class SystemEventMonitor(AsyncTask):
         self.loop = loop
         self.mqtt = AsyncMqtt('SystemEventMonitor', loop=loop)
         self.mqtt.connect_sync()
-        self.mqtt.subscribe([tSystem.SHUTDOWN], self.handle_mqtt_event)
+        self.mqtt.subscribe([TSystem.SHUTDOWN], self.handle_mqtt_event)
         self.monitor = Monitor.from_netlink(Context(), source='udev')
         self.eusb = UsbEventDetector(self.mqtt).filter_by(self.monitor)
         self.eblk = BlkEventDetector(self.mqtt).filter_by(self.monitor)
@@ -51,7 +51,7 @@ class SystemEventMonitor(AsyncTask):
             asyncio.create_task(do_task(d))
 
     def handle_mqtt_event(self, topic, message):
-        if topic == tSystem.SHUTDOWN:
+        if topic == TSystem.SHUTDOWN:
             asyncio.ensure_future(self.queue.put('q'))
 
     async def run(self):

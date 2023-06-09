@@ -10,33 +10,33 @@
 # from campi.utils.net import MAC
 
 
-class tSystem:
-    ALL = '/system/#'
-    SHUTDOWN = '/system/shutdown'
+class TSystem:
+    ALL = 'system/#'
+    SHUTDOWN = 'system/shutdown'
 
 
-class tNetwork:
-    ALL = '/network/#'
-    CONNECTED = '/network/connected'
-    DISCONNECTED = '/network/disconnected'
+class TNetwork:
+    ALL = 'network/#'
+    CONNECTED = 'network/connected'
+    DISCONNECTED = 'network/disconnected'
 
 
-class tUsbDisk:
-    ALL = '/usbdisk/#'
-    MOUNTED = '/usbdisk/mounted'
-    UMOUNTED = '/usbdisk/umounted'
+class TUsbDisk:
+    ALL = 'usbdisk/#'
+    MOUNTED = 'usbdisk/mounted'
+    UMOUNTED = 'usbdisk/umounted'
 
 class TCloud:
-    ALL = '/cloud/#'
-    OTA = '/cloud/ota'
+    ALL = 'cloud/service/#'
+    OTA = 'cloud/service/ota'
 
-class tLogger:
-    ALL = '/logger/#'
-    DEBUG = '/logger/debug'
-    INFO = '/logger/info'
-    WARN = '/logger/warn'
-    ERROR = '/logger/error'
+class TLogger:
+    ALL = 'logger/#'
+    DEBUG = 'logger/debug'
+    INFO = 'logger/info'
+    WARN = 'logger/warn'
+    ERROR = 'logger/error'
 
 
-class tApis:
+class TApis:
     SET_WIFI = '/apis/set_wifi'

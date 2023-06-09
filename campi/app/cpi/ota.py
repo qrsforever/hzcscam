@@ -11,7 +11,7 @@
 from . import MessageHandler
 from campi.topics import TCloud
 
-class LoggerMessageHandler(MessageHandler):
+class OtaMessageHandler(MessageHandler):
     def __init__(self):
         super().__init__([TCloud.OTA])
 

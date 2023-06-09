@@ -9,18 +9,18 @@
 
 
 from . import MessageHandler
-from campi.topics import tLogger
+from campi.topics import TLogger
 
 class LoggerMessageHandler(MessageHandler):
     def __init__(self):
-        super().__init__([tLogger.ALL])
+        super().__init__([TLogger.ALL])
 
     def handle_message(self, topic, message):
-        if topic == tLogger.INFO:
+        if topic == TLogger.INFO:
             self.logger.info(message)
-        elif topic == tLogger.WARN:
+        elif topic == TLogger.WARN:
             self.logger.warn(message)
-        elif topic == tLogger.ERROR:
+        elif topic == TLogger.ERROR:
             self.logger.error(message)
         else:
             self.logger.debug(message)
