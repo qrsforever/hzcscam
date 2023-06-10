@@ -43,7 +43,8 @@ fi
 if [[ x${RTMP_DOMAIN} != x ]]
 then
     SRSOS_VHOST=${SRSOS_VHOST:-seg.300s}
-    GSTSINK="x264enc bframes=0 speed-preset=veryfast key-int-max=30 ! flvmux streamable=true ! rtmpsink location=rtmp://${RTMP_DOMAIN}/live/${ADDRESS}?vhost=${SRSOS_VHOST}"
+    X264E_BITRATE=${X264E_BITRATE:-128}
+    GSTSINK="x264enc bitrate=${X264E_BITRATE} speed-preset=veryfast key-int-max=0 ! flvmux streamable=true ! rtmpsink location=rtmp://${RTMP_DOMAIN}/live/${ADDRESS}?vhost=${SRSOS_VHOST}"
 else
     GSTSINK="autovideosink"
 fi
