@@ -12,12 +12,14 @@ import multiprocessing
 import subprocess
 import json
 import os
+import glob
 
 from . import MessageHandler
 from campi.topics import (
     TNetwork,
     TUsbDisk,
     TSystem,
+    TUpgrade,
     TApis)
 
 from campi.constants import (
@@ -53,7 +55,7 @@ class SystemMessageHandler(MessageHandler):
         self.network_connected = False
         self.wifi_ssid_pswd = None
 
-    def on_network_connected(self, message):
+    def on_network_connected(self, message):# {{{
         # TODO
         self.network_connected = True
 
@@ -62,8 +64,9 @@ class SystemMessageHandler(MessageHandler):
             'lanip': util_get_lanip(),
             'netip': util_get_netip()
         }))
+# }}}
 
-    def on_network_disconnect(self, message):
+    def on_network_disconnect(self, message):# {{{
         self.network_connected = False
         # TODO
         return
@@ -91,8 +94,9 @@ class SystemMessageHandler(MessageHandler):
             if os.path.exists(WIFI_NM_CONF):
                 with open(WIFI_NM_CONF, 'r') as fr:
                     self.on_network_setwifi(fr.read())
+# }}}
 
-    def on_network_setwifi(self, message):
+    def on_network_setwifi(self, message):# {{{
         jdata = json.loads(message)
 
         def _set_wifi():
@@ -131,12 +135,21 @@ class SystemMessageHandler(MessageHandler):
                 self.logger.error(f'set wifi err[{SCRIPT_OF_SET_WIFI}]: {oerr}')
 
         multiprocessing.Process(target=_set_wifi).start()
+# }}}
+
+    def on_udisk_mounted(self, mntdir):# {{{
+        if os.path.isdir(f'{mntdir}/campi'):
+            zips = glob.glob(f'{self.mntdir}/campi/update_*.zip')
+            for zpath in zips:
+                zfile = os.path.basename(zpath)
+                version = zfile.split('_')[1][:-4]
+                if len(version.split('.')) > 2:
+                    break
+            self.send_message(TUpgrade.BY_UDISK, zpath)
+# }}}
 
     def handle_message(self, topic, message):
         self.logger.info(f'{topic} {message}')
-
-        if topic == TSystem.SHUTDOWN:
-            self.send_message('q')
 
         if topic == TNetwork.DISCONNECTED:
             return self.on_network_disconnect(message)
@@ -146,3 +159,9 @@ class SystemMessageHandler(MessageHandler):
 
         if topic == TApis.SET_WIFI:
             return self.on_network_setwifi(message)
+
+        if topic == TUsbDisk.MOUNTED:
+            return self.on_udisk_mounted(message)
+
+        if topic == TSystem.SHUTDOWN:
+            self.quit()

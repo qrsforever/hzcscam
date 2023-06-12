@@ -41,8 +41,11 @@ class MessageHandler(metaclass=abc.ABCMeta):
     def handle_message(self, topic, message):
         pass
 
-    def send_message(self, message):
-        asyncio.ensure_future(self.queue.put(message))
+    def send_message(self, topic, message):
+        self.mqtt.publish(topic, message)
+
+    def quit(self):
+        asyncio.ensure_future(self.queue.put('q'))
 
     @classmethod
     def dispatch_message(cls, topic, message):

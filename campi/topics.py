@@ -14,21 +14,15 @@ class TSystem:
     ALL = 'system/#'
     SHUTDOWN = 'system/shutdown'
 
-
 class TNetwork:
     ALL = 'network/#'
     CONNECTED = 'network/connected'
     DISCONNECTED = 'network/disconnected'
 
-
 class TUsbDisk:
     ALL = 'usbdisk/#'
     MOUNTED = 'usbdisk/mounted'
     UMOUNTED = 'usbdisk/umounted'
-
-class TCloud:
-    ALL = 'cloud/service/#'
-    OTA = 'cloud/service/ota'
 
 class TLogger:
     ALL = 'logger/#'
@@ -37,6 +31,13 @@ class TLogger:
     WARN = 'logger/warn'
     ERROR = 'logger/error'
 
+class TCloud:
+    ALL = 'cloud/#'
+    OTA = 'cloud/+/ota'
 
 class TApis:
     SET_WIFI = '/apis/set_wifi'
+
+class TUpgrade:
+    BY_UDISK = 'upgrade/udisk'
+    BY_OTA = 'upgrade/ota'

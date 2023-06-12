@@ -27,14 +27,14 @@ class BlkEventDetector(EventDetector):
         try:
             subprocess.call(f'mount {devnode} {mntdir}', shell=True)
             if os.path.ismount(mntdir):
-                self.mqtt.publish(TUsbDisk.MOUNTED, "test")
+                self.mqtt.publish(TUsbDisk.MOUNTED, mntdir)
         except Exception:
             pass
 
     def on_umount(self, devnode, mntdir):  # pyright:ignore
         if os.path.ismount(mntdir):
             subprocess.call(f'umount -l {mntdir}', shell=True)
-            self.mqtt.publish(TUsbDisk.UMOUNTED, "test")
+            self.mqtt.publish(TUsbDisk.UMOUNTED, mntdir)
 
     async def handle_event(self, device):
         if device.device_type == 'partition':

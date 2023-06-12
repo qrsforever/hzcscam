@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     }
     printf("%s %d %s %s %s\n", emq_host, emq_port, client_id, username, password);
     emqc_init(emq_host, emq_port, client_id, username, password);
-    sensor_init();
+    sensor_init(client_id);
     while (1) {
         sensor_detect();
         emqc_yield();

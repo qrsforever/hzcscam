@@ -13,6 +13,11 @@ MAIN_PID = os.getpid()
 
 WS_ROOT = '/campi'
 BOARD = os.environ.get('BOARD', 'orangepi3-lts')
+ADDRESS = os.environ.get('ADDRESS', '001122334466')
+
+## Archives
+
+ARCHIVES_ROOT_PATH = '/var/campi/archives'
 
 ## Scripts
 

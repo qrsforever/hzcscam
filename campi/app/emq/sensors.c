@@ -31,9 +31,8 @@
 #define BTN_RELEASE 1
 
 #define STATE_FILE   "/campi/runtime/emq_sensor.state"
-#define SENSOR_TOPIC "campi/sensors"
 
-extern int sensor_init();
+extern int sensor_init(const char*);
 extern void sensor_detect();
 
 enum {
@@ -63,6 +62,9 @@ static char SENSOR_NAMES[][16] = {
     "magnetsw",
 };
 
+static char SENSOR_TOPIC[64] = { 0 };
+
+
 static int _RGB[8][3] = {
     {0, 0, 0},  // black
     {1, 0, 0},
@@ -82,18 +84,25 @@ static unsigned int g_repeat_count = 0;
 static unsigned int g_thresh_quiet = 200;
 
 
-void _emq_report(const char* payload)
+void _emq_report(const char* extra)
 {
-    char topic[32];
-    sprintf(topic, "%s/%s", SENSOR_TOPIC, SENSOR_NAMES[g_current_sensor]);
-    if (payload == NULL) {
-        char data[64] = { 0 };
-        snprintf(data, 63, "{\"count\": %d}", g_repeat_count);
-        emqc_pub(topic, data);
+    char payload[256] = { 0 };
+    if (extra == NULL) {
+        snprintf(
+            payload, 255,
+            "{\"count\": %d, \"sensor\": \"%s\"}",
+            g_repeat_count,
+            SENSOR_NAMES[g_current_sensor]);
     } else {
-        syslog(LOG_DEBUG, "sub [%s]: %s\n", topic, payload);
-        emqc_pub(topic, payload);
+        snprintf(
+            payload, 255,
+            "{\"count\": %d, \"sensor\": \"%s\", %s}",
+            g_repeat_count,
+            SENSOR_NAMES[g_current_sensor], extra);
     }
+
+    emqc_pub(SENSOR_TOPIC, payload);
+    syslog(LOG_DEBUG, "pub [%s]: %s\n", SENSOR_TOPIC, payload);
 }
 
 void _emq_on_message(const char* topic, const char* payload)
@@ -167,7 +176,7 @@ static void _sensor_vibration_switch(int s)
     syslog(LOG_DEBUG, "sensor vibrate switch\n");
     pinMode(TSKPIN, INPUT);
     int value = 0, sumtimer = 0;
-    char payload[64] = { 0 };
+    char buff[64] = { 0 };
     while (g_current_sensor == s) {
         value = digitalRead(TSKPIN);
         if (1 == value) { // vibrate
@@ -182,8 +191,8 @@ static void _sensor_vibration_switch(int s)
             } while(g_current_sensor == s && sumtimer < g_thresh_quiet);
             g_repeat_count += 1;
             _change_color_to(g_current_color);
-            snprintf(payload, 63, "{\"threshold\": %d, \"count\": %d}", g_thresh_quiet, g_repeat_count);
-            _emq_report(payload);
+            snprintf(buff, 63, "\"threshold\": %d", g_thresh_quiet);
+            _emq_report(buff);
         }
         delay(200);
     }
@@ -195,7 +204,7 @@ static void _sensor_passive_infrared(int s)/*{{{*/
     pinMode(TSKPIN, INPUT);
     int current_state = 0, previous_state = -1; // 1: detected 0: no detected
     time_t detect_time = time(0);
-    char payload[64] = { 0 };
+    char buff[64] = { 0 };
     while (g_current_sensor == s) {
         current_state = digitalRead(TSKPIN);
         if (current_state != previous_state) {
@@ -206,8 +215,8 @@ static void _sensor_passive_infrared(int s)/*{{{*/
             } else {
                 g_repeat_count += 1;
                 _change_color_to(COLOR_BLACK);
-                snprintf(payload, 63, "{\"count\": %d, \"stay_time\": %ld}", g_repeat_count, time(0) - detect_time);
-                _emq_report(payload);
+                snprintf(buff, 63, "{\"stay_time\": %ld}", time(0) - detect_time);
+                _emq_report(buff);
             }
             previous_state = current_state;
         }
@@ -256,7 +265,7 @@ static void *_sensor_worker(void *arg)
     return 0;
 }/*}}}*/
 
-int sensor_init()
+int sensor_init(const char* client_id)
 {/*{{{*/
     syslog(LOG_DEBUG, "sensor_init\n");
     if(wiringPiSetup() == -1) {
@@ -272,7 +281,11 @@ int sensor_init()
     pthread_create(&g_thread_id, NULL, _sensor_worker, NULL);
     _load_current_state();
     _change_color_to(g_current_color);
-    emqc_sub("cloud/sensors/set", _emq_on_message);
+
+    char buff[64] = {0};
+    snprintf(buff, 63, "cloud/%s/sensors/set", client_id);
+    emqc_sub(buff, _emq_on_message);
+    snprintf(SENSOR_TOPIC, sizeof(SENSOR_TOPIC) - 1, "campi/%s/sensors/put", client_id);
     return 0;
 }/*}}}*/
 

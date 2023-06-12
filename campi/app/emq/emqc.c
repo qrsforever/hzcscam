@@ -6,18 +6,20 @@
 * Description:
 *****************************************************************************/
 
-#include "string.h"
-#include "unistd.h"
-#include "MQTTClient.h"
-#include "emqc.h"
+#include <string.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
 #include <syslog.h>
+#include "MQTTClient.h"
+#include "emqc.h"
 
 #define MAX_MESSAGE_HANDLERS 20
 
 static MQTTClient r_client = 0;
 static MQTTClient l_client = 0;
+static int CLOUD_TOPIC_PREFIX_LEN = -1;
+static int LOCAL_TOPIC_PREFIX_LEN = -1;
 
 struct MessageHandlers
 {
@@ -40,18 +42,24 @@ static int on_message(void *context, char *topic, int length, MQTTClient_message
 {
     char *payload = (char*)message->payload;
     syslog(LOG_DEBUG, "Received `%s` from `%s` topic \n", payload, topic);
-    if (strncmp(topic, "cloud/service/", 14) == 0) {
-        MQTTClient_deliveryToken token;
-        MQTTClient_publishMessage(l_client, topic, message, &token);
-        MQTTClient_waitForCompletion(l_client, token, 2000L);
-    } else {
-        for (int i = 0; i < MAX_MESSAGE_HANDLERS; ++i) {
-            if (s_messageHandlers[i].topic != NULL && strcmp(s_messageHandlers[i].topic, topic) == 0) {
-                if (s_messageHandlers[i].fp != NULL) {
-                    s_messageHandlers[i].fp(topic, payload);
+    if (strncmp(topic, "cloud/", 6) == 0) {
+        if (strncmp(topic + CLOUD_TOPIC_PREFIX_LEN, "ota", 3) == 0) {
+            MQTTClient_deliveryToken token;
+            MQTTClient_publishMessage(l_client, topic, message, &token);
+            MQTTClient_waitForCompletion(l_client, token, 2000L);
+        } else {
+            for (int i = 0; i < MAX_MESSAGE_HANDLERS; ++i) {
+                if (s_messageHandlers[i].topic != NULL && strcmp(s_messageHandlers[i].topic, topic) == 0) {
+                    if (s_messageHandlers[i].fp != NULL) {
+                        s_messageHandlers[i].fp(topic, payload);
+                    }
                 }
             }
         }
+    } else { // campi/
+        MQTTClient_deliveryToken token;
+        MQTTClient_publishMessage(r_client, topic, message, &token);
+        MQTTClient_waitForCompletion(r_client, token, 2000L);
     }
     MQTTClient_freeMessage(&message);
     MQTTClient_free(topic);
@@ -89,18 +97,22 @@ int emqc_sub(const char* topic, void (*cb)(const char*, const char*))
 int emqc_init(const char* host, int port, const char* client_id, const char* username, const char* password)
 {
     int rc = 0;
+    char buff[64] = {0};
 
     MQTTClient_create(&l_client, "tcp://127.0.0.1:1883", "campi_emq", 0, NULL);
+    MQTTClient_setCallbacks(l_client, NULL, NULL, on_message, NULL);
     rc = _emqc_connect(l_client, "eqmx", "public");
     if (rc != MQTTCLIENT_SUCCESS) {
         syslog(LOG_ERR, "Failed to connect local emqx, return code %d\n", rc);
         exit(-1);
     }
     syslog(LOG_DEBUG, "Connected to Local MQTT Broker!\n");
+    snprintf(buff, 63, "campi/%s/#", client_id);
+    LOCAL_TOPIC_PREFIX_LEN = strlen(buff) - 1;
+    MQTTClient_subscribe(l_client, buff, 0);
 
-    char address[64] = {0};
-    snprintf(address, 63, "tcp://%s:%d", host, port);
-    MQTTClient_create(&r_client, address, client_id, 0, NULL);
+    snprintf(buff, 63, "tcp://%s:%d", host, port);
+    MQTTClient_create(&r_client, buff, client_id, 0, NULL);
     MQTTClient_setCallbacks(r_client, NULL, NULL, on_message, NULL);
     rc = _emqc_connect(r_client, username, password);
     if (rc != MQTTCLIENT_SUCCESS) {
@@ -108,7 +120,9 @@ int emqc_init(const char* host, int port, const char* client_id, const char* use
         exit(-1);
     }
     syslog(LOG_DEBUG, "Connected to Cloud MQTT Broker!\n");
-    MQTTClient_subscribe(r_client, "cloud/service/#", 0);
+    snprintf(buff, 63, "cloud/%s/#", client_id);
+    MQTTClient_subscribe(r_client, buff, 0);
+    CLOUD_TOPIC_PREFIX_LEN = strlen(buff) - 1;
     return 0;
 }
 
