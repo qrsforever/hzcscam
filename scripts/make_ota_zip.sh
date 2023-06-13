@@ -19,6 +19,7 @@ VER_MINOR_NUM=0
 APP_VERSION=${VER_MAJOR_NUM}.${VER_MINOR_NUM}.${GIT_NUMBER}
 
 FORCE=false
+SETUP=true
 if [[ x$1 == 1 ]]
 then
     FORCE=true
@@ -42,6 +43,7 @@ cat > ota/version_info.json <<EOF
     "url": "update_${APP_VERSION}.zip",
     "force": ${FORCE},
     "md5": "${MD5}",
+    "execsetup": ${SETUP},
     "content": "This is the ota update zip content",
     "git_version": "${GIT_VERSION}",
     "git_commit": "${GIT_COMMIT}",

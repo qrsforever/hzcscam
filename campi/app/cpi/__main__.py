@@ -27,5 +27,8 @@ async def main():
             print("system quit")
             break
 
+    import os
+    os.system("reboot")
+
 if __name__ == "__main__":
     asyncio.run(main())
