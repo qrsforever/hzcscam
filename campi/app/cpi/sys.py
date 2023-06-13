@@ -140,12 +140,13 @@ class SystemMessageHandler(MessageHandler):
     def on_udisk_mounted(self, mntdir):# {{{
         verinfo_path = f'{mntdir}/campi/{VERSION_OTA_FILE}'
         if os.path.isfile(verinfo_path):
+            self.logger.info(f'{verinfo_path} found!')
             with open(verinfo_path, 'r') as fr:
                 version_info = json.load(fr)
                 zip_path = f'{mntdir}/campi/{version_info["url"]}'
                 if os.path.isfile(zip_path):
                     version_info['zip_path'] = zip_path
-                    self.send_message(TUpgrade.BY_UDISK, version_info)
+                    self.send_message(TUpgrade.BY_UDISK, json.dumps(version_info))
 # }}}
 
     def handle_message(self, topic, message):

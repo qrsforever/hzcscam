@@ -1,6 +1,5 @@
 #!/bin/bash
 
-CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 BOARD=$(cat /etc/orangepi-release | grep BOARD= | cut -d= -f2)
 ADDRESS=$(cat /sys/class/net/eth0/address | sed 's/://g')
 
@@ -9,7 +8,7 @@ CAMPI_ORDER_SVCS=("nmq" "cpi" "sys" "api" "emq")
 SYSROOT=/campi/board/${BOARD}
 LD_LIBRARY_PATH=${SYSROOT}/lib:${LD_LIBRARY_PATH}
 PATH=${SYSROOT}/bin:${PATH}
-PYTHONPATH=/campi:$PYTHONPATH
+PYTHONPATH=/campi:.
 
 RUNTIME_PATH=/campi/runtime
 

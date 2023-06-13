@@ -7,6 +7,7 @@ source ${TOP_DIR}/_env
 
 ARCHIVES_PATH=${ARCHIVES_PATH:-/var/campi/archives}
 
+rm -rf ${ARCHIVES_PATH}/current
 cp -arf ${ARCHIVES_PATH}/default ${ARCHIVES_PATH}/current
 
 echo "${LD_LIBRARY_PATH}" > /tmp/campi_sos.log

@@ -9,7 +9,7 @@ TOP_DIR=$(cd ${CUR_DIR}/..; pwd)
 rm -rf /campi
 ln -s ${TOP_DIR} /campi
 
-source /campi/_env
+source ${TOP_DIR}/_env
 
 mkdir -p /campi/runtime
 
@@ -32,7 +32,7 @@ then
          gstreamer1.0-libav gstreamer1.0-x
     apt install -y python3-gst-1.0
 
-    pip3 install psutil pyudev paho-mqtt quart PyEmail
+    pip3 install requests, psutil pyudev paho-mqtt quart PyEmail
 fi
 
 chmod +x ${SYSROOT}/bin/*

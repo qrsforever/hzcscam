@@ -10,6 +10,7 @@
 
 import subprocess
 import requests
+import json
 import os
 
 from . import MessageHandler
@@ -42,7 +43,7 @@ class OtaMessageHandler(MessageHandler):
     UPGRADE_METHOD_HTTP = 2
 
     def __init__(self):
-        super().__init__([TCloud.OTA, TUpgrade.BY_UDISK, TUpgrade.OTA])
+        super().__init__([TCloud.OTA, TUpgrade.BY_UDISK, TUpgrade.BY_OTA])
         with open(VERSION_APP_PATH, 'r') as fr:
             self.app_version = fr.read().strip()
 
@@ -50,6 +51,7 @@ class OtaMessageHandler(MessageHandler):
         self.read_timeout = 3
 
     def _do_upgrade(self, config):
+        self.logger.info("upgrade ...")
         force = config.get('force', False)
         if not force and compare_version(config['version'], self.app_version):
             return self.UPGRADE_NOOP
@@ -60,18 +62,15 @@ class OtaMessageHandler(MessageHandler):
         if md5.decode('utf-8').strip() != zip_md5:
             config['reason'] = 'md5 not match'
             return self.UPGRADE_FAIL
-        if self._unzip_setup(zip_path, ARCHIVES_ROOT_PATH, config.get('compatible', True)) != 0:
-            config['reason'] = 'unzip tarball fail'
-            return self.UPGRADE_FAIL
 
         compatible = config.get('compatible', True)
         execsetup = config.get('execsetup', True)
         try:
             subprocess.call(f'unzip -qo {zip_path} -d {ARCHIVES_ROOT_PATH}', shell=True)
             if compatible:
-                subprocess.call(f'cp -aprf {RUNTIME_PATH} {ARCHIVES_ROOT_PATH}/campi', shell=True)
+                subprocess.call(f'cp -aprf {RUNTIME_PATH} {ARCHIVES_ROOT_PATH}/hzcscam', shell=True)
             subprocess.call(f'rm -rf {ARCHIVES_CURRENT_PATH}', shell=True)
-            subprocess.call(f'mv {ARCHIVES_ROOT_PATH}/campi {ARCHIVES_CURRENT_PATH}', shell=True)
+            subprocess.call(f'mv {ARCHIVES_ROOT_PATH}/hzcscam {ARCHIVES_CURRENT_PATH}', shell=True)
             if execsetup:
                 subprocess.call('/campi/scripts/setup_service.sh', shell=True)
             return self.UPGRADE_SUCESS
@@ -83,21 +82,24 @@ class OtaMessageHandler(MessageHandler):
         self.logger.info(f'{topic} {message}')
 
         if topic in (TUpgrade.BY_UDISK, TCloud.OTA):
+            message = json.loads(message)
             if topic == TCloud.OTA:
                 zip_res = requests.get(
                     message['url'],
                     headers={'Content-Type': 'application/zip'},
                     timeout=(self.conn_timeout, self.read_timeout))
                 if zip_res.status_code != 200:
-                    self.to_cloud(TCloud.UPGRADE_FAIL, message)
+                    self.send_message(TCloud.UPGRADE_FAIL, message)
                 with open('/tmp/campi_update.zip', 'wb') as fw:
                     fw.write(zip_res.content)
 
                 message['zip_path'] = '/tmp/campi_update.zip'
 
             if self.UPGRADE_SUCESS == self._do_upgrade(message):
-                self.to_cloud(TCloud.UPGRADE_SUCESS, message)
+                self.logger.info("upgrade success")
+                self.send_message(TCloud.UPGRADE_SUCESS, message)
                 os.system("sleep 3; reboot")
             else:
-                self.to_cloud(TCloud.UPGRADE_FAIL, message)
+                self.logger.error(f"upgrade fail {message}")
+                self.send_message(TCloud.UPGRADE_FAIL, message)
             return

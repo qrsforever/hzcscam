@@ -11,6 +11,7 @@
 import sys
 import os
 import asyncio
+import json
 import paho.mqtt.client as paho_mqtt
 from campi.topics import TLogger as LOG
 from campi.constants import MAIN_PID
@@ -111,6 +112,8 @@ class AsyncMqtt(object):
 
     def publish(self, topic, message, qos=0):
         if self.ok:
+            if isinstance(message, dict):
+                message = json.dumps(message)
             return self.client.publish(topic, message, qos)
 
     def logd(self, message):

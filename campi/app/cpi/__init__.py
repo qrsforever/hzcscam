@@ -11,7 +11,6 @@
 import abc
 import asyncio
 from campi.core.amqtt import AsyncMqtt
-from campi.constants import ADDRESS
 
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -42,9 +41,6 @@ class MessageHandler(metaclass=abc.ABCMeta):
     def handle_message(self, topic, message):
         pass
 
-    def to_cloud(self, topic, message):
-        self.mqtt.publish(f'campi/{ADDRESS}/{topic}', message)
-
     def send_message(self, topic, message):
         self.mqtt.publish(topic, message)
 
@@ -56,9 +52,15 @@ class MessageHandler(metaclass=abc.ABCMeta):
         for key, cbs in cls.callbacks1.items():
             if topic.startswith(key[:-2]):
                 for cb in cbs:
-                    cb(topic, message)
+                    try:
+                        cb(topic, message)
+                    except Exception as err:
+                        print(f'{err}')
 
         for key, cbs in cls.callbacks2.items():
             if topic == key:
                 for cb in cbs:
-                    cb(topic, message)
+                    try:
+                        cb(topic, message)
+                    except Exception as err:
+                        print(f'{err}')
