@@ -24,6 +24,8 @@ cat > ${SRC_DIR}/$SERVICE <<EOF
     WorkingDirectory=${ROOT_DIR}
     Environment="PYTHONPATH=${ROOT_DIR}"
     ExecStart=bash ${ROOT_DIR}/board/${BOARD}/bin/rtmp_start.sh
+    ExecStartPost=/usr/bin/touch ${ROOT_DIR}/runtime/start/gst
+    ExecStopPost=/usr/bin/rm -f ${ROOT_DIR}/rumtime/start/gst
 
 [Install]
     WantedBy=multi-user.target

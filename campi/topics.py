@@ -8,7 +8,7 @@
 # @date 2023-04-24 23:21
 
 # from campi.utils.net import MAC
-
+from campi.constants import ADDRESS
 
 class TSystem:
     ALL = 'system/#'
@@ -34,6 +34,9 @@ class TLogger:
 class TCloud:
     ALL = 'cloud/#'
     OTA = 'cloud/+/ota'
+
+    UPGRADE_SUCESS = f'campi/{ADDRESS}/upgrade/success'
+    UPGRADE_FAIL = f'campi/{ADDRESS}/upgrade/fail'
 
 class TApis:
     SET_WIFI = '/apis/set_wifi'

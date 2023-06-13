@@ -35,8 +35,13 @@ then
     pip3 install psutil pyudev paho-mqtt quart PyEmail
 fi
 
+chmod +x ${SYSROOT}/bin/*
+
 # install service
-for svc in ${CAMPI_ORDER_SVCS[@]}
+for install_svc_script in `find ${CUR_DIR} -name "install_*_service.sh"`
 do
-    /campi/scripts/install_${svc}_service.sh
+    chmod +x ${install_svc_script}
+    ${install_svc_script}
 done
+
+${CUR_DIR}/setup_crontab.sh

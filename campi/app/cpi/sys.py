@@ -12,7 +12,6 @@ import multiprocessing
 import subprocess
 import json
 import os
-import glob
 
 from . import MessageHandler
 from campi.topics import (
@@ -26,6 +25,7 @@ from campi.constants import (
     SCRIPT_OF_SET_WIFI,
     SCRIPT_OF_START_AP,
     SCRIPT_OF_STOP_AP,
+    VERSION_OTA_FILE,
     WIFI_NM_CONF)
 
 from campi.utils.net import (
@@ -138,14 +138,14 @@ class SystemMessageHandler(MessageHandler):
 # }}}
 
     def on_udisk_mounted(self, mntdir):# {{{
-        if os.path.isdir(f'{mntdir}/campi'):
-            zips = glob.glob(f'{self.mntdir}/campi/update_*.zip')
-            for zpath in zips:
-                zfile = os.path.basename(zpath)
-                version = zfile.split('_')[1][:-4]
-                if len(version.split('.')) > 2:
-                    break
-            self.send_message(TUpgrade.BY_UDISK, zpath)
+        verinfo_path = f'{mntdir}/campi/{VERSION_OTA_FILE}'
+        if os.path.isfile(verinfo_path):
+            with open(verinfo_path, 'r') as fr:
+                version_info = json.load(fr)
+                zip_path = f'{mntdir}/campi/{version_info["url"]}'
+                if os.path.isfile(zip_path):
+                    version_info['zip_path'] = zip_path
+                    self.send_message(TUpgrade.BY_UDISK, version_info)
 # }}}
 
     def handle_message(self, topic, message):
