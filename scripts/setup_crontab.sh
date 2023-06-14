@@ -1,7 +1,5 @@
 #!/bin/bash
 
-CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
-
 BOARD=$(cat /etc/orangepi-release | grep BOARD= | cut -d= -f2)
 BINDIR=/campi/board/${BOARD}/bin
 
@@ -15,7 +13,10 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 47 6	* * 7	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )
 52 6	1 * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
 
-@reboot root test -x ${BINDIR}/sys_reboot.sh && ${BINDIR}/sys_reboot.sh /campi
+@reboot root test -x ${BINDIR}/sys_reboot.sh && ${BINDIR}/sys_reboot.sh
 EOF
 
 mv /tmp/crontab /etc/crontab
+chmod 644 /etc/crontab
+
+# systemctl status cron.service

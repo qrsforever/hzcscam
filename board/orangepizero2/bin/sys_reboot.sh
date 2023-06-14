@@ -3,11 +3,13 @@
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 TOP_DIR=/campi
 
+echo "===============SYS REBOOT==============" > /tmp/campi_reboot.log
+
 source ${TOP_DIR}/_env
 
 RUNTIME_PATH=${RUNTIME_PATH:-/campi/runtime}
 
-if [ -d ${RUNTIME_PATH}/start ]
+if [ ! -d ${RUNTIME_PATH}/start ]
 then
     mkdir -p ${RUNTIME_PATH}/start
 fi
@@ -23,7 +25,7 @@ then
     cp ${SYSROOT}/etc/nmwifi.json ${TOP_DIR}/runtime/nmwifi.json
 fi
 
-echo "==============Network=================" > /tmp/campi_reboot.log
+echo "==============Network================" >> /tmp/campi_reboot.log
 __run_and_log nmcli device status
 echo "==============Memory=================" >> /tmp/campi_reboot.log
 __run_and_log free
