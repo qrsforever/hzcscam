@@ -20,7 +20,6 @@ BOARD_PATH = f'{WS_ROOT}/board/{BOARD}'
 ## Archives
 
 ARCHIVES_ROOT_PATH = '/var/campi/archives'
-ARCHIVES_CURRENT_PATH = f'{ARCHIVES_ROOT_PATH}/current'
 
 ## Scripts
 

@@ -16,12 +16,12 @@ import os
 from . import MessageHandler
 from campi.constants import (
     ARCHIVES_ROOT_PATH,
-    ARCHIVES_CURRENT_PATH,
     RUNTIME_PATH,
     VERSION_APP_PATH,
 )
 from campi.topics import TCloud
 from campi.topics import TUpgrade
+
 
 def compare_version(vnew, vold):
     if vnew == vold:
@@ -54,6 +54,7 @@ class OtaMessageHandler(MessageHandler):
         self.logger.info("upgrade ...")
         force = config.get('force', False)
         if not force and compare_version(config['version'], self.app_version):
+            config['reason'] = 'same version'
             return self.UPGRADE_NOOP
 
         zip_md5 = config['md5']
@@ -70,10 +71,10 @@ class OtaMessageHandler(MessageHandler):
             subprocess.call(f'unzip -qo {zip_path} -d {ARCHIVES_ROOT_PATH}/{appversion}', shell=True)
             if compatible:
                 subprocess.call(f'cp -aprf {RUNTIME_PATH} {ARCHIVES_ROOT_PATH}/{appversion}/', shell=True)
-            subprocess.call('rm -rf $(readlink /campi)', shell=True)
-            subprocess.call(f'rm -f /campi; ln -s {ARCHIVES_ROOT_PATH}/{appversion} /campi', shell=True)
             if execsetup:
                 subprocess.call(f'{ARCHIVES_ROOT_PATH}/{appversion}/scripts/setup_service.sh', shell=True)
+            subprocess.call('rm -rf $(readlink /campi)', shell=True)
+            subprocess.call(f'rm -f /campi; ln -s {ARCHIVES_ROOT_PATH}/{appversion} /campi', shell=True)
             return self.UPGRADE_SUCESS
         except Exception as err:
             config['reason'] = f'subprocess upgrade fail {err}'

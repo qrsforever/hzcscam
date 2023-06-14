@@ -8,7 +8,7 @@ USER=root
 ROOT_DIR=/campi
 
 BOARD=$(cat /etc/orangepi-release | grep BOARD= | cut -d= -f2)
-TMP_DIR=${ROOT_DIR}/runtime
+TMP_DIR=/tmp/
 DST_DIR=/etc/systemd/system/
 
 cat > ${TMP_DIR}/$SERVICE <<EOF
@@ -31,9 +31,11 @@ cat > ${TMP_DIR}/$SERVICE <<EOF
     WantedBy=multi-user.target
 EOF
 
-systemctl stop $SERVICE 2>&1 > /dev/null
+chmod 644 ${TMP_DIR}/$SERVICE
 mv ${TMP_DIR}/$SERVICE $DST_DIR
-systemctl daemon-reload
+
+# systemctl stop $SERVICE 2>&1 > /dev/null
+# systemctl daemon-reload
 # # systemctl enable $SERVICE
 # systemctl restart $SERVICE
 # systemctl status $SERVICE

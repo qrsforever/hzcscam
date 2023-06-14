@@ -5,6 +5,11 @@
 FORCE_INSTALL=0
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 TOP_DIR=$(cd ${CUR_DIR}/..; pwd)
+if [[ -L ${TOP_DIR} ]]
+then
+    TOP_DIR=$(readlink ${TOP_DIR})
+    CUR_DIR=${TOP_DIR}/scripts
+fi
 
 source ${TOP_DIR}/_env
 
@@ -36,16 +41,19 @@ fi
 
 chmod +x ${TOP_DIR}/board/${BOARD}/bin/*
 
-# install service
-for install_svc_script in `find ${CUR_DIR} -name "install_*_service.sh"`
-do
-    chmod +x ${install_svc_script}
-    ${install_svc_script}
-done
-
-${CUR_DIR}/setup_crontab.sh
-
 if [[ ! -L /campi ]]
 then
     ln -s ${TOP_DIR} /campi
 fi
+
+# install service
+for install_svc_script in `find ${CUR_DIR} -name "install_*_service.sh"`
+do
+    chmod +x ${install_svc_script}
+    echo "install ${install_svc_script}"
+    ${install_svc_script}
+done
+
+systemctl daemon-reload
+
+${CUR_DIR}/setup_crontab.sh

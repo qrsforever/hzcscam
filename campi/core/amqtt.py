@@ -54,7 +54,7 @@ class AsyncMqtt(object):
 
         self.loop.call_soon_threadsafe(_do_socket_open)
 
-    def _on_socket_close(self, client, userdata, sock): 
+    def _on_socket_close(self, client, userdata, sock):
         self.loop.remove_reader(sock)
         if self.misc_task is not None:
             self.misc_task.cancel()
@@ -92,7 +92,7 @@ class AsyncMqtt(object):
         await asyncio.wait_for(self._connected, timeout=timeout)
 
     def close(self):
-        self.client.close()
+        self.client.disconnect()
 
     def _on_message(self, client, userdata, message):
         # print("[{current_thread}]: Received `{payload}` from `{topic}` topic".format(
