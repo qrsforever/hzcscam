@@ -60,24 +60,32 @@ class OtaMessageHandler(MessageHandler):
         appversion = config.get('version', '1.0.0')
         try:
             md5 = subprocess.check_output(f'md5sum {zip_path} | cut -c1-32', shell=True)
+            if os.path.isdir(f'{ARCHIVES_ROOT_PATH}/{zip_md5}'):
+                config['reason'] = 'md5 already exist.'
+                return self.UPGRADE_FAIL
             if md5.decode('utf-8').strip() != zip_md5:
                 config['reason'] = 'md5 not match'
                 return self.UPGRADE_FAIL
-            subprocess.call(f'unzip -qo {zip_path} -d {ARCHIVES_ROOT_PATH}/{appversion}', shell=True)
-            if compatible:
-                subprocess.call(f'cp -aprf {RUNTIME_PATH} {ARCHIVES_ROOT_PATH}/{appversion}/', shell=True)
-            if execsetup:
-                subprocess.call(f'{ARCHIVES_ROOT_PATH}/{appversion}/scripts/setup_service.sh', shell=True)
-            subprocess.call('rm -rf $(readlink /campi)', shell=True)
-            subprocess.call(f'rm -f /campi; ln -s {ARCHIVES_ROOT_PATH}/{appversion} /campi', shell=True)
-            return self.UPGRADE_SUCESS
+            subprocess.call(f'unzip -qo {zip_path} -d {ARCHIVES_ROOT_PATH}/{zip_md5}', shell=True)
+            if os.path.isdir(f'{ARCHIVES_ROOT_PATH}/{zip_md5}'):
+                if compatible:
+                    subprocess.call(f'cp -aprf {RUNTIME_PATH} {ARCHIVES_ROOT_PATH}/{zip_md5}', shell=True)
+                if execsetup:
+                    subprocess.call(f'{ARCHIVES_ROOT_PATH}/{zip_md5}/scripts/setup_service.sh', shell=True)
+                subprocess.call('rm -rf $(readlink /campi)', shell=True)
+                subprocess.call(f'rm -f /campi; ln -s {ARCHIVES_ROOT_PATH}/{zip_md5} /campi', shell=True)
+                return self.UPGRADE_SUCESS
+            config['reason'] = 'unzip fail!'
+            return self.UPGRADE_FAIL
         except Exception as err:
             config['reason'] = f'subprocess upgrade fail {err}'
             return self.UPGRADE_FAIL
 
     def handle_message(self, topic, message):
-        self.logger.info(f'ota {topic} {message}')
+        self.logger.info(f'xxota {topic} {message}')
 
+        self.send_message(TCloud.UPGRADE_SUCESS, {"a":"test"})
+        return
         if topic in (TUpgrade.BY_UDISK, TCloud.OTA):
             config = json.loads(message) if isinstance(message, str) else message
 
@@ -92,14 +100,14 @@ class OtaMessageHandler(MessageHandler):
                     headers={'Content-Type': 'application/zip'},
                     timeout=(self.conn_timeout, self.read_timeout))
                 if zip_res.status_code != 200:
-                    self.send_message(TCloud.UPGRADE_FAIL, config)
+                    self.send_message(TCloud.UPGRADE_FAIL, {"reason": config['reason']})
                 with open('/tmp/campi_update.zip', 'wb') as fw:
                     fw.write(zip_res.content)
                 config['zip_path'] = '/tmp/campi_update.zip'
 
             if self.UPGRADE_SUCESS == self._do_upgrade(config):
                 self.logger.info("upgrade success")
-                self.send_message(TCloud.UPGRADE_SUCESS, config)
+                self.send_message(TCloud.UPGRADE_SUCESS, {"version": config['version']})
                 os.system("sleep 3; reboot")
             else:
                 self.logger.error(f"upgrade fail {config}")

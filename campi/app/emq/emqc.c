@@ -41,8 +41,8 @@ static int _emqc_connect(MQTTClient client, const char* username, const char* pa
 static int on_message(void *context, char *topic, int length, MQTTClient_message *message)
 {
     char *payload = (char*)message->payload;
-    syslog(LOG_DEBUG, "Received `%s` from `%s` topic \n", payload, topic);
     if (strncmp(topic, "cloud/", 6) == 0) {
+        syslog(LOG_DEBUG, "From Cloud to Campi Received `%s` from `%s` topic \n", payload, topic);
         if (strncmp(topic + CLOUD_TOPIC_PREFIX_LEN, "ota", 3) == 0) {
             MQTTClient_deliveryToken token;
             MQTTClient_publishMessage(l_client, topic, message, &token);
@@ -57,6 +57,7 @@ static int on_message(void *context, char *topic, int length, MQTTClient_message
             }
         }
     } else { // campi/
+        syslog(LOG_DEBUG, "From Campi to Cloud: Received `%s` from `%s` topic \n", payload, topic);
         MQTTClient_deliveryToken token;
         MQTTClient_publishMessage(r_client, topic, message, &token);
         MQTTClient_waitForCompletion(r_client, token, 2000L);
