@@ -33,7 +33,7 @@ class TLogger:
 
 class TCloud:
     ALL = 'cloud/#'
-    OTA = 'cloud/+/ota'
+    OTA = f'cloud/{ADDRESS}/ota'
 
     UPGRADE_SUCESS = f'campi/{ADDRESS}/upgrade/success'
     UPGRADE_FAIL = f'campi/{ADDRESS}/upgrade/fail'

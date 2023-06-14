@@ -7,6 +7,7 @@ SERVICE=campi_sys.service
 USER=root
 ROOT_DIR=/campi
 
+ADDRESS=$(cat /sys/class/net/eth0/address | sed 's/://g')
 BOARD=$(cat /etc/orangepi-release | grep BOARD= | cut -d= -f2)
 TMP_DIR=/tmp/
 DST_DIR=/etc/systemd/system/
@@ -26,6 +27,8 @@ cat > ${TMP_DIR}/$SERVICE <<EOF
     UMask=0000
     WorkingDirectory=${ROOT_DIR}
     Environment="PYTHONPATH=${ROOT_DIR}"
+    Environment="BOARD=${BOARD}"
+    Environment="ADDRESS=${ADDRESS}"
     Restart=always
     RestartSec=5
     ExecStart=python3 ${ROOT_DIR}/campi/app/sys

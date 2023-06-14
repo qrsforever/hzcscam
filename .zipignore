@@ -1,4 +1,4 @@
-ota
+*.ota*
 *.git*
 *.gitignore
 *.gitmodules

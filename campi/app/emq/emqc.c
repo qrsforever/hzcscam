@@ -108,8 +108,9 @@ int emqc_init(const char* host, int port, const char* client_id, const char* use
     }
     syslog(LOG_DEBUG, "Connected to Local MQTT Broker!\n");
     snprintf(buff, 63, "campi/%s/#", client_id);
-    LOCAL_TOPIC_PREFIX_LEN = strlen(buff) - 1;
     MQTTClient_subscribe(l_client, buff, 0);
+    LOCAL_TOPIC_PREFIX_LEN = strlen(buff) - 1;
+    syslog(LOG_DEBUG, "campi sub: %s: %d\n", buff, LOCAL_TOPIC_PREFIX_LEN);
 
     snprintf(buff, 63, "tcp://%s:%d", host, port);
     MQTTClient_create(&r_client, buff, client_id, 0, NULL);
@@ -123,6 +124,7 @@ int emqc_init(const char* host, int port, const char* client_id, const char* use
     snprintf(buff, 63, "cloud/%s/#", client_id);
     MQTTClient_subscribe(r_client, buff, 0);
     CLOUD_TOPIC_PREFIX_LEN = strlen(buff) - 1;
+    syslog(LOG_DEBUG, "cloud sub: %s: %d\n", buff, CLOUD_TOPIC_PREFIX_LEN);
     return 0;
 }
 

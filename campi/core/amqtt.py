@@ -95,6 +95,7 @@ class AsyncMqtt(object):
         self.client.disconnect()
 
     def _on_message(self, client, userdata, message):
+        print(f'topic: {message.topic}, payload: {message.payload.decode()}')
         # print("[{current_thread}]: Received `{payload}` from `{topic}` topic".format(
         #     current_thread=threading.current_thread().ident,
         #     payload=message.payload.decode(),
@@ -106,6 +107,7 @@ class AsyncMqtt(object):
         if isinstance(topics, str):
             topics = [topics]
         for topic in topics:
+            print(f"sub: {topic}")
             self.client.subscribe(topic)
         if callback is not None:
             self.message_callback = callback

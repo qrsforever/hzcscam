@@ -81,7 +81,7 @@ class OtaMessageHandler(MessageHandler):
             return self.UPGRADE_FAIL
 
     def handle_message(self, topic, message):
-        self.logger.info(f'{topic} {message}')
+        self.logger.info(f'ota {topic} {message}')
 
         if topic in (TUpgrade.BY_UDISK, TCloud.OTA):
             message = json.loads(message)
@@ -94,7 +94,6 @@ class OtaMessageHandler(MessageHandler):
                     self.send_message(TCloud.UPGRADE_FAIL, message)
                 with open('/tmp/campi_update.zip', 'wb') as fw:
                     fw.write(zip_res.content)
-
                 message['zip_path'] = '/tmp/campi_update.zip'
 
             if self.UPGRADE_SUCESS == self._do_upgrade(message):

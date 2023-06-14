@@ -29,12 +29,12 @@ echo -n "${APP_VERSION}" > $TOP_DIR/version.txt
 chmod +x $TOP_DIR/board/${BOARD}/bin/* -R
 chmod +x $TOP_DIR/scripts/* -R
 
-mkdir -p ota
+mkdir -p .ota
 
-zip -r ota/update_${APP_VERSION}.zip *  -x@.zipignore
-MD5=`md5sum ota/update_${APP_VERSION}.zip | cut -c1-32`
+zip -r .ota/update_${APP_VERSION}.zip *  -x@.zipignore
+MD5=`md5sum .ota/update_${APP_VERSION}.zip | cut -c1-32`
 
-cat > ota/version_info.json <<EOF
+cat > .ota/version_info.json <<EOF
 {
     "version": "${APP_VERSION}",
     "datetime": "${DATETIME}",
