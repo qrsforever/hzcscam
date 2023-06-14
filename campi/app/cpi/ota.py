@@ -52,22 +52,17 @@ class OtaMessageHandler(MessageHandler):
 
     def _do_upgrade(self, config):
         self.logger.info("upgrade ...")
-        force = config.get('force', False)
-        if not force and compare_version(config['version'], self.app_version):
-            config['reason'] = 'same version'
-            return self.UPGRADE_NOOP
 
         zip_md5 = config['md5']
         zip_path = config['zip_path']
-        md5 = subprocess.check_output(f'md5sum {zip_path} | cut -c1-32', shell=True)
-        if md5.decode('utf-8').strip() != zip_md5:
-            config['reason'] = 'md5 not match'
-            return self.UPGRADE_FAIL
-
         compatible = config.get('compatible', True)
         execsetup = config.get('execsetup', True)
         appversion = config.get('version', '1.0.0')
         try:
+            md5 = subprocess.check_output(f'md5sum {zip_path} | cut -c1-32', shell=True)
+            if md5.decode('utf-8').strip() != zip_md5:
+                config['reason'] = 'md5 not match'
+                return self.UPGRADE_FAIL
             subprocess.call(f'unzip -qo {zip_path} -d {ARCHIVES_ROOT_PATH}/{appversion}', shell=True)
             if compatible:
                 subprocess.call(f'cp -aprf {RUNTIME_PATH} {ARCHIVES_ROOT_PATH}/{appversion}/', shell=True)
@@ -84,23 +79,29 @@ class OtaMessageHandler(MessageHandler):
         self.logger.info(f'ota {topic} {message}')
 
         if topic in (TUpgrade.BY_UDISK, TCloud.OTA):
-            message = json.loads(message)
+            config = json.loads(message) if isinstance(message, str) else message
+
+            force = config.get('force', False)
+            if not force and not compare_version(config['version'], self.app_version):
+                self.logger.info(f"save version: {config['version']}, {self.app_version}")
+                return
+
             if topic == TCloud.OTA:
                 zip_res = requests.get(
-                    message['url'],
+                    config['url'],
                     headers={'Content-Type': 'application/zip'},
                     timeout=(self.conn_timeout, self.read_timeout))
                 if zip_res.status_code != 200:
-                    self.send_message(TCloud.UPGRADE_FAIL, message)
+                    self.send_message(TCloud.UPGRADE_FAIL, config)
                 with open('/tmp/campi_update.zip', 'wb') as fw:
                     fw.write(zip_res.content)
-                message['zip_path'] = '/tmp/campi_update.zip'
+                config['zip_path'] = '/tmp/campi_update.zip'
 
-            if self.UPGRADE_SUCESS == self._do_upgrade(message):
+            if self.UPGRADE_SUCESS == self._do_upgrade(config):
                 self.logger.info("upgrade success")
-                self.send_message(TCloud.UPGRADE_SUCESS, message)
+                self.send_message(TCloud.UPGRADE_SUCESS, config)
                 os.system("sleep 3; reboot")
             else:
-                self.logger.error(f"upgrade fail {message}")
-                self.send_message(TCloud.UPGRADE_FAIL, message)
+                self.logger.error(f"upgrade fail {config}")
+                self.send_message(TCloud.UPGRADE_FAIL, config)
             return
