@@ -1,4 +1,7 @@
+ota
 *.git*
+*.gitignore
+*.gitmodules
 *.flake8
 *.zipignore
 *.clangd

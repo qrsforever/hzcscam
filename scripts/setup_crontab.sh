@@ -5,7 +5,7 @@ CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 BOARD=$(cat /etc/orangepi-release | grep BOARD= | cut -d= -f2)
 BINDIR=/campi/board/${BOARD}/bin
 
-cat > /campi/runtime/crontab <<EOF
+cat > /tmp/crontab <<EOF
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
@@ -18,4 +18,4 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 @reboot root test -x ${BINDIR}/sys_reboot.sh && ${BINDIR}/sys_reboot.sh /campi
 EOF
 
-cp /campi/runtime/crontab /etc/crontab
+mv /tmp/crontab /etc/crontab

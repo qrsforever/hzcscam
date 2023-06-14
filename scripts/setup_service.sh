@@ -6,15 +6,14 @@ FORCE_INSTALL=0
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 TOP_DIR=$(cd ${CUR_DIR}/..; pwd)
 
-rm -rf /campi
-ln -s ${TOP_DIR} /campi
-
 source ${TOP_DIR}/_env
 
-mkdir -p /campi/runtime
-
-cp ${SYSROOT}/etc/nmwifi.json /campi/runtime
-cp ${SYSROOT}/etc/gst_rtmp.env /campi/runtime
+if [[ ! -d ${TOP_DIR}/runtime ]]
+then
+    mkdir -p ${TOP_DIR}/runtime
+    cp ${TOP_DIR}/board/${BOARD}/etc/nmwifi.json ${TOP_DIR}/runtime/
+    cp ${TOP_DIR}/board/${BOARD}/etc/gst_rtmp.env ${TOP_DIR}/runtime/
+fi
 
 gst_bin=$(command -v gst-launch-1.0)
 if [[ x$gst_bin == x || ${FORCE_INSTALL} == 1 ]]
@@ -23,7 +22,7 @@ then
     systemctl disable systemd-resolved
     systemctl mask systemd-resolved
 
-    apt update 
+    apt update
     apt install -y dnsmasq
     apt install -y python3-dev python3-pip libx264-dev libjpeg-dev
     apt install -y gstreamer1.0-tools gstreamer1.0-alsa \
@@ -32,10 +31,10 @@ then
          gstreamer1.0-libav gstreamer1.0-x
     apt install -y python3-gst-1.0
 
-    pip3 install requests, psutil pyudev paho-mqtt quart PyEmail
+    pip3 install requests psutil pyudev paho-mqtt quart PyEmail
 fi
 
-chmod +x ${SYSROOT}/bin/*
+chmod +x ${TOP_DIR}/board/${BOARD}/bin/*
 
 # install service
 for install_svc_script in `find ${CUR_DIR} -name "install_*_service.sh"`
@@ -45,3 +44,8 @@ do
 done
 
 ${CUR_DIR}/setup_crontab.sh
+
+if [[ ! -L /campi ]]
+then
+    ln -s ${TOP_DIR} /campi
+fi

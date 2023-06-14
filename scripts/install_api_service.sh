@@ -8,10 +8,10 @@ USER=root
 ROOT_DIR=/campi
 
 BOARD=$(cat /etc/orangepi-release | grep BOARD= | cut -d= -f2)
-SRC_DIR=${ROOT_DIR}/runtime
+TMP_DIR=${ROOT_DIR}/runtime
 DST_DIR=/etc/systemd/system/
 
-cat > ${SRC_DIR}/$SERVICE <<EOF
+cat > ${TMP_DIR}/$SERVICE <<EOF
 [Unit]
     Description=System Api for WebPage
     Documentation=http://campi.hzcsai.com
@@ -36,14 +36,14 @@ cat > ${SRC_DIR}/$SERVICE <<EOF
 EOF
 
 systemctl stop $SERVICE 2>&1 > /dev/null
-cp ${SRC_DIR}/$SERVICE $DST_DIR
+mv ${TMP_DIR}/$SERVICE $DST_DIR
 systemctl daemon-reload
 # systemctl enable $SERVICE
-systemctl restart $SERVICE
-systemctl status $SERVICE
+# systemctl restart $SERVICE
+# systemctl status $SERVICE
 # journalctl -u $SERVICE --no-pager -n 10
-echo "-------------------------------"
-echo ""
-echo "journalctl -u $SERVICE -f -n 100"
-echo ""
-echo "-------------------------------"
+# echo "-------------------------------"
+# echo ""
+# echo "journalctl -u $SERVICE -f -n 100"
+# echo ""
+# echo "-------------------------------"

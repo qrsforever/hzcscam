@@ -4,7 +4,6 @@ CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 TOP_DIR=$(cd $CUR_DIR/..; pwd)
 
 BOARD=orangepizero2
-APP_NAME=`basename $TOP_DIR`
 
 cd $TOP_DIR
 
@@ -30,9 +29,9 @@ echo -n "${APP_VERSION}" > $TOP_DIR/version.txt
 chmod +x $TOP_DIR/board/${BOARD}/bin/* -R
 chmod +x $TOP_DIR/scripts/* -R
 
-cd $TOP_DIR/.. && mkdir -p ota
+mkdir -p ota
 
-zip -r ota/update_${APP_VERSION}.zip ${APP_NAME} -x@${APP_NAME}/.zipignore
+zip -r ota/update_${APP_VERSION}.zip *  -x@.zipignore
 MD5=`md5sum ota/update_${APP_VERSION}.zip | cut -c1-32`
 
 cat > ota/version_info.json <<EOF

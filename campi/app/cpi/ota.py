@@ -65,17 +65,18 @@ class OtaMessageHandler(MessageHandler):
 
         compatible = config.get('compatible', True)
         execsetup = config.get('execsetup', True)
+        appversion = config.get('version', '1.0.0')
         try:
-            subprocess.call(f'unzip -qo {zip_path} -d {ARCHIVES_ROOT_PATH}', shell=True)
+            subprocess.call(f'unzip -qo {zip_path} -d {ARCHIVES_ROOT_PATH}/{appversion}', shell=True)
             if compatible:
-                subprocess.call(f'cp -aprf {RUNTIME_PATH} {ARCHIVES_ROOT_PATH}/hzcscam', shell=True)
-            subprocess.call(f'rm -rf {ARCHIVES_CURRENT_PATH}', shell=True)
-            subprocess.call(f'mv {ARCHIVES_ROOT_PATH}/hzcscam {ARCHIVES_CURRENT_PATH}', shell=True)
+                subprocess.call(f'cp -aprf {RUNTIME_PATH} {ARCHIVES_ROOT_PATH}/{appversion}/', shell=True)
+            subprocess.call('rm -rf $(readlink /campi)', shell=True)
+            subprocess.call(f'rm -f /campi; ln -s {ARCHIVES_ROOT_PATH}/{appversion} /campi', shell=True)
             if execsetup:
-                subprocess.call('/campi/scripts/setup_service.sh', shell=True)
+                subprocess.call(f'{ARCHIVES_ROOT_PATH}/{appversion}/scripts/setup_service.sh', shell=True)
             return self.UPGRADE_SUCESS
         except Exception as err:
-            config['reason'] = f'upgrade fail {err}'
+            config['reason'] = f'subprocess upgrade fail {err}'
             return self.UPGRADE_FAIL
 
     def handle_message(self, topic, message):
