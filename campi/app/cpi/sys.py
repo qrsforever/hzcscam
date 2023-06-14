@@ -12,15 +12,18 @@ import multiprocessing
 import subprocess
 import json
 import os
+import psutil
 
 from . import MessageHandler
 from campi.topics import (
     TNetwork,
     TUsbDisk,
+    TCloud,
     TSystem,
     TUpgrade,
     TApis)
 
+import campi.constants as C
 from campi.constants import (
     SCRIPT_OF_SET_WIFI,
     SCRIPT_OF_START_AP,
@@ -166,3 +169,15 @@ class SystemMessageHandler(MessageHandler):
 
         if topic == TSystem.SHUTDOWN:
             self.quit()
+
+    async def do_heartbeat(self):
+        about = {
+            'software_version': C.APP_VERSION,
+            'hardware_product': C.BOARD,
+            'mac': C.ADDRESS,
+            'ip': util_get_lanip(),
+            'disk_usage_percent': psutil.disk_usage('/').percent,
+            'cpu_percent': psutil.cpu_percent(),
+            'cpu_memory_percent': psutil.virtual_memory().percent
+        }
+        self.send_message(TCloud.EVENTS_HEARTBEAT, about)

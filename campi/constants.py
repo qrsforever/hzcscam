@@ -9,6 +9,7 @@
 
 import os
 
+
 MAIN_PID = os.getpid()
 
 BOARD = os.environ.get('BOARD', 'orangepi3-lts')
@@ -36,3 +37,7 @@ WIFI_NM_CONF = f'{RUNTIME_PATH}/nmwifi.json'
 
 VERSION_APP_PATH = '/campi/version.txt'
 VERSION_OTA_FILE = 'version_info.json'
+APP_VERSION = '1.0.0'
+
+with open(VERSION_APP_PATH, 'r') as fr:
+    APP_VERSION = fr.read().strip()

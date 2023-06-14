@@ -38,6 +38,8 @@ class TCloud:
     UPGRADE_SUCESS = f'campi/{ADDRESS}/upgrade/success'
     UPGRADE_FAIL = f'campi/{ADDRESS}/upgrade/fail'
 
+    EVENTS_HEARTBEAT = f'campi/{ADDRESS}/events/heartbeat'
+
 class TApis:
     SET_WIFI = '/apis/set_wifi'
 
