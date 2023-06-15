@@ -39,9 +39,17 @@ class GstMessageHandler(MessageHandler):
             TCloud.CAMERA_RTMP, TCloud.CAMERA_OVERLAY, TCloud.CAMERA_IMAGE, TCloud.CAMERA_VIDEO,
         ])
         self.config = self._read_config()
+        self.cvt = {}
         if self.config.get('RTMP_ENABLE', True):
             util_start_service(self.SNAME)
         self.is_running = util_check_service(self.SNAME)
+
+    def _restart_gst(self):
+        if self.is_running:
+            util_start_service(self.SNAME, restart=True)
+        self.is_running = util_check_service(self.SNAME)
+
+
 
 # Read & Save Config {{{
     def _read_config(self):
@@ -117,9 +125,7 @@ class GstMessageHandler(MessageHandler):
 
     def _set_overlay(self, jdata):
         if self.set_config(jdata):
-            if self.is_running:
-                util_start_service(self.SNAME, restart=True)
-            self.is_running = util_check_service(self.SNAME)
+            self._restart_gst()
         self.send_message(TCloud.CAMERA_CONFIG, self.get_overlay_config())
 # }}}
 
@@ -137,9 +143,7 @@ class GstMessageHandler(MessageHandler):
 
     def _set_image(self, jdata):
         if self.set_config(jdata):
-            if self.is_running:
-                util_start_service(self.SNAME, restart=True)
-            self.is_running = util_check_service(self.SNAME)
+            self._restart_gst()
         self.send_message(TCloud.CAMERA_CONFIG, self.get_image_config())
 # }}}
 
@@ -150,9 +154,7 @@ class GstMessageHandler(MessageHandler):
 
     def _set_video(self, jdata):
         if self.set_config(jdata):
-            if self.is_running:
-                util_start_service(self.SNAME, restart=True)
-            self.is_running = util_check_service(self.SNAME)
+            self._restart_gst()
         self.send_message(TCloud.CAMERA_CONFIG, self.get_video_config())
 # }}}
 
@@ -168,31 +170,42 @@ class GstMessageHandler(MessageHandler):
 # }}}
 
     def on_camera_plugin(self, videoid):# {{{
-        ret = subprocess.Popen(
-                f'v4l2-ctl --device {videoid} --list-ctrls',
-                shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8")
-        if not ret.returncode:
-            config = self.get_image_config()
-            newcnf = {} 
-            for line in ret.stdout.readlines():
-                p, q = line.split(':')
-                p, q = p.strip(), q.strip()
-                psegs = p.split(' ')
-                if psegs[0] in ('brightness', 'contrast', 'hue', 'saturation'):
-                    qsegs = q.split(' ')
-                    if psegs[-1] == '(int)':
-                        newcnf[psegs[0].upper()] = int((config[psegs[0]] * (qsegs[1] - qsegs[0]) / 100))
-            with open(GST_CAMERA_PROP, 'w') as fw:
-                for key, value in newcnf.items():
-                    fw.write(f'{key}={value}\n')
+        try:
+            ret = subprocess.Popen(
+                    f'v4l2-ctl --device {videoid} --list-ctrls',
+                    shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8")
+            if not ret.returncode:
+                config = self.get_image_config()
+                newcnf = {} 
+                for line in ret.stdout.readlines():
+                    line = line.strip()
+                    if not line or ':' not in line:
+                        continue
+                    p, q = line.split(':')
+                    p, q = p.strip(), q.strip()
+                    psegs = p.split(' ')
+                    if psegs[0] in ('brightness', 'contrast', 'hue', 'saturation'):
+                        qsegs = q.split(' ')
+                        if psegs[-1] == '(int)':
+                            min = int(qsegs[0].split('=')[1])
+                            max = int(qsegs[1].split('=')[1])
+                            # self.cvt[
+                            newcnf[psegs[0].upper()] = int((config[psegs[0]] * (max - min) / 100)) + min
+                with open(GST_CAMERA_PROP, 'w') as fw:
+                    for key, value in newcnf.items():
+                        fw.write(f'{key}={value}\n')
+            self._restart_gst()
+        except Exception as err: 
+            self.logger.error(f'{err}')
 # }}}
 
     def handle_message(self, topic, message):
         self.logger.info(f'gst {topic} {message}')
-        jdata = json.loads(message)
 
         if topic == TUsbCamera.PLUGIN:
             return self.on_camera_plugin(message)
+
+        jdata = json.loads(message)
 
         if topic == TCloud.CAMERA_RTMP:
             return self._set_rtmp(jdata)
