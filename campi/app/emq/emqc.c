@@ -43,11 +43,7 @@ static int on_message(void *context, char *topic, int length, MQTTClient_message
     char *payload = (char*)message->payload;
     if (strncmp(topic, "cloud/", 6) == 0) {
         syslog(LOG_DEBUG, "From Cloud to Campi Received `%s` from `%s` topic \n", payload, topic);
-        if (strncmp(topic + CLOUD_TOPIC_PREFIX_LEN, "ota", 3) == 0) {
-            MQTTClient_deliveryToken token;
-            MQTTClient_publishMessage(l_client, topic, message, &token);
-            MQTTClient_waitForCompletion(l_client, token, 2000L);
-        } else {
+        if (strncmp(topic + CLOUD_TOPIC_PREFIX_LEN, "sensors", 7) == 0) {
             for (int i = 0; i < MAX_MESSAGE_HANDLERS; ++i) {
                 if (s_messageHandlers[i].topic != NULL && strcmp(s_messageHandlers[i].topic, topic) == 0) {
                     if (s_messageHandlers[i].fp != NULL) {
@@ -55,6 +51,10 @@ static int on_message(void *context, char *topic, int length, MQTTClient_message
                     }
                 }
             }
+        } else {
+            MQTTClient_deliveryToken token;
+            MQTTClient_publishMessage(l_client, topic, message, &token);
+            MQTTClient_waitForCompletion(l_client, token, 2000L);
         }
     } else { // campi/
         syslog(LOG_DEBUG, "From Campi to Cloud: Received `%s` from `%s` topic \n", payload, topic);

@@ -19,22 +19,27 @@ fi
 
 source /campi/runtime/gst_rtmp.env
 
+if [ -e /campi/runtime/camera_prop.env ]
+then
+    source /campi/runtime/camera_prop.env
+fi
+
 ADDRESS=${ADDRESS:-$(cat /sys/class/net/eth0/address | sed 's/://g')}
 
 FRAME_WIDTH=${FRAME_WIDTH:-640}
 FRAME_HEIGHT=${FRAME_HEIGHT:-480}
 FRAME_RATE=${FRAME_RATE:-15}
 
-BRIGHTNESS=${BRIGHTNESS:-0}
-CONTRAST=${CONTRAST:-0}
-HUE=${HUE:-0}
-SATURATION=${SATURATION:-0}
+BRIGHTNESS=${BRIGHTNESS:-100}
+CONTRAST=${CONTRAST:-50}
+HUE=${HUE:-50}
+SATURATION=${SATURATION:-50}
 
 OVERLAY_FONT=${OVERLAY_FONT:-12}
 
 if [[ x${VIDEO_DEVICE} != x ]]
 then
-    GSTSRC="v4l2src device=${VIDEO_DEVICE} io-mode=4 brightness=${BRIGHTNESS} contrast=${CONTRAST} hue=${HUE} saturation=${SATURATION} !"
+    GSTSRC="v4l2src device=${VIDEO_DEVICE} io-mode=4 extra-controls=\"c,brightness=${BRIGHTNESS},contrast=${CONTRAST},hue=${HUE},saturation=${SATURATION}\" !"
 else
     GSTSRC="videotestsrc !"
 fi
@@ -48,8 +53,8 @@ then
         RTMP_STREAM=${ADDRESS}
     fi
     RTMP_VHOST=${RTMP_VHOST:-seg.300s}
-    X264E_BITRATE=${X264E_BITRATE:-128}
-    GSTSINK="x264enc bitrate=${X264E_BITRATE} speed-preset=veryfast key-int-max=0 ! flvmux streamable=true ! rtmpsink location=rtmp://${RTMP_DOMAIN}/${RTMP_ROOM}/${RTMP_STREAM}?vhost=${SRSOS_VHOST}"
+    X264E_BITRATE=${VIDEO_BITRATE:-128}
+    GSTSINK="x264enc bframes=0 bitrate=${X264E_BITRATE} speed-preset=veryfast key-int-max=0 ! flvmux streamable=true ! rtmpsink location=rtmp://${RTMP_DOMAIN}/${RTMP_ROOM}/${RTMP_STREAM}?vhost=${RTMP_VHOST}"
 else
     GSTSINK="autovideosink"
 fi
@@ -98,9 +103,9 @@ do
                 echo "ping ${RTMP_DOMAIN} not received!"
             fi
         fi
-    else
-        echo "camera [${VIDEO_DEVICE}] is not exist!"
+    # else
+        # echo "camera [${VIDEO_DEVICE}] is not exist!"
         # __echo_and_run gst-launch-1.0 ${GSTSRC} ${VIDEO_CONVERT} ${GSTSINK}
     fi
-    sleep 10
+    sleep 30
 done

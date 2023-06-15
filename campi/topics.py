@@ -24,6 +24,11 @@ class TUsbDisk:
     MOUNTED = 'usbdisk/mounted'
     UMOUNTED = 'usbdisk/umounted'
 
+class TUsbCamera:
+    ALL = 'camera/#'
+    PLUGIN = 'camera/plugin'
+    PLUGOUT = 'camera/plugout'
+
 class TLogger:
     ALL = 'logger/#'
     DEBUG = 'logger/debug'
@@ -44,6 +49,7 @@ class TCloud:
     CAMERA_RTMP = f'cloud/{ADDRESS}/camera/rtmp'
     CAMERA_OVERLAY = f'cloud/{ADDRESS}/camera/overlay'
     CAMERA_IMAGE = f'cloud/{ADDRESS}/camera/image'
+    CAMERA_VIDEO = f'cloud/{ADDRESS}/camera/video'
     CAMERA_CONFIG = f'campi/{ADDRESS}/camera/config'
 
 class TApis:

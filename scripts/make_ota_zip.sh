@@ -39,7 +39,7 @@ cat > .ota/version_info.json <<EOF
     "version": "${APP_VERSION}",
     "datetime": "${DATETIME}",
     "compatible": true,
-    "url": "update_${APP_VERSION}.zip",
+    "url": "http://aiot.hzcsdata.com:30082/update_${APP_VERSION}.zip",
     "force": ${FORCE},
     "md5": "${MD5}",
     "execsetup": ${SETUP},

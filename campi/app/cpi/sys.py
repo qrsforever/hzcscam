@@ -25,11 +25,8 @@ from campi.topics import (
 
 import campi.constants as C
 from campi.constants import (
-    SCRIPT_OF_SET_WIFI,
-    SCRIPT_OF_START_AP,
-    SCRIPT_OF_STOP_AP,
-    VERSION_OTA_FILE,
-    WIFI_NM_CONF)
+    SCRIPT_OF_SET_WIFI, SCRIPT_OF_START_AP, SCRIPT_OF_STOP_AP,
+    VERSION_OTA_FILE, WIFI_NM_CONF)
 
 from campi.utils.net import (
     util_get_mac,

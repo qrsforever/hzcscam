@@ -7,11 +7,13 @@
 # @version 1.0
 # @date 2023-06-15 15:01
 
+import subprocess
 import json
 
 from . import MessageHandler
 from campi.constants import (
     ADDRESS,
+    GST_CAMERA_PROP,
     GST_CONFIG_PATH,
 )
 
@@ -21,20 +23,27 @@ from campi.utils.shell import (
     util_stop_service,
 )
 
-from campi.topics import TCloud as T
+from campi.topics import (
+    TCloud,
+    TUsbCamera,
+)
 
 
 class GstMessageHandler(MessageHandler):
 
-    SNAME = 'campi.gst.service'
+    SNAME = 'campi_gst.service'
 
     def __init__(self):
-        super().__init__([T.CAMERA_RTMP, T.CAMERA_OVERLAY, T.CAMERA_IMAGE])
+        super().__init__([
+            TUsbCamera.ALL,
+            TCloud.CAMERA_RTMP, TCloud.CAMERA_OVERLAY, TCloud.CAMERA_IMAGE, TCloud.CAMERA_VIDEO,
+        ])
         self.config = self._read_config()
         if self.config.get('RTMP_ENABLE', True):
             util_start_service(self.SNAME)
         self.is_running = util_check_service(self.SNAME)
 
+# Read & Save Config {{{
     def _read_config(self):
         config = {}
         with open(GST_CONFIG_PATH, 'r') as fr:
@@ -44,12 +53,18 @@ class GstMessageHandler(MessageHandler):
                     key, value = line.split('=')
                     if '#' in value:
                         value = value.split('#')[0].strip()
+                    if value == 'true':
+                        value = True
+                    elif value == 'false':
+                        value = False
                     config[key] = value
         return config
 
     def _save_config(self, config):
         with open(GST_CONFIG_PATH, 'w') as fw:
             for key, value in config.items():
+                if isinstance(value, bool):
+                    value = 'true' if value else 'false'
                 fw.write(f"{key}={value}\n")
 
     def set_config(self, jdata):
@@ -60,10 +75,11 @@ class GstMessageHandler(MessageHandler):
                 self.config[key] = value
                 to_save = True
         if to_save:
-            self._save_config()
+            self._save_config(self.config)
         return to_save
+# }}}
 
-    def get_rtmp_config(self):
+    def get_rtmp_config(self):# {{{
         return {
             "rtmp_enable": self.config.get('RTMP_ENABLE', True),
             "rtmp_domain": self.config.get('RTMP_DOMAIN', 'srs.hzcsdata.com'),
@@ -74,18 +90,22 @@ class GstMessageHandler(MessageHandler):
 
     def _set_rtmp(self, jdata):
         self.set_config(jdata)
+        self.logger.info(f'{self.config}')
         enable = self.config.get('RTMP_ENABLE', True)
         if enable:
             if not self.is_running:
+                self.logger.info(f'start {self.SNAME}')
                 util_start_service(self.SNAME)
         else:
             if self.is_running:
+                self.logger.info(f'stop {self.SNAME}')
                 util_stop_service(self.SNAME)
 
         self.is_running = util_check_service(self.SNAME)
-        self.send_message(T.CAMERA_CONFIG, self.get_rtmp_config())
+        self.send_message(TCloud.CAMERA_CONFIG, self.get_rtmp_config())
+# }}}
 
-    def get_overlay_config(self):
+    def get_overlay_config(self):# {{{
         return {
             "time_format": self.config.get('TIME_FORMAT', "%Y/%m/%d %H:%M:%S"),
             "time_halignment": self.config.get('TIME_HALIGNMENT', 'right'),
@@ -100,17 +120,18 @@ class GstMessageHandler(MessageHandler):
             if self.is_running:
                 util_start_service(self.SNAME, restart=True)
             self.is_running = util_check_service(self.SNAME)
-        self.send_message(T.CAMERA_CONFIG, self.get_overlay_config())
+        self.send_message(TCloud.CAMERA_CONFIG, self.get_overlay_config())
+# }}}
 
-    def get_image_config(self):
+    def get_image_config(self):# {{{
         return {
             'frame_width': int(self.config.get('FRAME_WIDTH', '640')),
             'frame_height': int(self.config.get('FRAME_HEIGHT', '480')),
             'frame_rate': int(self.config.get('FRAME_RATE', '15')),
-            'brightness': int(self.config.get('BRIGHTNESS', '0')),
-            'contrast': int(self.config.get('CONTRAST', '0')),
-            'hue': int(self.config.get('HUE', '0')),
-            'saturation': int(self.config.get('SATURATION', '0')),
+            'brightness': int(self.config.get('BRIGHTNESS', '100')),
+            'contrast': int(self.config.get('CONTRAST', '50')),
+            'hue': int(self.config.get('HUE', '50')),
+            'saturation': int(self.config.get('SATURATION', '50')),
             'flip_method': self.config.get('FLIP_METHOD', 'vertical-flip'),
         }
 
@@ -119,25 +140,68 @@ class GstMessageHandler(MessageHandler):
             if self.is_running:
                 util_start_service(self.SNAME, restart=True)
             self.is_running = util_check_service(self.SNAME)
-        self.send_message(T.CAMERA_CONFIG, self.get_image_config())
+        self.send_message(TCloud.CAMERA_CONFIG, self.get_image_config())
+# }}}
 
-    def do_report_config(self):
+    def get_video_config(self):# {{{
+        return {
+            "video_bitrate": int(self.config.get('VIDEO_BITRATE', 400)),
+        }
+
+    def _set_video(self, jdata):
+        if self.set_config(jdata):
+            if self.is_running:
+                util_start_service(self.SNAME, restart=True)
+            self.is_running = util_check_service(self.SNAME)
+        self.send_message(TCloud.CAMERA_CONFIG, self.get_video_config())
+# }}}
+
+    async def do_report_config(self):# {{{
         config = {
             'rtmp': self.get_rtmp_config(),
             'overlay': self.get_overlay_config(),
-            'image': self.get_image_config()
+            'image': self.get_image_config(),
+            'video': self.get_video_config(),
         }
-        self.send_message(T.CAMERA_CONFIG, config)
+        self.logger.info(f'gst report: {config}')
+        self.send_message(TCloud.CAMERA_CONFIG, config)
+# }}}
+
+    def on_camera_plugin(self, videoid):# {{{
+        ret = subprocess.Popen(
+                f'v4l2-ctl --device {videoid} --list-ctrls',
+                shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8")
+        if not ret.returncode:
+            config = self.get_image_config()
+            newcnf = {} 
+            for line in ret.stdout.readlines():
+                p, q = line.split(':')
+                p, q = p.strip(), q.strip()
+                psegs = p.split(' ')
+                if psegs[0] in ('brightness', 'contrast', 'hue', 'saturation'):
+                    qsegs = q.split(' ')
+                    if psegs[-1] == '(int)':
+                        newcnf[psegs[0].upper()] = int((config[psegs[0]] * (qsegs[1] - qsegs[0]) / 100))
+            with open(GST_CAMERA_PROP, 'w') as fw:
+                for key, value in newcnf.items():
+                    fw.write(f'{key}={value}\n')
+# }}}
 
     def handle_message(self, topic, message):
         self.logger.info(f'gst {topic} {message}')
         jdata = json.loads(message)
 
-        if topic == T.CAMERA_RTMP:
+        if topic == TUsbCamera.PLUGIN:
+            return self.on_camera_plugin(message)
+
+        if topic == TCloud.CAMERA_RTMP:
             return self._set_rtmp(jdata)
 
-        if topic == T.CAMERA_OVERLAY:
+        if topic == TCloud.CAMERA_OVERLAY:
             return self._set_overlay(jdata)
 
-        if topic == T.CAMERA_IMAGE:
+        if topic == TCloud.CAMERA_IMAGE:
             return self._set_image(jdata)
+
+        if topic == TCloud.CAMERA_VIDEO:
+            return self._set_video(jdata)

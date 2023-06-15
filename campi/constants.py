@@ -45,3 +45,4 @@ with open(VERSION_APP_PATH, 'r') as fr:
 ## Gst
 
 GST_CONFIG_PATH = f'{RUNTIME_PATH}/gst_rtmp.env'
+GST_CAMERA_PROP = f'{RUNTIME_PATH}/camera_prop.env'

@@ -17,4 +17,4 @@ class UsbEventDetector(EventDetector):
         super().__init__(mqtt)
 
     async def handle_event(self, device):
-        print(device)
+        self.mqtt.logi(f'usb: {device}')

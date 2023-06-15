@@ -19,6 +19,7 @@ from campi.topics import TSystem
 from campi.app.sys.usb import UsbEventDetector
 from campi.app.sys.blk import BlkEventDetector
 from campi.app.sys.net import NetEventDetector
+from campi.app.sys.input import InputEventDetector
 
 DEBUG = 1
 
@@ -34,12 +35,13 @@ class SystemEventMonitor(AsyncTask):
         self.eusb = UsbEventDetector(self.mqtt).filter_by(self.monitor)
         self.eblk = BlkEventDetector(self.mqtt).filter_by(self.monitor)
         self.enet = NetEventDetector(self.mqtt).filter_by(self.monitor)
+        self.einput = InputEventDetector(self.mqtt).filter_by(self.monitor)
 
     def handle_udev_event(self):
         d = self.monitor.poll(0)
         if d is not None:
             if DEBUG:
-                print(f'[{threading.current_thread().ident}]: subsystem:{d.subsystem}, device_type:{d.device_type}, action:{d.action}, device_path:{d.device_path}, device_node:{d.device_node}, sys_name:{d.sys_name}')
+                self.mqtt.logi(f'subsystem:{d.subsystem}, device_type:{d.device_type}, action:{d.action}, device_path:{d.device_path}, device_node:{d.device_node}, sys_name:{d.sys_name}')
 
             async def do_task(d):
                 if d.subsystem == self.eusb.subsystem:
@@ -48,6 +50,8 @@ class SystemEventMonitor(AsyncTask):
                     await self.eblk.handle_event(d)
                 elif d.subsystem == self.enet.subsystem:
                     await self.enet.handle_event(d)
+                elif d.subsystem == self.einput.subsystem:
+                    await self.einput.handle_event(d)
             asyncio.create_task(do_task(d))
 
     def handle_mqtt_event(self, topic, message):
