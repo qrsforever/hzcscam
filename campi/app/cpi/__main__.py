@@ -15,23 +15,29 @@ import asyncio
 from campi.app.cpi.sys import SystemMessageHandler
 from campi.app.cpi.log import LoggerMessageHandler
 from campi.app.cpi.ota import OtaMessageHandler
+from campi.app.cpi.gst import GstMessageHandler
 
 
 async def main():
     sys_h = SystemMessageHandler()  # noqa
     log_h = LoggerMessageHandler()  # noqa
     ota_h = OtaMessageHandler()     # noqa
+    gst_h = GstMessageHandler()     # noqa
 
     loop = asyncio.get_running_loop()
-    loop.call_later(3, sys_h.queue.put_nowait, 'h')
+    loop.call_later(5, sys_h.queue.put_nowait, 'h')
+    report = False
     while True:
         r = await sys_h.queue.get()
         if r == 'q':
             print("system quit")
             break
         elif r == 'h':
+            if not report:
+                gst_h.do_report_config()
+                report = True
             await sys_h.do_heartbeat()
-            loop.call_later(300, sys_h.queue.put_nowait, 'h')
+            loop.call_later(sys_h.heartbeat_interval, sys_h.queue.put_nowait, 'h')
 
     import os
     os.system("sleep 1; reboot")

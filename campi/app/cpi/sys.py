@@ -47,6 +47,7 @@ WIFIAP_STOPING = 2
 
 
 class SystemMessageHandler(MessageHandler):
+
     def __init__(self):
         super().__init__([
             TNetwork.ALL,
@@ -54,6 +55,7 @@ class SystemMessageHandler(MessageHandler):
             TSystem.SHUTDOWN,
             TApis.SET_WIFI,
         ])
+        self.heartbeat_interval = 300
         self.wifiap_state = WIFIAP_NOSTATE
         self.network_connected = False
         self.wifi_ssid_pswd = None

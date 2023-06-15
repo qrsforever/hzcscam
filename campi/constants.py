@@ -41,3 +41,7 @@ APP_VERSION = '1.0.0'
 
 with open(VERSION_APP_PATH, 'r') as fr:
     APP_VERSION = fr.read().strip()
+
+## Gst
+
+GST_CONFIG_PATH = f'{RUNTIME_PATH}/gst_rtmp.env'

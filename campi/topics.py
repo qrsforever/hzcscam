@@ -32,13 +32,19 @@ class TLogger:
     ERROR = 'logger/error'
 
 class TCloud:
-    ALL = 'cloud/#'
-    OTA = f'cloud/{ADDRESS}/ota'
+    # EVENTS
+    EVENTS_HEARTBEAT = f'campi/{ADDRESS}/events/heartbeat'
 
+    # OTA
+    OTA = f'cloud/{ADDRESS}/ota'
     UPGRADE_SUCESS = f'campi/{ADDRESS}/upgrade/success'
     UPGRADE_FAIL = f'campi/{ADDRESS}/upgrade/fail'
 
-    EVENTS_HEARTBEAT = f'campi/{ADDRESS}/events/heartbeat'
+    # GST
+    CAMERA_RTMP = f'cloud/{ADDRESS}/camera/rtmp'
+    CAMERA_OVERLAY = f'cloud/{ADDRESS}/camera/overlay'
+    CAMERA_IMAGE = f'cloud/{ADDRESS}/camera/image'
+    CAMERA_CONFIG = f'campi/{ADDRESS}/camera/config'
 
 class TApis:
     SET_WIFI = '/apis/set_wifi'

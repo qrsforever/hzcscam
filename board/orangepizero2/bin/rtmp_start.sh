@@ -19,8 +19,7 @@ fi
 
 source /campi/runtime/gst_rtmp.env
 
-INTERFACE=${INTERFACE:-eth0}
-ADDRESS=$(cat /sys/class/net/${INTERFACE}/address | sed 's/://g')
+ADDRESS=${ADDRESS:-$(cat /sys/class/net/eth0/address | sed 's/://g')}
 
 FRAME_WIDTH=${FRAME_WIDTH:-640}
 FRAME_HEIGHT=${FRAME_HEIGHT:-480}
@@ -42,9 +41,15 @@ fi
 
 if [[ x${RTMP_DOMAIN} != x ]]
 then
-    SRSOS_VHOST=${SRSOS_VHOST:-seg.300s}
+    RTMP_ROOM=${RTMP_ROOM:-live}
+    RTMP_STREAM=${RTMP_STREAM:-${ADDRESS}}
+    if [[ ${RTMP_STREAM} == auto ]]
+    then
+        RTMP_STREAM=${ADDRESS}
+    fi
+    RTMP_VHOST=${RTMP_VHOST:-seg.300s}
     X264E_BITRATE=${X264E_BITRATE:-128}
-    GSTSINK="x264enc bitrate=${X264E_BITRATE} speed-preset=veryfast key-int-max=0 ! flvmux streamable=true ! rtmpsink location=rtmp://${RTMP_DOMAIN}/live/${ADDRESS}?vhost=${SRSOS_VHOST}"
+    GSTSINK="x264enc bitrate=${X264E_BITRATE} speed-preset=veryfast key-int-max=0 ! flvmux streamable=true ! rtmpsink location=rtmp://${RTMP_DOMAIN}/${RTMP_ROOM}/${RTMP_STREAM}?vhost=${SRSOS_VHOST}"
 else
     GSTSINK="autovideosink"
 fi
@@ -76,7 +81,7 @@ then
     VIDEO_CONVERT="${VIDEO_CONVERT} textoverlay text=\"${TEXT_TITLE}\" halignment=${TEXT_HALIGNMENT} valignment=${TEXT_VALIGNMENT} font-desc=\"normal ${OVERLAY_FONT}\" !"
 fi
 
-PLAY_TEST="http://101.42.139.3:30808/players/rtc_player.html?vhost=${SRSOS_VHOST}&ip=192.168.152.185&api=31985&app=live&stream=${ADDRESS}&autostart=true"
+PLAY_TEST="http://101.42.139.3:30808/players/rtc_player.html?vhost=${RTMP_VHOST}&ip=192.168.152.185&api=31985&app=live&stream=${ADDRESS}&autostart=true"
 
 while (( 1 ))
 do

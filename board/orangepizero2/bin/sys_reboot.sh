@@ -14,6 +14,11 @@ then
     mkdir -p ${RUNTIME_PATH}/start
 fi
 
+if [[ ! -e ${RUNTIME_PATH}/gst_rtmp.env ]]
+then
+    cp ${SYSROOT}/etc/gst_rtmp.env ${RUNTIME_PATH}/gst_rtmp.env
+fi
+
 __run_and_log() {
     echo "$*"
     /bin/bash -c "$*" >> /tmp/campi_reboot.log
