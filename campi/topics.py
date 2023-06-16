@@ -39,6 +39,7 @@ class TLogger:
 class TCloud:
     # EVENTS
     EVENTS_HEARTBEAT = f'campi/{ADDRESS}/events/heartbeat'
+    EVENTS_ABOUT = f'campi/{ADDRESS}/events/about'
 
     # OTA
     OTA = f'cloud/{ADDRESS}/ota'
@@ -46,10 +47,10 @@ class TCloud:
     UPGRADE_FAIL = f'campi/{ADDRESS}/upgrade/fail'
 
     # GST
-    CAMERA_RTMP = f'cloud/{ADDRESS}/camera/rtmp'
-    CAMERA_OVERLAY = f'cloud/{ADDRESS}/camera/overlay'
     CAMERA_IMAGE = f'cloud/{ADDRESS}/camera/image'
     CAMERA_VIDEO = f'cloud/{ADDRESS}/camera/video'
+    CAMERA_OVERLAY = f'cloud/{ADDRESS}/camera/overlay'
+    CAMERA_RTMP = f'cloud/{ADDRESS}/camera/rtmp'
     CAMERA_CONFIG = f'campi/{ADDRESS}/camera/config'
 
 class TApis:

@@ -34,9 +34,13 @@ async def main():
             break
         elif r == 'h':
             if not report:
-                await gst_h.do_report_config()
+                extras = {
+                    "gst": gst_h.get_config(),
+                }
+                await sys_h.do_heartbeat(extras)
                 report = True
-            await sys_h.do_heartbeat()
+            else:
+                await sys_h.do_heartbeat()
             loop.call_later(sys_h.heartbeat_interval, sys_h.queue.put_nowait, 'h')
 
     import os

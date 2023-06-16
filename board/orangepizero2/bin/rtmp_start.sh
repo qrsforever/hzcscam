@@ -1,6 +1,7 @@
 #!/bin/bash
 
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
+PRO_FIL=/campi/runtime/camera_props.json
 
 source /campi/_env
 
@@ -19,11 +20,6 @@ fi
 
 source /campi/runtime/gst_rtmp.env
 
-if [ -e /campi/runtime/camera_prop.env ]
-then
-    source /campi/runtime/camera_prop.env
-fi
-
 ADDRESS=${ADDRESS:-$(cat /sys/class/net/eth0/address | sed 's/://g')}
 
 FRAME_WIDTH=${FRAME_WIDTH:-640}
@@ -39,6 +35,22 @@ OVERLAY_FONT=${OVERLAY_FONT:-12}
 
 if [[ x${VIDEO_DEVICE} != x ]]
 then
+    if [ -e ${PRO_FIL} ]
+    then
+        JDATA=$(cat ${PRO_FIL})
+        PROPS=('brightness' 'contrast' 'hue' 'saturation')
+        for prop in ${PROPS[@]}
+        do
+            min=$(echo ${JDATA} | jq .$prop.min)
+            max=$(echo ${JDATA} | jq .$prop.max)
+            if [[ $min != null && $max != null ]]
+            then
+                PROP=$(echo $prop | tr '[:lower:]' '[:upper:]')
+                eval "(( $PROP = \$${PROP} * ($max - $min) / 100 + $min ))"
+            fi
+        done
+    fi
+
     GSTSRC="v4l2src device=${VIDEO_DEVICE} io-mode=4 extra-controls=\"c,brightness=${BRIGHTNESS},contrast=${CONTRAST},hue=${HUE},saturation=${SATURATION}\" !"
 else
     GSTSRC="videotestsrc !"

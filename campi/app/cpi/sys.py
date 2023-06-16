@@ -169,14 +169,17 @@ class SystemMessageHandler(MessageHandler):
         if topic == TSystem.SHUTDOWN:
             self.quit()
 
-    async def do_heartbeat(self):
+    async def do_heartbeat(self, extras=None):
         about = {
-            'software_version': C.APP_VERSION,
-            'hardware_product': C.BOARD,
-            'mac': C.ADDRESS,
             'ip': util_get_lanip(),
             'disk_usage_percent': psutil.disk_usage('/').percent,
             'cpu_percent': psutil.cpu_percent(),
             'cpu_memory_percent': psutil.virtual_memory().percent
         }
+        if extras:
+            about['software_version'] = C.APP_VERSION
+            about['hardware_product'] = C.BOARD
+            about['mac'] = C.ADDRESS
+            for key, value in extras.items():
+                about[key] = value
         self.send_message(TCloud.EVENTS_HEARTBEAT, about)

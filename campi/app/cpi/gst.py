@@ -8,6 +8,7 @@
 # @date 2023-06-15 15:01
 
 import subprocess
+import os
 import json
 
 from . import MessageHandler
@@ -158,25 +159,13 @@ class GstMessageHandler(MessageHandler):
         self.send_message(TCloud.CAMERA_CONFIG, self.get_video_config())
 # }}}
 
-    async def do_report_config(self):# {{{
-        config = {
-            'rtmp': self.get_rtmp_config(),
-            'overlay': self.get_overlay_config(),
-            'image': self.get_image_config(),
-            'video': self.get_video_config(),
-        }
-        self.logger.info(f'gst report: {config}')
-        self.send_message(TCloud.CAMERA_CONFIG, config)
-# }}}
-
     def on_camera_plugin(self, videoid):# {{{
         try:
             ret = subprocess.Popen(
                     f'v4l2-ctl --device {videoid} --list-ctrls',
                     shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8")
             if not ret.returncode:
-                config = self.get_image_config()
-                newcnf = {} 
+                config = {}
                 for line in ret.stdout.readlines():
                     line = line.strip()
                     if not line or ':' not in line:
@@ -186,17 +175,32 @@ class GstMessageHandler(MessageHandler):
                     psegs = p.split(' ')
                     if psegs[0] in ('brightness', 'contrast', 'hue', 'saturation'):
                         qsegs = q.split(' ')
+                        props = {'min': 0, 'max': 1, 'step': 1}
                         if psegs[-1] == '(int)':
-                            min = int(qsegs[0].split('=')[1])
-                            max = int(qsegs[1].split('=')[1])
-                            # self.cvt[
-                            newcnf[psegs[0].upper()] = int((config[psegs[0]] * (max - min) / 100)) + min
+                            for i, name in enumerate(['min', 'max', 'step', 'default', 'value']):
+                                props[name] = int(qsegs[i].split('=')[1])
+                        config[psegs[0]] = props
                 with open(GST_CAMERA_PROP, 'w') as fw:
-                    for key, value in newcnf.items():
-                        fw.write(f'{key}={value}\n')
+                    json.dump(config, fw)
             self._restart_gst()
-        except Exception as err: 
+        except Exception as err:
             self.logger.error(f'{err}')
+# }}}
+
+    def on_camera_plugout(self, videoid):# {{{
+        if os.path.isfile(GST_CAMERA_PROP):
+            os.unlink(GST_CAMERA_PROP)
+# }}}
+
+    def get_config(self):# {{{
+        config = {
+            'rtmp': self.get_rtmp_config(),
+            'overlay': self.get_overlay_config(),
+            'image': self.get_image_config(),
+            'video': self.get_video_config(),
+        }
+        self.logger.info(f'gst config: {config}')
+        return config
 # }}}
 
     def handle_message(self, topic, message):
@@ -204,6 +208,9 @@ class GstMessageHandler(MessageHandler):
 
         if topic == TUsbCamera.PLUGIN:
             return self.on_camera_plugin(message)
+
+        if topic == TUsbCamera.PLUGOUT:
+            return self.on_camera_plugout(message)
 
         jdata = json.loads(message)
 
