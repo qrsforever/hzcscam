@@ -11,9 +11,9 @@ __echo_and_run() {
 
 TEST_DOMAIN="www.baidu.com"
 
-if [[ ! -e /campi/runtime/frpc.ini ]]
+if [[ ! -e /tmp/frpc.ini ]]
 then
-    cp ${SYSROOT}/etc/frpc.ini /campi/runtime/frpc.ini
+    cp ${SYSROOT}/etc/frpc.ini /tmp/frpc.ini
 fi
 
 while (( 1 ))
@@ -23,7 +23,7 @@ do
         netok=$(ping -c 1 -W 2 ${TEST_DOMAIN} 2>/dev/null | grep -o "received")
         if [[ x${netok} != x ]]
         then
-            __echo_and_run ${SYSROOT}/bin/frpc -c /campi/runtime/frpc.ini
+            __echo_and_run ${SYSROOT}/bin/frpc -c /tmp/frpc.ini
         fi
     fi
     sleep 10

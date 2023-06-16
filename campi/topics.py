@@ -53,6 +53,9 @@ class TCloud:
     CAMERA_RTMP = f'cloud/{ADDRESS}/camera/rtmp'
     CAMERA_CONFIG = f'campi/{ADDRESS}/camera/config'
 
+    # FRP
+    FRPC_CTRL = f'cloud/{ADDRESS}/frpc'
+
 class TApis:
     SET_WIFI = '/apis/set_wifi'
 

@@ -16,6 +16,7 @@ from campi.app.cpi.sys import SystemMessageHandler
 from campi.app.cpi.log import LoggerMessageHandler
 from campi.app.cpi.ota import OtaMessageHandler
 from campi.app.cpi.gst import GstMessageHandler
+from campi.app.cpi.frp import FrpcMessageHandler
 
 
 async def main():
@@ -23,6 +24,7 @@ async def main():
     log_h = LoggerMessageHandler()  # noqa
     ota_h = OtaMessageHandler()     # noqa
     gst_h = GstMessageHandler()     # noqa
+    frp_h = FrpcMessageHandler()    # noqa
 
     loop = asyncio.get_running_loop()
     loop.call_later(5, sys_h.queue.put_nowait, 'h')
