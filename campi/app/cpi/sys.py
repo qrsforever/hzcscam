@@ -30,6 +30,7 @@ from campi.constants import (
     VERSION_OTA_FILE, WIFI_NM_CONF, WIFI_NM_FILE)
 
 from campi.utils.net import (
+    util_net_ping,
     util_get_mac,
     util_get_lanip,
     util_get_netip,
@@ -55,7 +56,7 @@ class SystemMessageHandler(MessageHandler):
         ])
         self.heartbeat_interval = 300
         self.wifiap_state = WIFIAP_NOSTATE
-        self.network_connected = False
+        self.network_connected = util_net_ping()
         self.wifi_ssid_pswd = None
 
     def on_network_connected(self, message):# {{{
@@ -155,6 +156,7 @@ class SystemMessageHandler(MessageHandler):
         wifinm_path = f'{mntdir}/campi/{WIFI_NM_FILE}'
         if os.path.isfile(wifinm_path):
             shutil.copyfile(wifinm_path, WIFI_NM_CONF)
+            self.quit()
 # }}}
 
     def handle_message(self, topic, message):
