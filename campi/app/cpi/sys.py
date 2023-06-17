@@ -13,6 +13,7 @@ import subprocess
 import json
 import os
 import psutil
+import shutil
 
 from . import MessageHandler
 from campi.topics import (
@@ -26,7 +27,7 @@ from campi.topics import (
 import campi.constants as C
 from campi.constants import (
     SCRIPT_OF_SET_WIFI, SCRIPT_OF_START_AP, SCRIPT_OF_STOP_AP,
-    VERSION_OTA_FILE, WIFI_NM_CONF)
+    VERSION_OTA_FILE, WIFI_NM_CONF, WIFI_NM_FILE)
 
 from campi.utils.net import (
     util_get_mac,
@@ -149,6 +150,11 @@ class SystemMessageHandler(MessageHandler):
                 if os.path.isfile(zip_path):
                     version_info['zip_path'] = zip_path
                     self.send_message(TUpgrade.BY_UDISK, json.dumps(version_info))
+            return
+
+        wifinm_path = f'{mntdir}/campi/{WIFI_NM_FILE}'
+        if os.path.isfile(wifinm_path):
+            shutil.copyfile(wifinm_path, WIFI_NM_CONF)
 # }}}
 
     def handle_message(self, topic, message):
@@ -170,6 +176,8 @@ class SystemMessageHandler(MessageHandler):
             self.quit()
 
     async def do_heartbeat(self, extras=None):
+        if not self.network_connected:
+            return
         about = {
             'ip': util_get_lanip(),
             'disk_usage_percent': psutil.disk_usage('/').percent,

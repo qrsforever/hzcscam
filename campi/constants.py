@@ -31,7 +31,8 @@ SCRIPT_OF_START_UPGRADE = f'{BOARD_PATH}/bin/upgrade_start.sh'
 
 ## Network
 
-WIFI_NM_CONF = f'{RUNTIME_PATH}/nmwifi.json'
+WIFI_NM_FILE = 'nmwifi.json'
+WIFI_NM_CONF = f'{RUNTIME_PATH}/{WIFI_NM_FILE}'
 
 ## Upgrade
 

@@ -59,6 +59,8 @@ def util_get_lanip():
     try:
         s.connect(('8.8.8.8', 80))
         return s.getsockname()[0]
+    except Exception:
+        pass
     finally:
         s.close()
     return ''
