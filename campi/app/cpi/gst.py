@@ -50,8 +50,6 @@ class GstMessageHandler(MessageHandler):
             util_start_service(self.SNAME, restart=True)
         self.is_running = util_check_service(self.SNAME)
 
-
-
 # Read & Save Config {{{
     def _read_config(self):
         config = {}

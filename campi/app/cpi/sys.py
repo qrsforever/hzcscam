@@ -179,6 +179,7 @@ class SystemMessageHandler(MessageHandler):
 
     async def do_heartbeat(self, extras=None):
         if not self.network_connected:
+            self.logger.warn("network is not connected, heartbeat fail")
             return
         about = {
             'ip': util_get_lanip(),

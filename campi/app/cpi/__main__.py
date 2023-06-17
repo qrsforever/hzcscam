@@ -9,7 +9,16 @@
 
 
 import sys
+import os
 sys.path.append('/campi')
+
+if os.path.exists('/sys/class/net/eth0/address'):
+    with open('/sys/class/net/eth0/address', 'r') as fr:
+        os.environ['ADDRESS'] = fr.readline().strip().replace(':', '')
+
+if os.path.exists('/campi/version.txt'):
+    with open('/campi/version.txt', 'r') as fr:
+        os.environ['APP_VERSION'] = fr.read().strip()
 
 import asyncio
 from campi.app.cpi.sys import SystemMessageHandler

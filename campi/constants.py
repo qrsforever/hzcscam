@@ -38,10 +38,7 @@ WIFI_NM_CONF = f'{RUNTIME_PATH}/{WIFI_NM_FILE}'
 
 VERSION_APP_PATH = '/campi/version.txt'
 VERSION_OTA_FILE = 'version_info.json'
-APP_VERSION = '1.0.0'
-
-with open(VERSION_APP_PATH, 'r') as fr:
-    APP_VERSION = fr.read().strip()
+APP_VERSION = os.environ.get('APP_VERSION', '1.0.0')
 
 ## Gst
 
