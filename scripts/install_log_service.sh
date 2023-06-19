@@ -2,7 +2,7 @@
 
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 
-SERVICE=campi_frp.service
+SERVICE=campi_sos.service
 
 USER=root
 ROOT_DIR=/campi
@@ -13,18 +13,17 @@ DST_DIR=/etc/systemd/system/
 
 cat > ${TMP_DIR}/$SERVICE <<EOF
 [Unit]
-    Description=Frpc
+    Description=System SOS
     Documentation=http://campi.hzcsai.com
+    After=multi-user.target
 
 [Service]
-    Type=simple
+    Type=oneshot
     User=$USER
     Group=$USER
     UMask=0000
     WorkingDirectory=${ROOT_DIR}
-    ExecStart=bash ${ROOT_DIR}/board/${BOARD}/bin/frpc_start.sh
-    ExecStartPost=/usr/bin/touch ${ROOT_DIR}/runtime/start/frp
-    ExecStopPost=/usr/bin/rm -f ${ROOT_DIR}/runtime/start/frp
+    ExecStart=${ROOT_DIR}/board/${BOARD}/bin/sos_recovery.sh ${ROOT_DIR}
 
 [Install]
     WantedBy=multi-user.target
@@ -38,7 +37,7 @@ mv ${TMP_DIR}/$SERVICE $DST_DIR
 # systemctl enable $SERVICE
 # systemctl restart $SERVICE
 # systemctl status $SERVICE
-## journalctl -u $SERVICE --no-pager -n 10
+# journalctl -u $SERVICE --no-pager -n 10
 # echo "-------------------------------"
 # echo ""
 # echo "journalctl -u $SERVICE -f -n 100"

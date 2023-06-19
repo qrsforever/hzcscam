@@ -28,6 +28,7 @@ SCRIPT_OF_SET_WIFI = f'{BOARD_PATH}/bin/set_wifi.sh'
 SCRIPT_OF_START_AP = f'{BOARD_PATH}/bin/hostap_start.sh'
 SCRIPT_OF_STOP_AP = f'{BOARD_PATH}/bin/hostap_stop.sh'
 SCRIPT_OF_START_UPGRADE = f'{BOARD_PATH}/bin/upgrade_start.sh'
+SCRIPT_OF_LOGCAT = f'{BOARD_PATH}/bin/logcat_start.sh'
 
 ## Network
 
@@ -47,4 +48,8 @@ GST_CAMERA_PROP = f'{RUNTIME_PATH}/camera_props.json'
 
 ## FRP
 
-FRP_CONFIG_PATH = '/tmp/frpc.ini'
+FRP_CONFIG_PATH = f'{RUNTIME_PATH}/frpc.ini'
+
+## LOG
+
+OSS_LOGCAT_PATH = f'/logcat/{ADDRESS}'

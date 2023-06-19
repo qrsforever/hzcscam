@@ -23,7 +23,14 @@ class NetEventDetector(EventDetector):
 
     def __init__(self, mqtt):
         super().__init__(mqtt)
-        self.ping_hosts = (('8.8.8.8', 53), ('1.1.1.1', 53), ('8.8.4.4', 53), ('185.222.222.222', 53))
+        self.ping_hosts = (
+            ('8.8.8.8', 53),
+            ('1.1.1.1', 53),
+            ('8.8.4.4', 53),
+            ('185.222.222.222', 53),
+            ('aiot.hzcsdata.com', 1883),
+            ('www.baidu.com', 80)
+        )
         self.ping_trycnt = 5
         self.ping_timeout = 3
         self.ping_interval = 1

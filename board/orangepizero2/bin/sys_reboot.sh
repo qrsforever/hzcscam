@@ -51,14 +51,14 @@ fi
 
 for svc in ${CAMPI_ORDER_SVCS[@]}
 do
-    echo "start ${svc} at $(date)" >> /tmp/campi_reboot.log
+    echo "start ${svc} at $(date +"%Y/%m/%d-%H:%M:%S")" >> /tmp/campi_reboot.log
     svc=campi_${svc}.service
     systemctl start ${svc}
 done
 
 for svc in `ls ${RUNTIME_PATH}/start`
 do
-    echo "start ${svc} at $(date)" >> /tmp/campi_reboot.log
+    echo "start ${svc} at $(date +"%Y/%m/%d-%H:%M:%S")" >> /tmp/campi_reboot.log
     svc=campi_${svc}.service
     systemctl start ${svc}
 done

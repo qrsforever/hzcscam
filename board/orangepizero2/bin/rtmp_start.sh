@@ -64,9 +64,12 @@ then
     then
         RTMP_STREAM=${ADDRESS}
     fi
-    RTMP_VHOST=${RTMP_VHOST:-seg.300s}
+    if [[ x${RTMP_VHOST} != x ]]
+    then
+        RTMP_VHOST="vhost=${RTMP_VHOST}"
+    fi
     X264E_BITRATE=${VIDEO_BITRATE:-128}
-    GSTSINK="x264enc bframes=0 bitrate=${X264E_BITRATE} speed-preset=veryfast key-int-max=0 ! flvmux streamable=true ! rtmpsink location=rtmp://${RTMP_DOMAIN}/${RTMP_ROOM}/${RTMP_STREAM}?vhost=${RTMP_VHOST}"
+    GSTSINK="x264enc bframes=0 bitrate=${X264E_BITRATE} speed-preset=veryfast key-int-max=0 ! flvmux streamable=true ! rtmpsink location=rtmp://${RTMP_DOMAIN}/${RTMP_ROOM}/${RTMP_STREAM}?${RTMP_VHOST}"
 else
     GSTSINK="autovideosink"
 fi
@@ -98,7 +101,7 @@ then
     VIDEO_CONVERT="${VIDEO_CONVERT} textoverlay text=\"${TEXT_TITLE}\" halignment=${TEXT_HALIGNMENT} valignment=${TEXT_VALIGNMENT} font-desc=\"normal ${OVERLAY_FONT}\" !"
 fi
 
-PLAY_TEST="http://101.42.139.3:30808/players/rtc_player.html?vhost=${RTMP_VHOST}&ip=192.168.152.185&api=31985&app=live&stream=${ADDRESS}&autostart=true"
+PLAY_TEST="http://101.42.139.3:30808/players/rtc_player.html?${RTMP_VHOST}&ip=192.168.152.185&api=31985&app=live&stream=${ADDRESS}&autostart=true"
 
 while (( 1 ))
 do

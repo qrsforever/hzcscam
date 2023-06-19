@@ -2,7 +2,7 @@
 
 # git clone --depth 1 https://gitee.com/hzcsai_com/hzcscam.git
 
-FORCE_INSTALL=0
+FORCE_INSTALL=${1:-1}
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 TOP_DIR=$(cd ${CUR_DIR}/..; pwd)
 if [[ -L ${TOP_DIR} ]]
@@ -36,7 +36,7 @@ then
          gstreamer1.0-libav gstreamer1.0-x
     apt install -y python3-gst-1.0
 
-    pip3 install requests psutil pyudev paho-mqtt quart PyEmail
+    pip3 install requests psutil pyudev paho-mqtt quart PyEmail cos-python-sdk-v5
 fi
 
 chmod +x ${TOP_DIR}/board/${BOARD}/bin/*
@@ -57,3 +57,11 @@ done
 systemctl daemon-reload
 
 ${CUR_DIR}/setup_crontab.sh
+
+LT=$(readlink /etc/localtime)
+if [[ ${LT##*/} != Shanghai ]]
+then
+    rm -f /etc/localtime
+    ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+    echo "Asia/Shanghai" > /etc/timezone
+fi

@@ -182,15 +182,17 @@ class SystemMessageHandler(MessageHandler):
             self.logger.warn("network is not connected, heartbeat fail")
             return
         about = {
-            'ip': util_get_lanip(),
             'disk_usage_percent': psutil.disk_usage('/').percent,
             'cpu_percent': psutil.cpu_percent(),
             'cpu_memory_percent': psutil.virtual_memory().percent
         }
         if extras:
+            about['ip'] = util_get_lanip()
+            about['mac'] = C.ADDRESS
             about['software_version'] = C.APP_VERSION
             about['hardware_product'] = C.BOARD
-            about['mac'] = C.ADDRESS
             for key, value in extras.items():
                 about[key] = value
-        self.send_message(TCloud.EVENTS_HEARTBEAT, about)
+            self.send_message(TCloud.EVENTS_ABOUT, about)
+        else:
+            self.send_message(TCloud.EVENTS_HEARTBEAT, about)
