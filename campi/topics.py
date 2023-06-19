@@ -57,7 +57,8 @@ class TCloud:
     FRPC_CTRL = f'cloud/{ADDRESS}/frpc'
 
     # LOG
-    LOGCAT_CTRL = f'cloud/{ADDRESS}/log'
+    LOGCAT_COLLECT = f'cloud/{ADDRESS}/log/collect'
+    LOGCAT_MESSAGE = f'campi/{ADDRESS}/log/message'
 
 class TApis:
     SET_WIFI = '/apis/set_wifi'

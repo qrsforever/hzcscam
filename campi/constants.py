@@ -52,4 +52,4 @@ FRP_CONFIG_PATH = f'{RUNTIME_PATH}/frpc.ini'
 
 ## LOG
 
-OSS_LOGCAT_PATH = f'/logcat/{ADDRESS}'
+OSS_LOGCAT_PATH = f'logcat/{ADDRESS}'

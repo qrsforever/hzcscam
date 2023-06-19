@@ -36,7 +36,8 @@ then
          gstreamer1.0-libav gstreamer1.0-x
     apt install -y python3-gst-1.0
 
-    pip3 install requests psutil pyudev paho-mqtt quart PyEmail cos-python-sdk-v5
+    pip3 install requests psutil pyudev paho-mqtt quart PyEmail
+    pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple --trusted-host pypi.tuna.tsinghua.edu.cn cos-python-sdk-v5
 fi
 
 chmod +x ${TOP_DIR}/board/${BOARD}/bin/*
