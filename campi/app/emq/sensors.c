@@ -34,6 +34,7 @@
 
 extern int sensor_init(const char*);
 extern void sensor_detect();
+extern int syscall_exec(const char* cmd);
 
 enum {
     COLOR_BLACK = 0,
@@ -289,12 +290,37 @@ int sensor_init(const char* client_id)
     return 0;
 }/*}}}*/
 
+// static time_t short_press_count = 0;
+// static time_t btnon_press_timer = 0;
+// static time_t curr_release_timer = 0;
+// static time_t prev_release_timer = 0;
+
 void sensor_detect()
 {/*{{{*/
-    int duration = 0, color = COLOR_BLACK;
-    if (BTN_RELEASE == digitalRead(BTNPIN))
+    if (BTN_RELEASE == digitalRead(BTNPIN)) {
+        // curr_release_timer = time(0);
+        // time_t interval = curr_release_timer - prev_release_timer;
+        // if (interval < 1) {
+        //     short_press_count++;
+        //     prev_release_timer = curr_release_timer;
+        // } else if (interval > 2) {
+        //     if (short_press_count > 1) {
+        //         switch (short_press_count) {
+        //             case 2: {
+        //                 break;
+        //             }
+        //             case 3: {
+        //                 syscall_exec("systemctl start campi_frp.service");
+        //                 break;
+        //             }
+        //             default: break;
+        //         }
+        //     }
+        // }
         return;
+    }
 
+    int duration = 0, color = COLOR_BLACK;
     time_t press_timer = time(0);
     while (BTN_ONPRESS == digitalRead(BTNPIN)) {
         duration = time(0) - press_timer;
@@ -319,6 +345,15 @@ void sensor_detect()
         delay(10);
     }
     switch (color) {
+        case COLOR_BLACK: {
+            // printf("---> %ld\n", press_timer - btnon_press_timer);
+            // if ((press_timer - btnon_press_timer) < 2)
+            //     short_press_count += 1;
+            // else
+            //     short_press_count = 1;
+            // btnon_press_timer = press_timer;
+            break;
+        }
         case COLOR_RED: {
             _change_sensor_to(color, SENSOR_VIBRATSW);
             break;

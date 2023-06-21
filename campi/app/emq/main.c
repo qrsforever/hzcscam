@@ -14,7 +14,8 @@
 
 #include "emqc.h"
 
-extern int sensor_init();
+extern int sensor_init(const char*);
+extern int syscall_init();
 extern void sensor_detect();
 
 int main(int argc, char *argv[])

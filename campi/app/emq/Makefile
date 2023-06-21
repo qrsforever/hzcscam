@@ -7,7 +7,7 @@ main:
 		-Wl,-rpath=$(PREFIX)/lib \
 		-O2 -Wall -Wno-unused -Wno-format -DDEBUG \
 		-o $(PREFIX)/bin/emqs \
-		main.c log.c emqc.c handler.c sensors.c \
+		main.c log.c emqc.c syscall.c sensors.c \
 		-lpthread -lpaho-mqtt3c -lwiringPi -lcjson
 
 run: main
