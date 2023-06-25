@@ -62,3 +62,5 @@ do
     svc=campi_${svc}.service
     systemctl start ${svc}
 done
+
+adb connect 172.19.76.112:5555

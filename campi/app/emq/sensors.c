@@ -203,28 +203,58 @@ static void _sensor_passive_infrared(int s)/*{{{*/
 {
     syslog(LOG_DEBUG, "sensor passive infrared detection\n");
     pinMode(TSKPIN, INPUT);
-    int current_state = 0, previous_state = -1; // 1: detected 0: no detected
-    time_t detect_time = time(0);
+    // int current_state = 0, previous_state = -1; // 1: detected 0: no detected
+    // time_t detect_time = time(0);
+    // char buff[64] = { 0 };
+    // while (g_current_sensor == s) {
+    //     current_state = digitalRead(TSKPIN);
+    //     if (current_state != previous_state) {
+    //         if (0 == current_state) {
+    //             // motion detect
+    //             detect_time = time(0);
+    //             _change_color_to(g_current_color);
+    //             syscall_exec("adb shell am start com.stv.globalsetting/.activity.SettingActivity");
+    //         } else {
+    //             leave_time = time(0);
+    //             if ((time(0) - detect_time) > 5) {
+    //                 g_repeat_count += 1;
+    //                 _change_color_to(COLOR_BLACK);
+    //                 snprintf(buff, 63, "{\"stay_time\": %ld}", time(0) - detect_time);
+    //                 _emq_report(buff);
+    //                 syscall_exec("adb shell am start com.dianshijia.newlive/.entry.SplashActivity");
+    //             }
+    //         }
+    //         previous_state = current_state;
+    //     }
+    //     delay(500);
+    // }
+    int value = 0, sumtimer = 0;
     char buff[64] = { 0 };
+    int thresh_quiet = 7000;
     while (g_current_sensor == s) {
-        current_state = digitalRead(TSKPIN);
-        if (current_state != previous_state) {
-            if (1 == current_state) {
-                // motion detect
-                detect_time = time(0);
-                _change_color_to(g_current_color);
-            } else {
-                g_repeat_count += 1;
-                _change_color_to(COLOR_BLACK);
-                snprintf(buff, 63, "{\"stay_time\": %ld}", time(0) - detect_time);
-                _emq_report(buff);
-            }
-            previous_state = current_state;
+        value = digitalRead(TSKPIN);
+        if (0 == value) { // motion detect
+            sumtimer = 0;
+            _change_color_to(g_current_color);
+            syscall_exec("adb shell am start com.stv.globalsetting/.activity.SettingActivity");
+            do {
+                if (value == digitalRead(TSKPIN))
+                    sumtimer = 0;
+                else
+                    sumtimer += 100;
+                delay(100);
+            } while(g_current_sensor == s && sumtimer < thresh_quiet);
+            g_repeat_count += 1;
+            _change_color_to(COLOR_BLACK);
+            snprintf(buff, 63, "\"threshold\": %d", thresh_quiet);
+            _emq_report(buff);
+            syscall_exec("adb shell am start com.dianshijia.newlive/.entry.SplashActivity");
         }
         delay(500);
     }
 }
 /*}}}*/
+
 static void _sensor_photoelectric_or_magnet(int s)
 {
     syslog(LOG_DEBUG, "sensor photo electirc or magnat\n");
