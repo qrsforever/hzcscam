@@ -20,7 +20,7 @@ FRPC_TEMPLATE_INI = """
 server_addr = %s
 server_port = %d
 
-[ssh]
+[ssh%d]
 type = tcp
 local_ip = 127.0.0.1
 local_port = 22
@@ -49,7 +49,7 @@ class FrpcMessageHandler(MessageHandler):
             return
 
         with open(FRP_CONFIG_PATH, 'w') as fw:
-            fw.write(FRPC_TEMPLATE_INI % (server_addr, server_port, remote_port))
+            fw.write(FRPC_TEMPLATE_INI % (server_addr, server_port, remote_port, remote_port))
         util_start_service(self.SNAME, True)
 
     def handle_message(self, topic, message):
