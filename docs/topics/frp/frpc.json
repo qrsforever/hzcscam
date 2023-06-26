@@ -1,0 +1,6 @@
+{
+    "frpc_enable":true,
+    "server_addr":"82.157.36.183",
+    "server_port":7777,
+    "remote_port":7711
+}

@@ -9,6 +9,7 @@
 
 
 import json
+import os
 from . import MessageHandler
 from campi.topics import TCloud
 from campi.constants import FRP_CONFIG_PATH
@@ -33,7 +34,7 @@ class FrpcMessageHandler(MessageHandler):
     SNAME = 'campi_frp.service'
 
     def __init__(self):
-        super().__init__([TCloud.FRPC_CTRL])
+        super().__init__([TCloud.FRPC_CLOUD_CTRL])
 
     def _set_frpc(self, config):
         enable = config.get('frpc_enable', False)
@@ -47,14 +48,27 @@ class FrpcMessageHandler(MessageHandler):
 
         if server_addr is None or remote_port is None:
             return
-
         with open(FRP_CONFIG_PATH, 'w') as fw:
             fw.write(FRPC_TEMPLATE_INI % (server_addr, server_port, remote_port, remote_port))
-        util_start_service(self.SNAME, True)
+        util_start_service(self.SNAME, False)
+
+    def get_info(self):
+        config = {'frpc_enable': False}
+        if os.path.exists(FRP_CONFIG_PATH):
+            config['frpc_enable'] = True
+            with open(FRP_CONFIG_PATH, 'r') as fr:
+                for line in fr.readlines():
+                    if 'server_addr' in line:
+                        config['server_addr'] = line.split('=')[1].strip()
+                    elif 'server_port' in line:
+                        config['server_port'] = int(line.split('=')[1].strip())
+                    elif 'remote_port' in line:
+                        config['remote_port'] = int(line.split('=')[1].strip())
+        return {'frp': config}
 
     def handle_message(self, topic, message):
         self.logger.debug(f'frpc: {message}')
 
         jdata = json.loads(message)
-        if topic == TCloud.FRPC_CTRL:
+        if topic == TCloud.FRPC_CLOUD_CTRL:
             return self._set_frpc(jdata)

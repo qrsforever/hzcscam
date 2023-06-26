@@ -2,4 +2,5 @@
 **/out
 .ota
 version.txt
+extern/mosquitto-2.0.15.tar.gz
 runtime

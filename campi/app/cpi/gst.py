@@ -190,12 +190,14 @@ class GstMessageHandler(MessageHandler):
             os.unlink(GST_CAMERA_PROP)
 # }}}
 
-    def get_config(self):# {{{
+    def get_info(self):# {{{
         config = {
-            'rtmp': self.get_rtmp_config(),
-            'overlay': self.get_overlay_config(),
-            'image': self.get_image_config(),
-            'video': self.get_video_config(),
+            "gst": {
+                'rtmp': self.get_rtmp_config(),
+                'overlay': self.get_overlay_config(),
+                'image': self.get_image_config(),
+                'video': self.get_video_config(),
+            }
         }
         self.logger.info(f'gst config: {config}')
         return config

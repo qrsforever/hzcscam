@@ -49,3 +49,6 @@ cat > .ota/version_info.json <<EOF
     "git_branch": "${GIT_BRANCH}"
 }
 EOF
+
+echo "scp .ota/update_${APP_VERSION}.zip k8-storage:/data/nginx/www"
+echo "cat .ota/version_info.json | jq -c"

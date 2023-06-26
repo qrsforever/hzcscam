@@ -21,6 +21,7 @@ class MessageHandler(metaclass=abc.ABCMeta):
     mqtt: AsyncMqtt = None
     callbacks1 = {}  # /topic/#
     callbacks2 = {}
+    handlers = []
 
     def __init__(self, topics):
         self.logger = logging.getLogger('campi')
@@ -36,10 +37,14 @@ class MessageHandler(metaclass=abc.ABCMeta):
             else:
                 cbs[topic].append(self.handle_message)
             self.mqtt.subscribe(topic)
+        MessageHandler.handlers.append(self)
 
     @abc.abstractmethod
     def handle_message(self, topic, message):
         pass
+
+    def get_info(self):
+        return {}
 
     def send_message(self, topic, message):
         self.mqtt.publish(topic, message)

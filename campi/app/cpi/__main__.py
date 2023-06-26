@@ -37,21 +37,18 @@ async def main():
 
     loop = asyncio.get_running_loop()
     loop.call_later(5, sys_h.queue.put_nowait, 'h')
-    report = False
+    report_more = False
     while True:
         r = await sys_h.queue.get()
         if r == 'q':
             print("system quit")
             break
         elif r == 'h':
-            if not report:
-                extras = {
-                    "gst": gst_h.get_config(),
-                }
-                await sys_h.do_heartbeat(extras)
-                report = True
+            if not report_more:
+                await sys_h.do_heartbeat(True)
+                report_more = True
             else:
-                await sys_h.do_heartbeat()
+                await sys_h.do_heartbeat(False)
             loop.call_later(sys_h.heartbeat_interval, sys_h.queue.put_nowait, 'h')
 
     import os

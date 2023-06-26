@@ -203,23 +203,25 @@ static void _sensor_passive_infrared(int s)/*{{{*/
 {
     syslog(LOG_DEBUG, "sensor passive infrared detection\n");
     pinMode(TSKPIN, INPUT);
-    int current_state = 0, previous_state = -1; // 1: detected 0: no detected
-    time_t detect_time = time(0);
+    int value = 0, sumtimer = 0;
     char buff[64] = { 0 };
+    int thresh_quiet = 3500;
     while (g_current_sensor == s) {
-        current_state = digitalRead(TSKPIN);
-        if (current_state != previous_state) {
-            if (1 == current_state) {
-                // motion detect
-                detect_time = time(0);
-                _change_color_to(g_current_color);
-            } else {
-                g_repeat_count += 1;
-                _change_color_to(COLOR_BLACK);
-                snprintf(buff, 63, "{\"stay_time\": %ld}", time(0) - detect_time);
-                _emq_report(buff);
-            }
-            previous_state = current_state;
+        value = digitalRead(TSKPIN);
+        if (0 == value) { // motion detect
+            sumtimer = 0;
+            _change_color_to(g_current_color);
+            do {
+                if (value == digitalRead(TSKPIN))
+                    sumtimer = 0;
+                else
+                    sumtimer += 100;
+                delay(100);
+            } while(g_current_sensor == s && sumtimer < thresh_quiet);
+            g_repeat_count += 1;
+            _change_color_to(COLOR_BLACK);
+            snprintf(buff, 63, "\"threshold\": %d", thresh_quiet);
+            _emq_report(buff);
         }
         delay(500);
     }
@@ -284,9 +286,9 @@ int sensor_init(const char* client_id)
     _change_color_to(g_current_color);
 
     char buff[64] = {0};
-    snprintf(buff, 63, "cloud/%s/sensors/set", client_id);
+    snprintf(buff, 63, "cloud/%s/sensor/config", client_id);
     emqc_sub(buff, _emq_on_message);
-    snprintf(SENSOR_TOPIC, sizeof(SENSOR_TOPIC) - 1, "campi/%s/sensors/put", client_id);
+    snprintf(SENSOR_TOPIC, sizeof(SENSOR_TOPIC) - 1, "campi/%s/sensor/report", client_id);
     return 0;
 }/*}}}*/
 

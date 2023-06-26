@@ -53,6 +53,7 @@ class SystemMessageHandler(MessageHandler):
             TUsbDisk.ALL,
             TSystem.SHUTDOWN,
             TApis.SET_WIFI,
+            TCloud.EVENTS_CLOUD_REPORT,
         ])
         self.heartbeat_interval = 300
         self.wifiap_state = WIFIAP_NOSTATE
@@ -174,10 +175,32 @@ class SystemMessageHandler(MessageHandler):
         if topic == TUsbDisk.MOUNTED:
             return self.on_udisk_mounted(message)
 
+        if topic == TCloud.EVENTS_CLOUD_REPORT:
+            return self.do_report(message)
+
         if topic == TSystem.SHUTDOWN:
             self.quit()
 
-    async def do_heartbeat(self, extras=None):
+    def get_info(self):
+        return {
+            'sys': {
+                'ip': util_get_lanip(),
+                'mac': C.ADDRESS,
+                'software_version': C.APP_VERSION,
+                'hardware_product': C.BOARD,
+            }
+        }
+
+    def do_report(self, message):
+        jdata = json.loads(message)
+        report = {}
+        for h in self.handlers:
+            for key, value in h.get_info().items():
+                if key in jdata and jdata[key]:
+                    report[key] = value
+        self.send_message(TCloud.EVENTS_CAMPI_REPORT, report)
+
+    async def do_heartbeat(self, more=False):
         if not self.network_connected:
             self.logger.warn("network is not connected, heartbeat fail")
             return
@@ -186,12 +209,8 @@ class SystemMessageHandler(MessageHandler):
             'cpu_percent': psutil.cpu_percent(),
             'cpu_memory_percent': psutil.virtual_memory().percent
         }
-        if extras:
-            about['ip'] = util_get_lanip()
-            about['mac'] = C.ADDRESS
-            about['software_version'] = C.APP_VERSION
-            about['hardware_product'] = C.BOARD
-            for key, value in extras.items():
+        if more:
+            for key, value in self.get_info().items():
                 about[key] = value
             self.send_message(TCloud.EVENTS_ABOUT, about)
         else:

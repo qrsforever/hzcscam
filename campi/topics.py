@@ -40,6 +40,8 @@ class TCloud:
     # EVENTS
     EVENTS_HEARTBEAT = f'campi/{ADDRESS}/events/heartbeat'
     EVENTS_ABOUT = f'campi/{ADDRESS}/events/about'
+    EVENTS_CLOUD_REPORT = f'cloud/{ADDRESS}/events/report'
+    EVENTS_CAMPI_REPORT = f'campi/{ADDRESS}/events/report'
 
     # OTA
     OTA = f'cloud/{ADDRESS}/ota'
@@ -54,7 +56,7 @@ class TCloud:
     CAMERA_CONFIG = f'campi/{ADDRESS}/camera/config'
 
     # FRP
-    FRPC_CTRL = f'cloud/{ADDRESS}/frpc'
+    FRPC_CLOUD_CTRL = f'cloud/{ADDRESS}/frpc'
 
     # LOG
     LOGCAT_COLLECT = f'cloud/{ADDRESS}/log/collect'
