@@ -99,10 +99,12 @@ class OtaMessageHandler(MessageHandler):
                     self.logger.error(f"upgrade fail: requests error[{zip_res.status_code}]!")
                     self.send_message(TCloud.UPGRADE_FAIL, config)
                     return
-                shutil.move(f'{ARCHIVES_ROOT_PATH}/update.zip', f'{ARCHIVES_ROOT_PATH}/factory.zip')
-                with open(f'{ARCHIVES_ROOT_PATH}/update.zip', 'wb') as fw:
+                zip_path = f'{ARCHIVES_ROOT_PATH}/update.zip'
+                if os.path.exists(zip_path):
+                    shutil.move(zip_path, f'{ARCHIVES_ROOT_PATH}/factory.zip')
+                with open(zip_path, 'wb') as fw:
                     fw.write(zip_res.content)
-                config['zip_path'] = f'{ARCHIVES_ROOT_PATH}/update.zip'
+                config['zip_path'] = zip_path
 
             if self.UPGRADE_SUCESS == self._do_upgrade(config):
                 self.logger.info("upgrade success")
