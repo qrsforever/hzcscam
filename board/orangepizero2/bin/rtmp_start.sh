@@ -35,6 +35,9 @@ OVERLAY_FONT=${OVERLAY_FONT:-12}
 
 if [[ x${VIDEO_DEVICE} != x ]]
 then
+    if [ -e ${PRO_FIL} ]
+    then
+        JDATA=$(cat ${PRO_FIL})
         PROPS=('brightness' 'contrast' 'hue' 'saturation')
         for prop in ${PROPS[@]}
         do
