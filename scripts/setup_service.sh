@@ -2,7 +2,7 @@
 
 # git clone --depth 1 https://gitee.com/hzcsai_com/hzcscam.git
 
-FORCE_INSTALL=${1:-1}
+FORCE_INSTALL=${1:-0}
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 TOP_DIR=$(cd ${CUR_DIR}/..; pwd)
 if [[ -L ${TOP_DIR} ]]
@@ -19,6 +19,15 @@ then
     cp ${TOP_DIR}/board/${BOARD}/etc/nmwifi.json ${TOP_DIR}/runtime/
     cp ${TOP_DIR}/board/${BOARD}/etc/gst_rtmp.env ${TOP_DIR}/runtime/
 fi
+
+__pip_install()
+{
+    check=`python3 -c "import $2" 2>&1`
+    if [[ x$check != x ]]                         
+    then
+        pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple --trusted-host pypi.tuna.tsinghua.edu.cn $1
+    fi
+}
 
 gst_bin=$(command -v gst-launch-1.0)
 if [[ x$gst_bin == x || ${FORCE_INSTALL} == 1 ]]
@@ -37,8 +46,9 @@ then
     apt install -y python3-gst-1.0
 
     pip3 install requests psutil pyudev paho-mqtt quart PyEmail
-    pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple --trusted-host pypi.tuna.tsinghua.edu.cn cos-python-sdk-v5
 fi
+
+__pip_install cos-python-sdk-v5 qcloud_cos
 
 chmod +x ${TOP_DIR}/board/${BOARD}/bin/*
 
@@ -66,3 +76,5 @@ then
     ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
     echo "Asia/Shanghai" > /etc/timezone
 fi
+
+echo "${ADDRESS}" > /etc/hostname

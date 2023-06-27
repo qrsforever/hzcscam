@@ -53,6 +53,7 @@ class SystemMessageHandler(MessageHandler):
             TUsbDisk.ALL,
             TSystem.SHUTDOWN,
             TApis.SET_WIFI,
+            TCloud.EVENTS_REPORT,
             TCloud.EVENTS_CLOUD_REPORT,
         ])
         self.heartbeat_interval = 300
@@ -175,7 +176,7 @@ class SystemMessageHandler(MessageHandler):
         if topic == TUsbDisk.MOUNTED:
             return self.on_udisk_mounted(message)
 
-        if topic == TCloud.EVENTS_CLOUD_REPORT:
+        if topic == TCloud.EVENTS_CLOUD_REPORT or topic == TCloud.EVENTS_REPORT:
             return self.do_report(message)
 
         if topic == TSystem.SHUTDOWN:
@@ -193,10 +194,11 @@ class SystemMessageHandler(MessageHandler):
 
     def do_report(self, message):
         jdata = json.loads(message)
+        all_flag = True if len(jdata) == 0 else False
         report = {}
         for h in self.handlers:
             for key, value in h.get_info().items():
-                if key in jdata and jdata[key]:
+                if all_flag or (key in jdata and jdata[key]):
                     report[key] = value
         self.send_message(TCloud.EVENTS_CAMPI_REPORT, report)
 

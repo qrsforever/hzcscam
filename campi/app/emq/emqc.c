@@ -124,6 +124,7 @@ int emqc_init(const char* host, int port, const char* client_id, const char* use
     syslog(LOG_DEBUG, "Connected to Cloud MQTT Broker!\n");
     snprintf(buff, 63, "cloud/%s/#", client_id);
     MQTTClient_subscribe(r_client, buff, 0);
+    MQTTClient_subscribe(r_client, "cloud/all/events/#", 0);
     CLOUD_TOPIC_PREFIX_LEN = strlen(buff) - 1;
     syslog(LOG_DEBUG, "cloud sub: %s: %d\n", buff, CLOUD_TOPIC_PREFIX_LEN);
     return 0;

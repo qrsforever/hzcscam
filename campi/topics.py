@@ -40,6 +40,7 @@ class TCloud:
     # EVENTS
     EVENTS_HEARTBEAT = f'campi/{ADDRESS}/events/heartbeat'
     EVENTS_ABOUT = f'campi/{ADDRESS}/events/about'
+    EVENTS_REPORT = 'cloud/all/events/report'
     EVENTS_CLOUD_REPORT = f'cloud/{ADDRESS}/events/report'
     EVENTS_CAMPI_REPORT = f'campi/{ADDRESS}/events/report'
 

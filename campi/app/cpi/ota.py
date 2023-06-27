@@ -12,6 +12,7 @@ import subprocess
 import requests
 import json
 import os
+import shutil
 
 from . import MessageHandler
 from campi.constants import (
@@ -95,10 +96,13 @@ class OtaMessageHandler(MessageHandler):
                     headers={'Content-Type': 'application/zip'},
                     timeout=(self.conn_timeout, self.read_timeout))
                 if zip_res.status_code != 200:
+                    self.logger.error(f"upgrade fail: requests error[{zip_res.status_code}]!")
                     self.send_message(TCloud.UPGRADE_FAIL, config)
-                with open('/tmp/campi_update.zip', 'wb') as fw:
+                    return
+                shutil.move(f'{ARCHIVES_ROOT_PATH}/update.zip', f'{ARCHIVES_ROOT_PATH}/factory.zip')
+                with open(f'{ARCHIVES_ROOT_PATH}/update.zip', 'wb') as fw:
                     fw.write(zip_res.content)
-                config['zip_path'] = '/tmp/campi_update.zip'
+                config['zip_path'] = f'{ARCHIVES_ROOT_PATH}/update.zip'
 
             if self.UPGRADE_SUCESS == self._do_upgrade(config):
                 self.logger.info("upgrade success")

@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <wiringPi.h>
 #include <stdio.h>
 #include <time.h>
@@ -20,6 +21,7 @@
 
 #include "emqc.h"
 
+#define MAX_BUF  1024
 #define BTNPIN   2    // PC9
 #define TSKPIN   6    // PC11
 
@@ -31,6 +33,7 @@
 #define BTN_RELEASE 1
 
 #define STATE_FILE   "/campi/runtime/emq_sensor.state"
+#define PIEMQ_FIFO   "/tmp/emq_sensor.fifo"
 
 extern int sensor_init(const char*);
 extern void sensor_detect();
@@ -65,7 +68,6 @@ static char SENSOR_NAMES[][16] = {
 
 static char SENSOR_TOPIC[64] = { 0 };
 
-
 static int _RGB[8][3] = {
     {0, 0, 0},  // black
     {1, 0, 0},
@@ -83,11 +85,12 @@ static int g_current_color = COLOR_RED;
 static int g_current_sensor = SENSOR_VIBRATSW;
 static unsigned int g_repeat_count = 0;
 static unsigned int g_thresh_quiet = 200;
-
+static int g_fifo_w = -1;
 
 void _emq_report(const char* extra)
 {
     char payload[256] = { 0 };
+    char buff[MAX_BUF] = { 0 };
     if (extra == NULL) {
         snprintf(
             payload, 255,
@@ -100,6 +103,9 @@ void _emq_report(const char* extra)
             "{\"count\": %d, \"sensor\": \"%s\", %s}",
             g_repeat_count,
             SENSOR_NAMES[g_current_sensor], extra);
+    }
+    snprintf(buff, MAX_BUF, "%d\n", g_repeat_count);
+    if (write(g_fifo_w, buff, strlen(buff)) > 0) {
     }
 
     emqc_pub(SENSOR_TOPIC, payload);
@@ -271,9 +277,18 @@ static void *_sensor_worker(void *arg)
 int sensor_init(const char* client_id)
 {/*{{{*/
     syslog(LOG_DEBUG, "sensor_init\n");
+
+    if (0 != access(PIEMQ_FIFO, F_OK))
+        mkfifo(PIEMQ_FIFO, 0666);
+    g_fifo_w = open(PIEMQ_FIFO, O_RDWR | O_NONBLOCK);
+    if (g_fifo_w < 0) {
+        syslog(LOG_ERR, "open fifo %s error\n", PIEMQ_FIFO);
+        exit(1);
+    }
+
     if(wiringPiSetup() == -1) {
         syslog(LOG_ERR, "setup of wiringPi failed !\n");
-        return -1;
+        exit(1);
     }
 
     pinMode(BTNPIN, INPUT);
@@ -289,6 +304,7 @@ int sensor_init(const char* client_id)
     snprintf(buff, 63, "cloud/%s/sensor/config", client_id);
     emqc_sub(buff, _emq_on_message);
     snprintf(SENSOR_TOPIC, sizeof(SENSOR_TOPIC) - 1, "campi/%s/sensor/report", client_id);
+
     return 0;
 }/*}}}*/
 

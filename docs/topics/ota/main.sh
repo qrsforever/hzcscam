@@ -1,6 +1,10 @@
 #!/bin/bash
 
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
+TOP_DIR=$(cd ${CUR_DIR}/../../../; pwd)
 
-CLIENTID=${CLIENTID:-0200519f3bab}
-TOPIC=cloud/${CLIENTID}/ota
+source ${CUR_DIR}/../env.sh
+
+PUB_TOPIC=cloud/${CLIENTID}/ota
+
+__echo_run mosquitto_pub -h ${EMQX_HOST} -p ${EMQX_PORT} -u campi -P 123456 -t ${PUB_TOPIC} -f ${TOP_DIR}/.ota/version_info.json

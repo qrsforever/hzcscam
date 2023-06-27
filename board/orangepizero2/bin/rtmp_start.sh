@@ -35,9 +35,6 @@ OVERLAY_FONT=${OVERLAY_FONT:-12}
 
 if [[ x${VIDEO_DEVICE} != x ]]
 then
-    if [ -e ${PRO_FIL} ]
-    then
-        JDATA=$(cat ${PRO_FIL})
         PROPS=('brightness' 'contrast' 'hue' 'saturation')
         for prop in ${PROPS[@]}
         do
@@ -74,23 +71,24 @@ else
     GSTSINK="autovideosink"
 fi
 
+GST_CMD=gst-launch-1.0
 VIDEO_CONVERT=
 
-if [[ x${FLIP_METHOD} != x ]]
+if [[ x${FLIP_METHOD} != x && x${FLIP_METHOD} != xnone ]]
 then
     VIDEO_CONVERT="${VIDEO_CONVERT} videoflip method=${FLIP_METHOD} !"
 fi
 
 VIDEO_CONVERT="${VIDEO_CONVERT} videoscale ! video/x-raw, width=${FRAME_WIDTH}, height=${FRAME_HEIGHT}, framerate=${FRAME_RATE}/1 ! videoconvert !"
 
-if [[ x${TIME_FORMAT} != x ]]
+if [[ x${TIME_FORMAT} != x && x${TIME_FORMAT} != xnone ]]
 then
     TIME_HALIGNMENT=${TIME_HALIGNMENT:-right}
     TIME_VALIGNMENT=${TIME_VALIGNMENT:-top}
     VIDEO_CONVERT="${VIDEO_CONVERT} clockoverlay time-format=\"${TIME_FORMAT}\" halignment=${TIME_HALIGNMENT} valignment=${TIME_VALIGNMENT} font-desc=\"normal ${OVERLAY_FONT}\" !"
 fi
 
-if [[ x${TEXT_TITLE} != x ]]
+if [[ x${TEXT_TITLE} != x && x${TEXT_FORMAT} != xnone ]]
 then
     if [[ ${TEXT_TITLE} == auto ]]
     then
@@ -99,6 +97,16 @@ then
     TEXT_HALIGNMENT=${TEXT_HALIGNMENT:-left}
     TEXT_VALIGNMENT=${TEXT_VALIGNMENT:-top}
     VIDEO_CONVERT="${VIDEO_CONVERT} textoverlay text=\"${TEXT_TITLE}\" halignment=${TEXT_HALIGNMENT} valignment=${TEXT_VALIGNMENT} font-desc=\"normal ${OVERLAY_FONT}\" !"
+fi
+
+if [[ x${TEXT_SENSOR_COUNT} != xtrue ]]
+then
+    fifor=$(command -v fifor)
+    if [[ x$fifor != x ]]
+    then
+        VIDEO_CONVERT="${VIDEO_CONVERT} textoverlay name=txtsensor wait-text=false shaded-background=true shading-value=200 !"
+        GST_CMD="${fifor} | gst-launch-1.0 fdsrc fd=0 ! \"text/x-raw, format=utf8\" ! txtsensor."
+    fi
 fi
 
 PLAY_TEST="http://101.42.139.3:30808/players/rtc_player.html?${RTMP_VHOST}&ip=192.168.152.185&api=31985&app=live&stream=${ADDRESS}&autostart=true"
@@ -113,14 +121,11 @@ do
             if [[ x${netok} != x ]]
             then
                 echo ${PLAY_TEST} > /tmp/campi_gst_rtmp.log
-                __echo_and_run gst-launch-1.0 ${GSTSRC} ${VIDEO_CONVERT} ${GSTSINK}
+                __echo_and_run ${GST_CMD} ${GSTSRC} ${VIDEO_CONVERT} ${GSTSINK}
             else
                 echo "ping ${RTMP_DOMAIN} not received!"
             fi
         fi
-    # else
-        # echo "camera [${VIDEO_DEVICE}] is not exist!"
-        # __echo_and_run gst-launch-1.0 ${GSTSRC} ${VIDEO_CONVERT} ${GSTSINK}
     fi
     sleep 30
 done
