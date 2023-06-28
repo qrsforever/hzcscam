@@ -84,7 +84,7 @@ static pthread_mutex_t g_mutex;
 static int g_current_color = COLOR_RED;
 static int g_current_sensor = SENSOR_VIBRATSW;
 static unsigned int g_repeat_count = 0;
-static unsigned int g_thresh_quiet = 200;
+static unsigned int g_thresh_quiet = 500;
 static int g_fifo_w = -1;
 
 void _emq_report(const char* extra)

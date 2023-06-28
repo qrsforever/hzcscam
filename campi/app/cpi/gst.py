@@ -120,6 +120,7 @@ class GstMessageHandler(MessageHandler):
             "text_title": self.config.get('TEXT_TITLE', 'auto'),
             "text_halignmen": self.config.get('TEXT_HALIGNMEN', 'left'),
             "text_valignment": self.config.get('TEXT_VALIGNMENT', 'top'),
+            "text_sensor_count": self.config.get('TEXT_SENSOR_COUNT', False),
         }
 
     def _set_overlay(self, jdata):
@@ -137,7 +138,7 @@ class GstMessageHandler(MessageHandler):
             'contrast': int(self.config.get('CONTRAST', '50')),
             'hue': int(self.config.get('HUE', '50')),
             'saturation': int(self.config.get('SATURATION', '50')),
-            'flip_method': self.config.get('FLIP_METHOD', 'vertical-flip'),
+            'flip_method': self.config.get('FLIP_METHOD', 'none'),
         }
 
     def _set_image(self, jdata):
