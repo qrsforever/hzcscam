@@ -106,8 +106,9 @@ void _sensor_parse_config(const char* config)/*{{{*/
     if (cJSON_IsNumber(jcount))
         g_repeat_counter = jcount->valueint;
     cJSON* jccolor = cJSON_GetObjectItem(cjson, "current_color");
-    if (cJSON_IsNumber(jccolor))
+    if (cJSON_IsNumber(jccolor)) {
         g_current_color = jccolor->valueint;
+    }
     cJSON* jcsensor = cJSON_GetObjectItem(cjson, "current_sensor");
     if (cJSON_IsNumber(jcsensor))
         g_current_sensor = jcsensor->valueint;
@@ -137,23 +138,6 @@ const char* _sensor_get_config(char* config, int size, const char* extra)/*{{{*/
     memset(config, 0, size);
     snprintf(config, size, "{%s}", buff);
     return config;
-}/*}}}*/
-
-void _emq_report(const char* extra)/*{{{*/
-{
-    char payload[MAX_BUF] = { 0 };
-    snprintf(payload, MAX_BUF, "%d\n", g_repeat_counter);
-    if (write(g_fifo_w, payload, strlen(payload)) > 0) {
-    }
-    _sensor_get_config(payload, MAX_BUF, extra);
-    emqc_pub(SENSOR_TOPIC, payload);
-    syslog(LOG_DEBUG, "pub [%s]: %s\n", SENSOR_TOPIC, payload);
-}/*}}}*/
-
-void _emq_on_message(const char* topic, const char* payload)/*{{{*/
-{
-    syslog(LOG_DEBUG, "receive [%s]: %s\n", topic, payload);
-    _sensor_parse_config(payload);
 }/*}}}*/
 
 static void _save_current_state()/*{{{*/
@@ -203,6 +187,24 @@ static void _change_sensor_to(int c, int s)/*{{{*/
         pthread_mutex_unlock(&g_mutex);
         _save_current_state();
     }
+}/*}}}*/
+
+void _emq_report(const char* extra)/*{{{*/
+{
+    char payload[MAX_BUF] = { 0 };
+    snprintf(payload, MAX_BUF, "%d\n", g_repeat_counter);
+    if (write(g_fifo_w, payload, strlen(payload)) > 0) {
+    }
+    _sensor_get_config(payload, MAX_BUF, extra);
+    emqc_pub(SENSOR_TOPIC, payload);
+    syslog(LOG_DEBUG, "pub [%s]: %s\n", SENSOR_TOPIC, payload);
+}/*}}}*/
+
+void _emq_on_message(const char* topic, const char* payload)/*{{{*/
+{
+    syslog(LOG_DEBUG, "receive [%s]: %s\n", topic, payload);
+    _sensor_parse_config(payload);
+    _save_current_state();
 }/*}}}*/
 
 static void _sensor_common_task(int s)/*{{{*/
@@ -352,11 +354,10 @@ int sensor_init(const char* client_id)
     _load_current_state();
     _change_color_to(g_current_color);
 
-    char buff[64] = {0};
     snprintf(SENSOR_TOPIC, sizeof(SENSOR_TOPIC) - 1, "campi/%s/sensor/report", client_id);
+    char buff[64] = {0};
     snprintf(buff, 63, "cloud/%s/sensor/config", client_id);
     emqc_sub(buff, _emq_on_message);
-
     return 0;
 }/*}}}*/
 

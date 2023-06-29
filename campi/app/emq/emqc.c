@@ -7,6 +7,7 @@
 *****************************************************************************/
 
 #include <string.h>
+#include <sys/syslog.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
@@ -14,6 +15,7 @@
 #include "MQTTClient.h"
 #include "emqc.h"
 
+#define TOPIC_MAX_LENGTH 64
 #define MAX_MESSAGE_HANDLERS 20
 
 static MQTTClient r_client = 0;
@@ -23,7 +25,7 @@ static int LOCAL_TOPIC_PREFIX_LEN = -1;
 
 struct MessageHandlers
 {
-    const char* topic;
+    char topic[TOPIC_MAX_LENGTH];
     void (*fp) (const char* topic, const char* payload);
 } s_messageHandlers[MAX_MESSAGE_HANDLERS];
 
@@ -43,9 +45,9 @@ static int on_message(void *context, char *topic, int length, MQTTClient_message
     char *payload = (char*)message->payload;
     if (strncmp(topic, "cloud/", 6) == 0) {
         syslog(LOG_DEBUG, "From Cloud to Campi Received `%s` from `%s` topic \n", payload, topic);
-        if (strncmp(topic + CLOUD_TOPIC_PREFIX_LEN, "sensors", 7) == 0) {
+        if (strncmp(topic + CLOUD_TOPIC_PREFIX_LEN, "sensor", 6) == 0) {
             for (int i = 0; i < MAX_MESSAGE_HANDLERS; ++i) {
-                if (s_messageHandlers[i].topic != NULL && strcmp(s_messageHandlers[i].topic, topic) == 0) {
+                if (s_messageHandlers[i].topic[0] != 0 && strcmp(s_messageHandlers[i].topic, topic) == 0) {
                     if (s_messageHandlers[i].fp != NULL) {
                         s_messageHandlers[i].fp(topic, payload);
                     }
@@ -84,10 +86,10 @@ int emqc_pub(const char* topic, const char* payload)
 
 int emqc_sub(const char* topic, void (*cb)(const char*, const char*))
 {
-    MQTTClient_subscribe(r_client, topic, 0);
+    // MQTTClient_subscribe(r_client, topic, 0);
     for (int i = 0; i < MAX_MESSAGE_HANDLERS; ++i) {
-        if (s_messageHandlers[i].topic == NULL) {
-            s_messageHandlers[i].topic = topic;
+        if (s_messageHandlers[i].topic[0] == 0) {
+            strncpy(s_messageHandlers[i].topic, topic, TOPIC_MAX_LENGTH);
             s_messageHandlers[i].fp = cb;
             break;
         }
@@ -99,6 +101,7 @@ int emqc_init(const char* host, int port, const char* client_id, const char* use
 {
     int rc = 0;
     char buff[64] = {0};
+    memset(s_messageHandlers, 0, sizeof(s_messageHandlers));
 
     MQTTClient_create(&l_client, "tcp://127.0.0.1:1883", "campi_emq", 0, NULL);
     MQTTClient_setCallbacks(l_client, NULL, NULL, on_message, NULL);
