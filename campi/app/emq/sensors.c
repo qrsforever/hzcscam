@@ -32,34 +32,34 @@
 #define BTN_ONPRESS 0
 #define BTN_RELEASE 1
 
-#define STATE_FILE   "/campi/runtime/emq_sensor.state"
-#define PIEMQ_FIFO   "/tmp/emq_sensor.fifo"
+#define SENSOR_CONFIG "/campi/runtime/campi_sensor.json"
+#define PIEMQ_FIFO    "/tmp/emq_sensor.fifo"
 
 extern int sensor_init(const char*);
 extern void sensor_detect();
 extern int syscall_exec(const char* cmd);
 
 enum {
-    COLOR_BLACK = 0,
-    COLOR_RED,
+    COLOR_WHITE = 0,
+    COLOR_RED,         // SENSOR_VIBRATSW
     COLOR_GREEN,
     COLOR_BLUE,
     COLOR_YELLOW,
     COLOR_CYAN,
     COLOR_MAGENTA,
-    COLOR_WHITE
+    COLOR_BLACK,
 };
 
 enum {
-    SENSOR_NONE = 0,
-    SENSOR_VIBRATSW,
-    SENSOR_PIR,
-    SENSOR_PHOTOELE,
-    SENSOR_MAGNETSW
+    SENSOR_UNIVERSAL,  // COLOR_WHITE
+    SENSOR_VIBRATSW,   // COLOR_RED
+    SENSOR_PIR,        // COLOR_GREEN
+    SENSOR_PHOTOELE,   // COLOR_BLUE
+    SENSOR_MAGNETSW    // COLOR_YELLOW
 };
 
 static char SENSOR_NAMES[][16] = {
-    "none",
+    "universal",
     "vibratsw",
     "pir",
     "photoele",
@@ -69,117 +69,168 @@ static char SENSOR_NAMES[][16] = {
 static char SENSOR_TOPIC[64] = { 0 };
 
 static int _RGB[8][3] = {
-    {0, 0, 0},  // black
+    {1, 1, 1},  // white
     {1, 0, 0},
     {0, 1, 0},
     {0, 0, 1},
     {1, 1, 0},  // yellow
     {0, 1, 1},
     {1, 0, 1},
-    {1, 1, 1},  // white
+    {0, 0, 0},  // black
 };
 
+static int g_fifo_w = -1;
 static pthread_t g_thread_id;
 static pthread_mutex_t g_mutex;
-static int g_current_color = COLOR_RED;
-static int g_current_sensor = SENSOR_VIBRATSW;
-static unsigned int g_repeat_count = 0;
-static unsigned int g_thresh_quiet = 500;
-static int g_fifo_w = -1;
 
-void _emq_report(const char* extra)
+static int g_thresh_quiet = 500;
+
+static int g_sensor_debug = 0;
+static int g_current_color = COLOR_WHITE;
+static int g_current_sensor = SENSOR_UNIVERSAL;
+static int g_repeat_counter = 0;
+static int g_trigger_pulse = 1;
+static int g_calm_step_ms = 20;
+static int g_calm_down_ms = 200;
+static int g_read_sleep_ms = 300;
+
+
+void _sensor_parse_config(const char* config)/*{{{*/
 {
-    char payload[256] = { 0 };
-    char buff[MAX_BUF] = { 0 };
-    if (extra == NULL) {
-        snprintf(
-            payload, 255,
-            "{\"count\": %d, \"sensor\": \"%s\"}",
-            g_repeat_count,
-            SENSOR_NAMES[g_current_sensor]);
-    } else {
-        snprintf(
-            payload, 255,
-            "{\"count\": %d, \"sensor\": \"%s\", %s}",
-            g_repeat_count,
-            SENSOR_NAMES[g_current_sensor], extra);
-    }
-    snprintf(buff, MAX_BUF, "%d\n", g_repeat_count);
-    if (write(g_fifo_w, buff, strlen(buff)) > 0) {
-    }
-
-    emqc_pub(SENSOR_TOPIC, payload);
-    syslog(LOG_DEBUG, "pub [%s]: %s\n", SENSOR_TOPIC, payload);
-}
-
-void _emq_on_message(const char* topic, const char* payload)
-{/*{{{*/
-    syslog(LOG_DEBUG, "receive [%s]: %s\n", topic, payload);
-    cJSON* cjson = cJSON_Parse(payload);
+    cJSON* cjson = cJSON_Parse(config);
     if (cjson == NULL) {
         syslog(LOG_ERR, "cjson parse error!\n");
         return;
     }
     cJSON* jcount = cJSON_GetObjectItem(cjson, "count");
     if (cJSON_IsNumber(jcount))
-        g_repeat_count = jcount->valueint;
-    cJSON* jthres = cJSON_GetObjectItem(cjson, "threshold");
-    if (cJSON_IsNumber(jthres))
-        g_thresh_quiet = jthres->valueint;
+        g_repeat_counter = jcount->valueint;
+    cJSON* jccolor = cJSON_GetObjectItem(cjson, "current_color");
+    if (cJSON_IsNumber(jccolor))
+        g_current_color = jccolor->valueint;
+    cJSON* jcsensor = cJSON_GetObjectItem(cjson, "current_sensor");
+    if (cJSON_IsNumber(jcsensor))
+        g_current_sensor = jcsensor->valueint;
+    cJSON* jtrigger_pulse = cJSON_GetObjectItem(cjson, "trigger_pulse");
+    if (cJSON_IsNumber(jtrigger_pulse))
+        g_trigger_pulse = jtrigger_pulse->valueint;
+    cJSON* jcaml_step = cJSON_GetObjectItem(cjson, "calm_step_ms");
+    if (cJSON_IsNumber(jcaml_step))
+        g_calm_step_ms = jcaml_step->valueint;
+    cJSON* jcaml_down = cJSON_GetObjectItem(cjson, "calm_down_ms");
+    if (cJSON_IsNumber(jcaml_down))
+        g_calm_down_ms = jcaml_down->valueint;
+    cJSON* jread_sleep = cJSON_GetObjectItem(cjson, "read_sleep_ms");
+    if (cJSON_IsNumber(jread_sleep))
+        g_read_sleep_ms = jread_sleep->valueint;
     cJSON_Delete(cjson);
 }/*}}}*/
 
-static void _save_current_state()
-{/*{{{*/
-    int fd = open(STATE_FILE, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+const char* _sensor_get_config(char* config, int size, const char* extra)/*{{{*/
+{
+    char buff[MAX_BUF] = { 0 };
+    snprintf(buff, size,
+             "\"current_color\": %d, \"current_sensor\": %d, \"sensor\": \"%s\", \"count\": %d, \"trigger_pulse\": %d, \"calm_step_ms\": %d, \"calm_down_ms\": %d, \"read_sleep_ms\": %d",
+             g_current_color, g_current_sensor, SENSOR_NAMES[g_current_sensor], g_repeat_counter, g_trigger_pulse, g_calm_step_ms, g_calm_down_ms, g_read_sleep_ms);
+    if (NULL != extra)
+        snprintf(buff + strlen(buff), MAX_BUF, ", %s", extra);
+    memset(config, 0, size);
+    snprintf(config, size, "{%s}", buff);
+    return config;
+}/*}}}*/
+
+void _emq_report(const char* extra)/*{{{*/
+{
+    char payload[MAX_BUF] = { 0 };
+    snprintf(payload, MAX_BUF, "%d\n", g_repeat_counter);
+    if (write(g_fifo_w, payload, strlen(payload)) > 0) {
+    }
+    _sensor_get_config(payload, MAX_BUF, extra);
+    emqc_pub(SENSOR_TOPIC, payload);
+    syslog(LOG_DEBUG, "pub [%s]: %s\n", SENSOR_TOPIC, payload);
+}/*}}}*/
+
+void _emq_on_message(const char* topic, const char* payload)/*{{{*/
+{
+    syslog(LOG_DEBUG, "receive [%s]: %s\n", topic, payload);
+    _sensor_parse_config(payload);
+}/*}}}*/
+
+static void _save_current_state()/*{{{*/
+{
+    int fd = open(SENSOR_CONFIG, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd < 0) {
-        syslog(LOG_ERR, "write file %s error\n", STATE_FILE);
+        syslog(LOG_ERR, "write file %s error\n", SENSOR_CONFIG);
         exit(-1);
     }
-    char buff[8] = { 0 };
-    sprintf(buff, "%d,%d", g_current_color, g_current_sensor);
-    int sz = write(fd, buff, strlen(buff));
-    syslog(LOG_DEBUG, "[%d] save state %d %d\n", sz, g_current_color, g_current_sensor);
+    char config[MAX_BUF] = { 0 };
+    _sensor_get_config(config, MAX_BUF, NULL);
+    int sz = write(fd, config, strlen(config));
+    syslog(LOG_DEBUG, "[%d] save state %s\n", sz, config);
     close(fd);
 }/*}}}*/
 
-static void _load_current_state()
-{/*{{{*/
-    int fd = open(STATE_FILE, O_RDONLY | O_CREAT, 0644);
+static void _load_current_state()/*{{{*/
+{
+    int fd = open(SENSOR_CONFIG, O_RDONLY | O_CREAT, 0644);
     if (fd < 0) {
-        syslog(LOG_ERR, "read file %s error\n", STATE_FILE);
+        syslog(LOG_ERR, "read file %s error\n", SENSOR_CONFIG);
         exit(-1);
     }
-    char buff[8] = { 0 };
-    int sz =read(fd, buff, 8);
+    char buff[MAX_BUF] = { 0 };
+    int sz = read(fd, buff, MAX_BUF);
     if (sz > 0) {
-        sscanf(buff, "%d,%d", &g_current_color, &g_current_sensor);
-        syslog(LOG_DEBUG, "[%d] load state %d %d\n", sz, g_current_color, g_current_sensor);
+        _sensor_parse_config(buff);
+        syslog(LOG_DEBUG, "[%d] load state %s\n", sz, buff);
     }
     close(fd);
 }/*}}}*/
 
-static void _change_color_to(int c)
-{/*{{{*/
+static void _change_color_to(int c)/*{{{*/
+{
     digitalWrite(REDLED   , _RGB[c][0]);
     digitalWrite(GREENLED , _RGB[c][1]);
     digitalWrite(BLUELED  , _RGB[c][2]);
 }/*}}}*/
 
-static void _change_sensor_to(int c, int s)
-{/*{{{*/
+static void _change_sensor_to(int c, int s)/*{{{*/
+{
     if (s != g_current_sensor) {
         pthread_mutex_lock(&g_mutex);
         g_current_color = c;
         g_current_sensor = s;
-        g_repeat_count = 0;
+        g_repeat_counter = 0;
         pthread_mutex_unlock(&g_mutex);
         _save_current_state();
     }
 }/*}}}*/
 
-static void _sensor_vibration_switch(int s)
-{/*{{{*/
+static void _sensor_common_task(int s)/*{{{*/
+{
+    int value, sumtimer;
+    char buff[64] = { 0 };
+    while (g_current_sensor == s) {
+        value = digitalRead(TSKPIN);
+        if (g_trigger_pulse == value) {
+            _change_color_to(g_current_color);
+            sumtimer = 0;
+            do {
+                if (value == digitalRead(TSKPIN))
+                    sumtimer = 0;
+                else
+                    sumtimer += g_calm_step_ms;
+                delay(g_calm_step_ms);
+            } while(g_current_sensor == s && sumtimer < g_calm_down_ms);
+            g_repeat_counter += 1;
+            _change_color_to(COLOR_BLACK);
+            _emq_report(NULL);
+        }
+        delay(g_read_sleep_ms);
+    }
+}/*}}}*/
+
+static void _sensor_vibration_switch(int s)/*{{{*/
+{
     syslog(LOG_DEBUG, "sensor vibrate switch\n");
     pinMode(TSKPIN, INPUT);
     int value = 0, sumtimer = 0;
@@ -196,10 +247,9 @@ static void _sensor_vibration_switch(int s)
                     sumtimer += 20;
                 delay(20);
             } while(g_current_sensor == s && sumtimer < g_thresh_quiet);
-            g_repeat_count += 1;
+            g_repeat_counter += 1;
             _change_color_to(g_current_color);
-            snprintf(buff, 63, "\"threshold\": %d", g_thresh_quiet);
-            _emq_report(buff);
+            _emq_report(NULL);
         }
         delay(200);
     }
@@ -224,16 +274,15 @@ static void _sensor_passive_infrared(int s)/*{{{*/
                     sumtimer += 100;
                 delay(100);
             } while(g_current_sensor == s && sumtimer < thresh_quiet);
-            g_repeat_count += 1;
+            g_repeat_counter += 1;
             _change_color_to(COLOR_BLACK);
-            snprintf(buff, 63, "\"threshold\": %d", thresh_quiet);
-            _emq_report(buff);
+            _emq_report(NULL);
         }
         delay(500);
     }
-}
-/*}}}*/
-static void _sensor_photoelectric_or_magnet(int s)
+}/*}}}*/
+
+static void _sensor_photoelectric_or_magnet(int s)/*{{{*/
 {
     syslog(LOG_DEBUG, "sensor photo electirc or magnat\n");
 	pinMode(TSKPIN, INPUT);
@@ -242,12 +291,12 @@ static void _sensor_photoelectric_or_magnet(int s)
             _change_color_to(COLOR_BLACK);
             while (g_current_sensor == s && 0 == digitalRead(TSKPIN)) delay(200);
             _change_color_to(g_current_color);
-            g_repeat_count++;
+            g_repeat_counter++;
             _emq_report(NULL);
         }
         delay(200);
     }
-}
+}/*}}}*/
 
 static void *_sensor_worker(void *arg)
 {/*{{{*/
@@ -256,6 +305,9 @@ static void *_sensor_worker(void *arg)
         int s = g_current_sensor;
         pthread_mutex_unlock(&g_mutex);
         switch (s) {
+            case SENSOR_UNIVERSAL:
+                _sensor_common_task(s);
+                break;
             case SENSOR_VIBRATSW:
                 _sensor_vibration_switch(s);
                 break;
@@ -301,9 +353,9 @@ int sensor_init(const char* client_id)
     _change_color_to(g_current_color);
 
     char buff[64] = {0};
+    snprintf(SENSOR_TOPIC, sizeof(SENSOR_TOPIC) - 1, "campi/%s/sensor/report", client_id);
     snprintf(buff, 63, "cloud/%s/sensor/config", client_id);
     emqc_sub(buff, _emq_on_message);
-    snprintf(SENSOR_TOPIC, sizeof(SENSOR_TOPIC) - 1, "campi/%s/sensor/report", client_id);
 
     return 0;
 }/*}}}*/
@@ -344,7 +396,7 @@ void sensor_detect()
         duration = time(0) - press_timer;
 
         switch (duration) {
-            case 0: color = COLOR_BLACK; break;
+            case 0: color = COLOR_WHITE; break;
             case 1:
             case 2: color = COLOR_RED; break;
             case 3:
@@ -357,19 +409,14 @@ void sensor_detect()
             case 10: color = COLOR_CYAN; break;
             case 11:
             case 12: color = COLOR_MAGENTA; break;
-            default: color = COLOR_WHITE;
+            default: color = COLOR_BLACK;
         }
         _change_color_to(color);
-        delay(10);
+        delay(20);
     }
     switch (color) {
-        case COLOR_BLACK: {
-            // printf("---> %ld\n", press_timer - btnon_press_timer);
-            // if ((press_timer - btnon_press_timer) < 2)
-            //     short_press_count += 1;
-            // else
-            //     short_press_count = 1;
-            // btnon_press_timer = press_timer;
+        case COLOR_WHITE: {
+            _change_sensor_to(color, SENSOR_UNIVERSAL);
             break;
         }
         case COLOR_RED: {
@@ -389,7 +436,7 @@ void sensor_detect()
             break;
         }
         default: {
-            _change_sensor_to(color, SENSOR_NONE);
+            _change_sensor_to(color, SENSOR_UNIVERSAL);
             break;
         }
     }
