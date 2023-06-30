@@ -187,14 +187,12 @@ static void _change_color_to(int c)/*{{{*/
 
 static void _change_sensor_to(int c, int s)/*{{{*/
 {
-    if (s != g_current_sensor) {
-        pthread_mutex_lock(&g_mutex);
-        g_current_color = c;
-        g_current_sensor = s;
-        g_repeat_counter = 0;
-        pthread_mutex_unlock(&g_mutex);
-        _save_current_state();
-    }
+    pthread_mutex_lock(&g_mutex);
+    g_current_color = c;
+    g_current_sensor = s;
+    g_repeat_counter = 0;
+    pthread_mutex_unlock(&g_mutex);
+    _save_current_state();
 }/*}}}*/
 
 void _emq_report(const char* extra)/*{{{*/
@@ -221,6 +219,11 @@ static void _sensor_universal_task(int s)/*{{{*/
     char buff[MAX_BUF] = { 0 };
     while (g_current_sensor == s) {
         value = digitalRead(TSKPIN);
+        /*
+         * trigger pulse
+         * vibratsw: 1
+         * pir: 0
+         */
         if (g_trigger_pulse == value) {
             _change_color_to(g_current_color);
             sumtimer = 0;
@@ -331,6 +334,7 @@ static void *_sensor_worker(void *arg)
         int s = g_current_sensor;
         pthread_mutex_unlock(&g_mutex);
 
+        syslog(LOG_DEBUG, "change sensor [%d]\n", g_current_sensor);
         for (i = 0; i < 3; i++) {
             _change_color_to(g_current_color);
             delay(200);
@@ -424,6 +428,7 @@ void sensor_detect()
                     }
                 }
                 short_press_count = 0;
+                _change_color_to(COLOR_BLACK);
             }
         }
         return;
@@ -456,7 +461,7 @@ void sensor_detect()
         _change_color_to(color);
         delay(20);
     }
-    syslog(LOG_DEBUG, "duration: %d, %d\n", duration, color);
+    syslog(LOG_DEBUG, "duration: %d, color: %d\n", duration, color);
 
     if (color == COLOR_BLACK) { // short press
         short_press_count += 1;
