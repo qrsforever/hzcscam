@@ -8,8 +8,8 @@ PUB_TOPIC=cloud/${CLIENTID}/sensor/config
 
 cat > /tmp/neza.json <<EOF
 {
-  "current_color": 1,
-  "current_sensor": 1,
+  "current_color": 0,
+  "current_sensor": 0,
   "count": 0,
   "trigger_pulse": 1,
   "calm_step_ms": 20,

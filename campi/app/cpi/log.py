@@ -16,7 +16,7 @@ from campi.topics import TCloud
 from campi.constants import SCRIPT_OF_LOGCAT, OSS_LOGCAT_PATH
 from campi.utils.oss import coss3_put, coss3_domain
 
-class LoggerMessageHandler(MessageHandler):
+class LogMessageHandler(MessageHandler):
     def __init__(self):
         super().__init__([TLogger.ALL, TCloud.LOGCAT_COLLECT])
 

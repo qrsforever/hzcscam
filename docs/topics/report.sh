@@ -6,6 +6,7 @@ source ${CUR_DIR}/env.sh
 
 cat > /tmp/about.json <<EOF
 {
+    "emq": true,
     "frp": true,
     "gst": true,
     "sys": true

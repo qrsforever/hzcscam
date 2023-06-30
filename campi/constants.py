@@ -53,3 +53,7 @@ FRP_CONFIG_PATH = f'{RUNTIME_PATH}/frpc.ini'
 ## LOG
 
 OSS_LOGCAT_PATH = f'logcat/{ADDRESS}'
+
+## EMQ
+
+SENSOR_CONFIG_PATH = f'{RUNTIME_PATH}/emq_sensor.json'

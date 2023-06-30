@@ -32,7 +32,7 @@
 #define BTN_ONPRESS 0
 #define BTN_RELEASE 1
 
-#define SENSOR_CONFIG "/campi/runtime/campi_sensor.json"
+#define SENSOR_CONFIG "/campi/runtime/emq_sensor.json"
 #define PIEMQ_FIFO    "/tmp/emq_sensor.fifo"
 
 extern int sensor_init(const char*);
@@ -166,6 +166,8 @@ static void _load_current_state()/*{{{*/
     if (sz > 0) {
         _sensor_parse_config(buff);
         syslog(LOG_DEBUG, "[%d] load state %s\n", sz, buff);
+    } else {
+        _save_current_state();
     }
     close(fd);
 }/*}}}*/

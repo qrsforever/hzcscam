@@ -21,19 +21,21 @@ if os.path.exists('/campi/version.txt'):
         os.environ['APP_VERSION'] = fr.read().strip()
 
 import asyncio
-from campi.app.cpi.sys import SystemMessageHandler
-from campi.app.cpi.log import LoggerMessageHandler
+from campi.app.cpi.sys import SysMessageHandler
+from campi.app.cpi.log import LogMessageHandler
 from campi.app.cpi.ota import OtaMessageHandler
 from campi.app.cpi.gst import GstMessageHandler
-from campi.app.cpi.frp import FrpcMessageHandler
+from campi.app.cpi.emq import EmqMessageHandler
+from campi.app.cpi.frp import FrpMessageHandler
 
 
 async def main():
-    sys_h = SystemMessageHandler()  # noqa
-    log_h = LoggerMessageHandler()  # noqa
-    ota_h = OtaMessageHandler()     # noqa
-    gst_h = GstMessageHandler()     # noqa
-    frp_h = FrpcMessageHandler()    # noqa
+    sys_h = SysMessageHandler()  # noqa
+    log_h = LogMessageHandler()  # noqa
+    ota_h = OtaMessageHandler()  # noqa
+    gst_h = GstMessageHandler()  # noqa
+    emq_h = EmqMessageHandler()  # noqa
+    frp_h = FrpMessageHandler()  # noqa
 
     loop = asyncio.get_running_loop()
     loop.call_later(5, sys_h.queue.put_nowait, 'h')

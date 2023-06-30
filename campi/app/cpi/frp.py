@@ -29,7 +29,7 @@ remote_port = %d
 """
 
 
-class FrpcMessageHandler(MessageHandler):
+class FrpMessageHandler(MessageHandler):
 
     SNAME = 'campi_frp.service'
 

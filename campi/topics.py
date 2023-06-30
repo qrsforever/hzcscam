@@ -59,6 +59,9 @@ class TCloud:
     # FRP
     FRPC_CLOUD_CTRL = f'cloud/{ADDRESS}/frpc'
 
+    # EMQ
+    EMQ_SENSOR = f'cloud/{ADDRESS}/emq/sensor'
+
     # LOG
     LOGCAT_COLLECT = f'cloud/{ADDRESS}/log/collect'
     LOGCAT_MESSAGE = f'campi/{ADDRESS}/log/message'

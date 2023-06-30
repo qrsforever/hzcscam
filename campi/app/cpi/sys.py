@@ -45,7 +45,7 @@ WIFIAP_RUNNING = 1
 WIFIAP_STOPING = 2
 
 
-class SystemMessageHandler(MessageHandler):
+class SysMessageHandler(MessageHandler):
 
     def __init__(self):
         super().__init__([
