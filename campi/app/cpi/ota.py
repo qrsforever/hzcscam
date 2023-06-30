@@ -44,27 +44,30 @@ class OtaMessageHandler(MessageHandler):
     UPGRADE_METHOD_HTTP = 2
 
     def __init__(self):
-        super().__init__([TCloud.OTA, TUpgrade.BY_UDISK, TUpgrade.BY_OTA])
+        super().__init__([TCloud.OTA, TUpgrade.BY_UDISK, TUpgrade.BY_OTA, TUpgrade.BY_AUTO])
 
         self.conn_timeout = 3
         self.read_timeout = 3
+        self.upgrade_server = 'http://aiot.hzcsdata.com:30082/version_info.json'
+        self.zip_path = f'{ARCHIVES_ROOT_PATH}/update.zip'
 
     def _do_upgrade(self, config):
         self.logger.info("upgrade ...")
 
         zip_md5 = config['md5']
-        zip_path = config['zip_path']
         compatible = config.get('compatible', True)
         execsetup = config.get('execsetup', True)
         try:
-            md5 = subprocess.check_output(f'md5sum {zip_path} | cut -c1-32', shell=True)
             if os.path.isdir(f'{ARCHIVES_ROOT_PATH}/{zip_md5}'):
                 config['reason'] = 'md5 already exist.'
                 return self.UPGRADE_FAIL
-            if md5.decode('utf-8').strip() != zip_md5:
+            md5 = subprocess.check_output(f'md5sum {self.zip_path} | cut -c1-32', shell=True)
+            md5 = md5.decode('utf-8').strip()
+            if md5 != zip_md5:
+                self.logger.error(f'md5: {md5} vs {zip_md5}')
                 config['reason'] = 'md5 not match'
                 return self.UPGRADE_FAIL
-            subprocess.call(f'unzip -qo {zip_path} -d {ARCHIVES_ROOT_PATH}/{zip_md5}', shell=True)
+            subprocess.call(f'unzip -qo {self.zip_path} -d {ARCHIVES_ROOT_PATH}/{zip_md5}', shell=True)
             if os.path.isdir(f'{ARCHIVES_ROOT_PATH}/{zip_md5}'):
                 if compatible:
                     subprocess.call(f'cp -aprf {RUNTIME_PATH} {ARCHIVES_ROOT_PATH}/{zip_md5}', shell=True)
@@ -79,32 +82,53 @@ class OtaMessageHandler(MessageHandler):
             config['reason'] = f'subprocess upgrade fail {err}'
             return self.UPGRADE_FAIL
 
+    def _on_check_upgrade(self, config):
+        force = config.get('force', False)
+        if not force and not compare_version(config['version'], APP_VERSION):
+            self.logger.info(f"save version: {config['version']}, {APP_VERSION}")
+            return False
+        return True
+
+    def _on_request_upgrade_config(self):
+        config_res = requests.get(
+            self.upgrade_server,
+            headers={'Content-Type': 'application/json'},
+            timeout=(self.conn_timeout, self.read_timeout))
+        if config_res.status_code != 200:
+            self.logger.error(f"upgrade request config: requests error[{config_res.status_code}]!")
+            self.send_message(TCloud.UPGRADE_REQUEST_ERROR, "{}")
+            return None
+        return json.loads(config_res.content)
+
+    def _on_request_upgrade_zip(self, config):
+        zip_res = requests.get(
+            config['url'],
+            headers={'Content-Type': 'application/zip'},
+            timeout=(self.conn_timeout, self.read_timeout))
+        if zip_res.status_code != 200:
+            self.logger.error(f"upgrade fail: requests error[{zip_res.status_code}]!")
+            self.send_message(TCloud.UPGRADE_FAIL, config)
+            return False
+        if os.path.exists(self.zip_path):
+            shutil.move(self.zip_path, f'{ARCHIVES_ROOT_PATH}/factory.zip')
+        with open(self.zip_path, 'wb') as fw:
+            fw.write(zip_res.content)
+        return True
+
     def handle_message(self, topic, message):
-        self.logger.info(f'ota {topic} {message}')
+        self.logger.info(f'ota: {topic} {message}')
 
-        if topic in (TUpgrade.BY_UDISK, TCloud.OTA):
-            config = json.loads(message) if isinstance(message, str) else message
-
-            force = config.get('force', False)
-            if not force and not compare_version(config['version'], APP_VERSION):
-                self.logger.info(f"save version: {config['version']}, {APP_VERSION}")
+        if topic in (TUpgrade.BY_UDISK, TCloud.OTA, TUpgrade.BY_AUTO):
+            if topic == TUpgrade.BY_AUTO:
+                config = self._on_request_upgrade_config()
+            else:
+                config = json.loads(message) if isinstance(message, str) else message
+            if not self._on_check_upgrade(config):
                 return
 
-            if topic == TCloud.OTA:
-                zip_res = requests.get(
-                    config['url'],
-                    headers={'Content-Type': 'application/zip'},
-                    timeout=(self.conn_timeout, self.read_timeout))
-                if zip_res.status_code != 200:
-                    self.logger.error(f"upgrade fail: requests error[{zip_res.status_code}]!")
-                    self.send_message(TCloud.UPGRADE_FAIL, config)
+            if topic == TCloud.OTA or topic == TUpgrade.BY_AUTO:
+                if not self._on_request_upgrade_zip(config):
                     return
-                zip_path = f'{ARCHIVES_ROOT_PATH}/update.zip'
-                if os.path.exists(zip_path):
-                    shutil.move(zip_path, f'{ARCHIVES_ROOT_PATH}/factory.zip')
-                with open(zip_path, 'wb') as fw:
-                    fw.write(zip_res.content)
-                config['zip_path'] = zip_path
 
             if self.UPGRADE_SUCESS == self._do_upgrade(config):
                 self.logger.info("upgrade success")

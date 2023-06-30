@@ -46,6 +46,7 @@ class TCloud:
 
     # OTA
     OTA = f'cloud/{ADDRESS}/ota'
+    UPGRADE_REQUEST_ERROR = f'campi/{ADDRESS}/upgrade/request_error'
     UPGRADE_SUCESS = f'campi/{ADDRESS}/upgrade/success'
     UPGRADE_FAIL = f'campi/{ADDRESS}/upgrade/fail'
 
@@ -72,3 +73,4 @@ class TApis:
 class TUpgrade:
     BY_UDISK = 'upgrade/udisk'
     BY_OTA = 'upgrade/ota'
+    BY_AUTO = 'upgrade/auto'

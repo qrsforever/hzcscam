@@ -410,11 +410,12 @@ void sensor_detect()
                 syslog(LOG_DEBUG, "press count: %d\n", short_press_count);
                 switch (short_press_count) {
                     case 2: {
-                        syslog(LOG_DEBUG, "press 2\n");
+                        syslog(LOG_DEBUG, "start ota auto upgrade!\n");
+                        neza_pub("upgrade/auto", "{}");
                         break;
                     }
                     case 5: {
-                        syslog(LOG_DEBUG, "start campi_frp.service\n");
+                        syslog(LOG_DEBUG, "start campi_frp.service!\n");
                         syscall_exec("systemctl start campi_frp.service");
                         break;
                     }

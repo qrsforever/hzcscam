@@ -69,7 +69,7 @@ static int on_message(void *context, char *topic, int length, MQTTClient_message
     return 1;
 }
 
-int emqc_pub(const char* topic, const char* payload)
+static int _emqc_pub(MQTTClient mqtt, const char* topic, const char* payload)
 {
     MQTTClient_message message = MQTTClient_message_initializer;
     message.payload = (void*)payload;
@@ -77,11 +77,20 @@ int emqc_pub(const char* topic, const char* payload)
     message.qos = 0;
     message.retained = 0;
     MQTTClient_deliveryToken token;
-    MQTTClient_publishMessage(r_client, topic, &message, &token);
-    MQTTClient_waitForCompletion(r_client, token, 4000L);
+    MQTTClient_publishMessage(mqtt, topic, &message, &token);
+    MQTTClient_waitForCompletion(mqtt, token, 4000L);
     syslog(LOG_DEBUG, "Send `%s` to topic `%s` \n", payload, topic);
-    // printf("Send `%s` to topic `%s` \n", payload, topic);
     return 0;
+}
+
+int neza_pub(const char* topic, const char* payload)
+{
+    return _emqc_pub(l_client, topic, payload);
+}
+
+int emqc_pub(const char* topic, const char* payload)
+{
+    return _emqc_pub(r_client, topic, payload);
 }
 
 int emqc_sub(const char* topic, void (*cb)(const char*, const char*))

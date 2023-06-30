@@ -51,4 +51,5 @@ cat > .ota/version_info.json <<EOF
 EOF
 
 echo "scp .ota/update_${APP_VERSION}.zip k8-storage:/data/nginx/www"
+echo "scp .ota/version_info.json k8-storage:/data/nginx/www"
 echo "cat .ota/version_info.json | jq -c"
