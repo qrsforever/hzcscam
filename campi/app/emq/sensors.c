@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/syslog.h>
 #include <wiringPi.h>
 #include <stdio.h>
 #include <time.h>
@@ -21,7 +22,7 @@
 
 #include "emqc.h"
 
-#define MAX_BUF  1024
+#define MAX_BUF  2048
 #define BTNPIN   2    // PC9
 #define TSKPIN   6    // PC11
 
@@ -40,17 +41,18 @@ extern void sensor_detect();
 extern int syscall_exec(const char* cmd);
 
 enum {
-    COLOR_WHITE = 0,
+    COLOR_BLACK = 0,
+    COLOR_WHITE,
     COLOR_RED,         // SENSOR_VIBRATSW
     COLOR_GREEN,
     COLOR_BLUE,
     COLOR_YELLOW,
     COLOR_CYAN,
     COLOR_MAGENTA,
-    COLOR_BLACK,
 };
 
 enum {
+    SENSOR_NONE = 0,
     SENSOR_UNIVERSAL,  // COLOR_WHITE
     SENSOR_VIBRATSW,   // COLOR_RED
     SENSOR_PIR,        // COLOR_GREEN
@@ -59,6 +61,7 @@ enum {
 };
 
 static char SENSOR_NAMES[][16] = {
+    "none",
     "universal",
     "vibratsw",
     "pir",
@@ -69,6 +72,7 @@ static char SENSOR_NAMES[][16] = {
 static char SENSOR_TOPIC[64] = { 0 };
 
 static int _RGB[8][3] = {
+    {0, 0, 0},  // black
     {1, 1, 1},  // white
     {1, 0, 0},
     {0, 1, 0},
@@ -76,7 +80,6 @@ static int _RGB[8][3] = {
     {1, 1, 0},  // yellow
     {0, 1, 1},
     {1, 0, 1},
-    {0, 0, 0},  // black
 };
 
 static int g_fifo_w = -1;
@@ -102,6 +105,9 @@ void _sensor_parse_config(const char* config)/*{{{*/
         syslog(LOG_ERR, "cjson parse error!\n");
         return;
     }
+    cJSON* jdebug = cJSON_GetObjectItem(cjson, "debug_mode");
+    if (cJSON_IsNumber(jdebug))
+        g_sensor_debug = jdebug->valueint;
     cJSON* jcount = cJSON_GetObjectItem(cjson, "count");
     if (cJSON_IsNumber(jcount))
         g_repeat_counter = jcount->valueint;
@@ -131,9 +137,9 @@ const char* _sensor_get_config(char* config, int size, const char* extra)/*{{{*/
 {
     char buff[MAX_BUF] = { 0 };
     snprintf(buff, size,
-             "\"current_color\": %d, \"current_sensor\": %d, \"sensor\": \"%s\", \"count\": %d, \"trigger_pulse\": %d, \"calm_step_ms\": %d, \"calm_down_ms\": %d, \"read_sleep_ms\": %d",
-             g_current_color, g_current_sensor, SENSOR_NAMES[g_current_sensor], g_repeat_counter, g_trigger_pulse, g_calm_step_ms, g_calm_down_ms, g_read_sleep_ms);
-    if (NULL != extra)
+             "\"debug_mode\": %d, \"current_color\": %d, \"current_sensor\": %d, \"sensor\": \"%s\", \"count\": %d, \"trigger_pulse\": %d, \"calm_step_ms\": %d, \"calm_down_ms\": %d, \"read_sleep_ms\": %d",
+             g_sensor_debug, g_current_color, g_current_sensor, SENSOR_NAMES[g_current_sensor], g_repeat_counter, g_trigger_pulse, g_calm_step_ms, g_calm_down_ms, g_read_sleep_ms);
+    if (NULL != extra && strlen(extra) > 0)
         snprintf(buff + strlen(buff), MAX_BUF, ", %s", extra);
     memset(config, 0, size);
     snprintf(config, size, "{%s}", buff);
@@ -209,25 +215,40 @@ void _emq_on_message(const char* topic, const char* payload)/*{{{*/
     _save_current_state();
 }/*}}}*/
 
-static void _sensor_common_task(int s)/*{{{*/
+static void _sensor_universal_task(int s)/*{{{*/
 {
-    int value, sumtimer;
-    char buff[64] = { 0 };
+    int value, sumtimer, len = 0;
+    char buff[MAX_BUF] = { 0 };
     while (g_current_sensor == s) {
         value = digitalRead(TSKPIN);
         if (g_trigger_pulse == value) {
             _change_color_to(g_current_color);
             sumtimer = 0;
+            if (g_sensor_debug) {
+                memset(buff, 0, MAX_BUF);
+                strcpy(buff, "\"_calm_disturb_serial_\": [0");
+            }
             do {
-                if (value == digitalRead(TSKPIN))
+                if (value == digitalRead(TSKPIN)) {
+                    if (g_sensor_debug && sumtimer > 0) {
+                        len = strlen(buff);
+                        if (len < MAX_BUF)
+                            snprintf(buff + len, MAX_BUF - len - 1, ",%d", sumtimer);
+                    }
                     sumtimer = 0;
-                else
+                } else {
                     sumtimer += g_calm_step_ms;
+                }
                 delay(g_calm_step_ms);
             } while(g_current_sensor == s && sumtimer < g_calm_down_ms);
             g_repeat_counter += 1;
             _change_color_to(COLOR_BLACK);
-            _emq_report(NULL);
+            if (g_sensor_debug) {
+                buff[strlen(buff)] = ']';
+                _emq_report(buff);
+            } else {
+                _emq_report(NULL);
+            }
         }
         delay(g_read_sleep_ms);
     }
@@ -304,13 +325,22 @@ static void _sensor_photoelectric_or_magnet(int s)/*{{{*/
 
 static void *_sensor_worker(void *arg)
 {/*{{{*/
+    int i;
     while (1) {
         pthread_mutex_lock(&g_mutex);
         int s = g_current_sensor;
         pthread_mutex_unlock(&g_mutex);
+
+        for (i = 0; i < 3; i++) {
+            _change_color_to(g_current_color);
+            delay(200);
+            _change_color_to(COLOR_BLACK);
+            delay(200);
+        }
+
         switch (s) {
             case SENSOR_UNIVERSAL:
-                _sensor_common_task(s);
+                _sensor_universal_task(s);
                 break;
             case SENSOR_VIBRATSW:
                 _sensor_vibration_switch(s);
@@ -323,6 +353,12 @@ static void *_sensor_worker(void *arg)
                 _sensor_photoelectric_or_magnet(s);
                 break;
             default:
+                while (g_current_sensor == s) {
+                    _change_color_to(COLOR_MAGENTA);
+                    delay(500);
+                    _change_color_to(COLOR_BLACK);
+                    delay(500);
+                }
                 break;
         }
         delay(1000);
@@ -363,84 +399,95 @@ int sensor_init(const char* client_id)
     return 0;
 }/*}}}*/
 
-// static time_t short_press_count = 0;
-// static time_t btnon_press_timer = 0;
-// static time_t curr_release_timer = 0;
-// static time_t prev_release_timer = 0;
+static int short_press_count = 0;
+static time_t btn_onpress_timer = 0;
 
 void sensor_detect()
 {/*{{{*/
     if (BTN_RELEASE == digitalRead(BTNPIN)) {
-        // curr_release_timer = time(0);
-        // time_t interval = curr_release_timer - prev_release_timer;
-        // if (interval < 1) {
-        //     short_press_count++;
-        //     prev_release_timer = curr_release_timer;
-        // } else if (interval > 2) {
-        //     if (short_press_count > 1) {
-        //         switch (short_press_count) {
-        //             case 2: {
-        //                 break;
-        //             }
-        //             case 3: {
-        //                 syscall_exec("systemctl start campi_frp.service");
-        //                 break;
-        //             }
-        //             default: break;
-        //         }
-        //     }
-        // }
+        if (short_press_count > 0) {
+            if ((time(0) - btn_onpress_timer) > 2) {
+                syslog(LOG_DEBUG, "press count: %d\n", short_press_count);
+                switch (short_press_count) {
+                    case 2: {
+                        syslog(LOG_DEBUG, "press 2\n");
+                        break;
+                    }
+                    case 5: {
+                        syslog(LOG_DEBUG, "start campi_frp.service\n");
+                        syscall_exec("systemctl start campi_frp.service");
+                        break;
+                    }
+                    default: {
+                        syslog(LOG_DEBUG, "no operation\n");
+                    }
+                }
+                short_press_count = 0;
+            }
+        }
         return;
     }
 
-    int duration = 0, color = COLOR_BLACK;
+    static int duration = 0, color = COLOR_BLACK;
     time_t press_timer = time(0);
     while (BTN_ONPRESS == digitalRead(BTNPIN)) {
         duration = time(0) - press_timer;
 
         switch (duration) {
-            case 0: color = COLOR_WHITE; break;
-            case 1:
-            case 2: color = COLOR_RED; break;
-            case 3:
-            case 4: color = COLOR_GREEN; break;
-            case 5:
-            case 6: color = COLOR_BLUE; break;
-            case 7:
-            case 8: color = COLOR_YELLOW; break;
-            case 9:
-            case 10: color = COLOR_CYAN; break;
-            case 11:
-            case 12: color = COLOR_MAGENTA; break;
+            case 0:
+            case 1: color = COLOR_BLACK; break;
+            case 2:
+            case 3: color = COLOR_WHITE; break;
+            case 4:
+            case 5: color = COLOR_RED; break;
+            case 6:
+            case 7: color = COLOR_GREEN; break;
+            case 8:
+            case 9: color = COLOR_BLUE; break;
+            case 10:
+            case 11: color = COLOR_YELLOW; break;
+            case 12:
+            case 13: color = COLOR_CYAN; break;
+            case 14:
+            case 15: color = COLOR_MAGENTA; break;
             default: color = COLOR_BLACK;
         }
         _change_color_to(color);
         delay(20);
     }
-    switch (color) {
-        case COLOR_WHITE: {
-            _change_sensor_to(color, SENSOR_UNIVERSAL);
-            break;
-        }
-        case COLOR_RED: {
-            _change_sensor_to(color, SENSOR_VIBRATSW);
-            break;
-        }
-        case COLOR_GREEN: {
-            _change_sensor_to(color, SENSOR_PIR);
-            break;
-        }
-        case COLOR_BLUE: {
-            _change_sensor_to(color, SENSOR_PHOTOELE);
-            break;
-        }
-        case COLOR_YELLOW: {
-            _change_sensor_to(color, SENSOR_MAGNETSW);
-            break;
-        }
-        default: {
-            _change_sensor_to(color, SENSOR_UNIVERSAL);
-            break;
+    syslog(LOG_DEBUG, "duration: %d, %d\n", duration, color);
+
+    if (color == COLOR_BLACK) { // short press
+        short_press_count += 1;
+        _change_color_to(short_press_count % 8);
+        btn_onpress_timer = time(0);
+    } else {
+        short_press_count = 0;
+        switch (color) {
+            case COLOR_WHITE: {
+                _change_sensor_to(color, SENSOR_UNIVERSAL);
+                break;
+            }
+            case COLOR_RED: {
+                _change_sensor_to(color, SENSOR_VIBRATSW);
+                break;
+            }
+            case COLOR_GREEN: {
+                _change_sensor_to(color, SENSOR_PIR);
+                break;
+            }
+            case COLOR_BLUE: {
+                _change_sensor_to(color, SENSOR_PHOTOELE);
+                break;
+            }
+            case COLOR_YELLOW: {
+                _change_sensor_to(color, SENSOR_MAGNETSW);
+                break;
+            }
+            default: {
+                _change_sensor_to(color, SENSOR_NONE);
+                break;
+            }
         }
     }
     delay(200);

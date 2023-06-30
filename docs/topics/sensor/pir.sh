@@ -12,10 +12,10 @@ cat > /tmp/neza.json <<EOF
   "current_color": 0,
   "current_sensor": 0,
   "count": 0,
-  "trigger_pulse": 1,
-  "calm_step_ms": 20,
-  "calm_down_ms": 200,
-  "read_sleep_ms": 300
+  "trigger_pulse": 0,
+  "calm_step_ms": 100,
+  "calm_down_ms": 3500,
+  "read_sleep_ms": 500
 }
 EOF
 

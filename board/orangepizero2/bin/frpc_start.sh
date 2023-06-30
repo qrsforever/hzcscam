@@ -14,6 +14,7 @@ TEST_DOMAIN="www.baidu.com"
 if [[ ! -e /campi/runtime/frpc.ini ]]
 then
     cp ${SYSROOT}/etc/frpc.ini /campi/runtime/frpc.ini
+    sed -i "s/ssh/ssh${ADDRESS}/g" /campi/runtime/frpc.ini
 fi
 
 while (( 1 ))
