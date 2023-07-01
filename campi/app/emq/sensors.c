@@ -343,12 +343,13 @@ static void *_sensor_worker(void *arg)
         }
 
         switch (s) {
+            case SENSOR_VIBRATSW:
             case SENSOR_UNIVERSAL:
                 _sensor_universal_task(s);
                 break;
-            case SENSOR_VIBRATSW:
-                _sensor_vibration_switch(s);
-                break;
+            // case SENSOR_VIBRATSW:
+            //     _sensor_vibration_switch(s);
+            //     break;
             case SENSOR_PIR:
                 _sensor_passive_infrared(s);
                 break;
@@ -387,6 +388,7 @@ int sensor_init(const char* client_id)
         exit(1);
     }
 
+    pinMode(TSKPIN, INPUT);
     pinMode(BTNPIN, INPUT);
     pinMode(REDLED, OUTPUT);
     pinMode(BLUELED, OUTPUT);
