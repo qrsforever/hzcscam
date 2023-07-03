@@ -149,7 +149,7 @@ class GstMessageHandler(MessageHandler):
 
     def get_video_config(self):# {{{
         return {
-            "video_bitrate": int(self.config.get('VIDEO_BITRATE', 400)),
+            "video_bitrate": int(self.config.get('VIDEO_BITRATE', 600)),
         }
 
     def _set_video(self, jdata):

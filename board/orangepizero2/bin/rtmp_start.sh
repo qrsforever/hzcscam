@@ -68,7 +68,7 @@ then
     then
         RTMP_VHOST="vhost=${RTMP_VHOST}"
     fi
-    X264E_BITRATE=${VIDEO_BITRATE:-128}
+    X264E_BITRATE=${VIDEO_BITRATE:-600}
     GSTSINK="x264enc bframes=0 bitrate=${X264E_BITRATE} speed-preset=veryfast key-int-max=0 ! flvmux streamable=true ! rtmpsink location=rtmp://${RTMP_DOMAIN}/${RTMP_ROOM}/${RTMP_STREAM}?${RTMP_VHOST}"
 else
     GSTSINK="autovideosink"
