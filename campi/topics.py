@@ -36,6 +36,8 @@ class TLogger:
     WARN = 'logger/warn'
     ERROR = 'logger/error'
 
+    COLLECT = 'logger/collect'
+
 class TCloud:
     # EVENTS
     EVENTS_HEARTBEAT = f'campi/{ADDRESS}/events/heartbeat'

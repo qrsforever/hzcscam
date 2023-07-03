@@ -58,5 +58,5 @@ class LogMessageHandler(MessageHandler):
         elif topic == TLogger.DEBUG:
             self.logger.debug(message)
         else:
-            if topic == TCloud.LOGCAT_COLLECT:
+            if topic == TCloud.LOGCAT_COLLECT or topic == TLogger.COLLECT:
                 return self._do_logcat(json.loads(message))

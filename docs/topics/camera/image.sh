@@ -7,6 +7,7 @@ source ${CUR_DIR}/../env.sh
 PUB_TOPIC=cloud/${CLIENTID}/camera/image
 CLOUD_REPORT=cloud/${CLIENTID}/events/report
 
+# flip_method: "" or "vertical-flip" or "horizontal-flip"
 cat > /tmp/camera_image.json <<EOF
 {
     "frame_width": 640,

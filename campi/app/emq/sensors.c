@@ -217,6 +217,8 @@ static void _sensor_universal_task(int s)/*{{{*/
 {
     int value, sumtimer, len = 0;
     char buff[MAX_BUF] = { 0 };
+    int debug_mode = g_sensor_debug;
+    int calm_down_ms = g_calm_down_ms, calm_step_ms = g_calm_step_ms;
     while (g_current_sensor == s) {
         value = digitalRead(TSKPIN);
         /*
@@ -227,7 +229,7 @@ static void _sensor_universal_task(int s)/*{{{*/
         if (g_trigger_pulse == value) {
             _change_color_to(g_current_color);
             sumtimer = 0;
-            if (g_sensor_debug) {
+            if (debug_mode) {
                 memset(buff, 0, MAX_BUF);
                 strcpy(buff, "\"_calm_disturb_serial_\": [0");
             }
@@ -240,13 +242,13 @@ static void _sensor_universal_task(int s)/*{{{*/
                     }
                     sumtimer = 0;
                 } else {
-                    sumtimer += g_calm_step_ms;
+                    sumtimer += calm_step_ms;
                 }
                 delay(g_calm_step_ms);
-            } while(g_current_sensor == s && sumtimer < g_calm_down_ms);
+            } while(g_current_sensor == s && sumtimer < calm_down_ms);
             g_repeat_counter += 1;
             _change_color_to(COLOR_BLACK);
-            if (g_sensor_debug) {
+            if (debug_mode) {
                 buff[strlen(buff)] = ']';
                 _emq_report(buff);
             } else {
@@ -418,6 +420,11 @@ void sensor_detect()
                     case 3: {
                         syslog(LOG_DEBUG, "start ota auto upgrade!\n");
                         neza_pub("upgrade/auto", "{}");
+                        break;
+                    }
+                    case 4: {
+                        syslog(LOG_DEBUG, "start logcat collection!\n");
+                        neza_pub("logger/collect", "{}");
                         break;
                     }
                     case 5: {
