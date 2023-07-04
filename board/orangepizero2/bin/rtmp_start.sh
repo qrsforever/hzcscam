@@ -69,7 +69,25 @@ then
         RTMP_VHOST="vhost=${RTMP_VHOST}"
     fi
     X264E_BITRATE=${VIDEO_BITRATE:-600}
-    GSTSINK="x264enc bframes=0 bitrate=${X264E_BITRATE} speed-preset=veryfast key-int-max=0 ! flvmux streamable=true ! rtmpsink location=rtmp://${RTMP_DOMAIN}/${RTMP_ROOM}/${RTMP_STREAM}?${RTMP_VHOST}"
+    QUANTIZER=${VIDEO_QUANTIZER:-30}
+    PASS=${VIDEO_PASS:-qual}
+    PROPS="pass=${PASS} quantizer=${QUANTIZER} bitrate=${X264E_BITRATE} "
+    TUNE=${VIDEO_TUNE:-zerolatency}
+    if [[ x${TUNE} != xnone ]]
+    then
+        PROPS="${PROPS} tune=${TUNE}"
+    fi
+    SPEED_PRESET=${VIDEO_SPEED_PRESET:-faster}
+    if [[ x${SPEED_PRESET} != xnone ]]
+    then
+        PROPS="${PROPS} speed-preset=${SPEED_PRESET}"
+    fi
+    PROFILE=${VIDOE_PROFILE:-none}
+    if [[ x${PROFILE} != xnone ]]
+    then
+        PROPS="${PROPS} ! video/x-h264,profile=${PROFILE}"
+    fi
+    GSTSINK="x264enc ${PROPS} ! flvmux streamable=true ! rtmpsink location=rtmp://${RTMP_DOMAIN}/${RTMP_ROOM}/${RTMP_STREAM}?${RTMP_VHOST}"
 else
     GSTSINK="autovideosink"
 fi

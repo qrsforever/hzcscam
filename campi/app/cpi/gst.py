@@ -11,6 +11,7 @@ import subprocess
 import os
 import json
 
+from campi.utils.shell import util_get_uptime
 from . import MessageHandler
 from campi.constants import (
     ADDRESS,
@@ -33,22 +34,22 @@ from campi.topics import (
 class GstMessageHandler(MessageHandler):
 
     SNAME = 'campi_gst.service'
+    DEFAULT_VID = '/dev/video1'
 
     def __init__(self):
         super().__init__([
             TUsbCamera.ALL,
             TCloud.CAMERA_RTMP, TCloud.CAMERA_OVERLAY, TCloud.CAMERA_IMAGE, TCloud.CAMERA_VIDEO,
         ])
-        self.config = self._read_config()
-        self.cvt = {}
-        if self.config.get('RTMP_ENABLE', True):
-            util_start_service(self.SNAME)
         self.is_running = util_check_service(self.SNAME)
+        self.config = self._read_config()
+        if os.path.exists(self.DEFAULT_VID):
+            if util_get_uptime() < 60:
+                self.on_camera_plugin(self.DEFAULT_VID)
 
     def _restart_gst(self):
-        if self.is_running:
-            util_start_service(self.SNAME, restart=True)
-        self.is_running = util_check_service(self.SNAME)
+        if self.config.get('RTMP_ENABLE', True):
+            util_start_service(self.SNAME, restart=self.is_running)
 
 # Read & Save Config {{{
     def _read_config(self):
@@ -150,6 +151,11 @@ class GstMessageHandler(MessageHandler):
     def get_video_config(self):# {{{
         return {
             "video_bitrate": int(self.config.get('VIDEO_BITRATE', 600)),
+            "video_tune": self.config.get('VIDEO_TUNE', "zerolatency"),
+            "video_pass": self.config.get('VIDEO_TUNE', "qual"),
+            "video_speed_preset": self.config.get("VIDEO_SPEED_PRESET", "medium"),
+            "video_quantizer": int(self.config.get("VIDEO_QUANTIZER", 30)),
+            "video_profile": self.config.get("VIDEO_PROFILE", "none"),
         }
 
     def _set_video(self, jdata):

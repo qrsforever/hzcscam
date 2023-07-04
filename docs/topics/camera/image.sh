@@ -11,7 +11,7 @@ CLOUD_REPORT=cloud/${CLIENTID}/events/report
 cat > /tmp/camera_image.json <<EOF
 {
     "frame_width": 640,
-    "frame_height": 480,
+    "frame_height": 352,
     "frame_rate": 15,
     "brightness": 100,
     "contrast": 50,
