@@ -9,13 +9,13 @@ PUB_TOPIC=cloud/${CLIENTID}/sensor/config
 cat > /tmp/neza.json <<EOF
 {
   "debug_mode": 1,
-  "current_color": 0,
-  "current_sensor": 0,
+  "current_color": 3,
+  "current_sensor": 1,
   "count": 0,
   "trigger_pulse": 0,
-  "calm_step_ms": 100,
-  "calm_down_ms": 3500,
-  "read_sleep_ms": 500
+  "calm_step_ms": 50,
+  "calm_down_ms": 1500,
+  "read_sleep_ms": 200
 }
 EOF
 

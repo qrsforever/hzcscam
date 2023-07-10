@@ -6,8 +6,7 @@ echo "start hostap..."
 
 source /etc/orangepi-release
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
-TOP_DIR=$(dirname $(dirname ${CUR_DIR}))
-ETC_DIR=${TOP_DIR}/board/${BOARD}/etc
+ETC_DIR=$(dirname ${CUR_DIR})/etc
 
 DEFAULT_ADAPTER="eth0"
 WIRELESS_ADAPTER=${WIFI_DEVICE:-"wlan0"}
