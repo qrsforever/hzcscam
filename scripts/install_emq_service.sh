@@ -13,7 +13,7 @@ DST_DIR=/etc/systemd/system/
 
 cat > ${TMP_DIR}/$SERVICE <<EOF
 [Unit]
-    Description=NanoMQ
+    Description=EMQSensors
     Documentation=http://campi.hzcsai.com
 
 [Service]
