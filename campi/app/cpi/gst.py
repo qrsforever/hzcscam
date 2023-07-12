@@ -84,6 +84,8 @@ class GstMessageHandler(MessageHandler):
                 to_save = True
         if to_save:
             self._save_config(self.config)
+        else:
+            self.logger.warn("same config, not restart gst")
         return to_save
 # }}}
 

@@ -120,7 +120,7 @@ then
     VIDEO_CONVERT="${VIDEO_CONVERT} textoverlay text=\"${TEXT_TITLE}\" halignment=${TEXT_HALIGNMENT} valignment=${TEXT_VALIGNMENT} font-desc=\"normal ${OVERLAY_FONT}\" !"
 fi
 
-if [[ x${TEXT_SENSOR_COUNT} != xtrue ]]
+if [[ x${TEXT_SENSOR_COUNT} == xtrue ]]
 then
     fifor=$(command -v fifor)
     if [[ x$fifor != x ]]
