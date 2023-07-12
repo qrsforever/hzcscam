@@ -49,7 +49,7 @@ class GstMessageHandler(MessageHandler):
 
     def _restart_gst(self):
         if self.config.get('RTMP_ENABLE', True):
-            util_start_service(self.SNAME, restart=self.is_running)
+            util_start_service(self.SNAME, restart=True)
 
 # Read & Save Config {{{
     def _read_config(self):

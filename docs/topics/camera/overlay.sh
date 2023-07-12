@@ -15,7 +15,7 @@ cat > /tmp/camera_overlay.json <<EOF
     "text_title": "auto",
     "text_halignmen": "left",
     "text_valignment": "top"
-    "text_sensor_count": false,
+    "text_sensor_count": true,
 }
 EOF
 
