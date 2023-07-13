@@ -1,0 +1,5 @@
+{
+    "ota": {
+        "upgrade_server": "http://aiot.hzcsdata.com:30082"
+    }
+}

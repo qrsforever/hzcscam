@@ -37,6 +37,7 @@ WIFI_NM_CONF = f'{RUNTIME_PATH}/{WIFI_NM_FILE}'
 
 ## Upgrade
 
+OTA_UPGRADE_CONF = f'{RUNTIME_PATH}/ota.json'
 VERSION_APP_PATH = '/campi/version.txt'
 VERSION_OTA_FILE = 'version_info.json'
 APP_VERSION = os.environ.get('APP_VERSION', '1.0.0')

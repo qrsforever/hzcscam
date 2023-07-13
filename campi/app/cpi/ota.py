@@ -18,6 +18,7 @@ from . import MessageHandler
 from campi.constants import (
     ARCHIVES_ROOT_PATH,
     RUNTIME_PATH,
+    OTA_UPGRADE_CONF,
     APP_VERSION,
 )
 from campi.topics import TCloud
@@ -46,9 +47,18 @@ class OtaMessageHandler(MessageHandler):
     def __init__(self):
         super().__init__([TCloud.OTA, TUpgrade.BY_UDISK, TUpgrade.BY_OTA, TUpgrade.BY_AUTO])
 
+        if not os.path.exists(OTA_UPGRADE_CONF):
+            with open(OTA_UPGRADE_CONF, 'w') as fw:
+                json.dump({
+                    "upgrade_server": "http://aiot.hzcsdata.com:30082"
+                }, fw)
+
+        with open(OTA_UPGRADE_CONF, 'r') as fr:
+            self.ota_config = json.load(fr)
+
         self.conn_timeout = 3
         self.read_timeout = 3
-        self.upgrade_server = 'http://aiot.hzcsdata.com:30082/version_info.json'
+        self.upgrade_server = self.ota_config.get('upgrade_server') + '/version_info.json'
         self.zip_path = f'{ARCHIVES_ROOT_PATH}/update.zip'
 
     def _do_upgrade(self, config):
