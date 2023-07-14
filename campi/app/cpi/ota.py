@@ -45,21 +45,35 @@ class OtaMessageHandler(MessageHandler):
     UPGRADE_METHOD_HTTP = 2
 
     def __init__(self):
-        super().__init__([TCloud.OTA, TUpgrade.BY_UDISK, TUpgrade.BY_OTA, TUpgrade.BY_AUTO])
+        super().__init__([
+            TCloud.OTA_UPGRADE, TCloud.OTA_CONFIG,
+            TUpgrade.BY_UDISK, TUpgrade.BY_OTA, TUpgrade.BY_AUTO])
 
-        if not os.path.exists(OTA_UPGRADE_CONF):
-            with open(OTA_UPGRADE_CONF, 'w') as fw:
-                json.dump({
-                    "upgrade_server": "http://aiot.hzcsdata.com:30082"
-                }, fw)
-
-        with open(OTA_UPGRADE_CONF, 'r') as fr:
-            self.ota_config = json.load(fr)
-
+        self.ota_config = self._load_config()
         self.conn_timeout = 3
         self.read_timeout = 3
-        self.upgrade_server = self.ota_config.get('upgrade_server') + '/version_info.json'
         self.zip_path = f'{ARCHIVES_ROOT_PATH}/update.zip'
+
+    def _load_config(self):
+        if os.path.exists(OTA_UPGRADE_CONF):
+            with open(OTA_UPGRADE_CONF, 'r') as fr:
+                return json.load(fr)
+        else:
+            return {"upgrade_server": "http://aiot.hzcsdata.com:30082"}
+
+    def _save_config(self, config):
+        self.ota_config = config
+        with open(OTA_UPGRADE_CONF, 'w') as fw:
+            json.dump(config, fw)
+        return
+
+    def get_info(self):# {{{
+        config = {
+            "ota": self.ota_config
+        }
+        self.logger.info(f'ota config: {config}')
+        return config
+# }}}
 
     def _do_upgrade(self, config):
         self.logger.info("upgrade ...")
@@ -101,7 +115,7 @@ class OtaMessageHandler(MessageHandler):
 
     def _on_request_upgrade_config(self):
         config_res = requests.get(
-            self.upgrade_server,
+            self.ota_config['upgrade_server'] + '/version_info.json',
             headers={'Content-Type': 'application/json'},
             timeout=(self.conn_timeout, self.read_timeout))
         if config_res.status_code != 200:
@@ -128,7 +142,10 @@ class OtaMessageHandler(MessageHandler):
     def handle_message(self, topic, message):
         self.logger.info(f'ota: {topic} {message}')
 
-        if topic in (TUpgrade.BY_UDISK, TCloud.OTA, TUpgrade.BY_AUTO):
+        if topic == TCloud.OTA_CONFIG:
+            return self._save_config(json.loads(message))
+
+        if topic in (TUpgrade.BY_UDISK, TCloud.OTA_UPGRADE, TUpgrade.BY_AUTO):
             if topic == TUpgrade.BY_AUTO:
                 config = self._on_request_upgrade_config()
             else:
@@ -136,7 +153,7 @@ class OtaMessageHandler(MessageHandler):
             if not self._on_check_upgrade(config):
                 return
 
-            if topic == TCloud.OTA or topic == TUpgrade.BY_AUTO:
+            if topic == TCloud.OTA_UPGRADE or topic == TUpgrade.BY_AUTO:
                 if not self._on_request_upgrade_zip(config):
                     return
 
