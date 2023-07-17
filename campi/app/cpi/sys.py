@@ -212,8 +212,9 @@ class SysMessageHandler(MessageHandler):
             'cpu_memory_percent': psutil.virtual_memory().percent
         }
         if more:
-            for key, value in self.get_info().items():
-                about[key] = value
+            for h in self.handlers:
+                for key, value in h.get_info().items():
+                    about[key] = value
             self.send_message(TCloud.EVENTS_ABOUT, about)
         else:
             self.send_message(TCloud.EVENTS_HEARTBEAT, about)
