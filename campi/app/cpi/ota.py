@@ -146,6 +146,8 @@ class OtaMessageHandler(MessageHandler):
             return self._save_config(json.loads(message))
 
         if topic in (TUpgrade.BY_UDISK, TCloud.OTA_UPGRADE, TUpgrade.BY_AUTO):
+            self.logger.error("upgrade start...")
+            self.send_message(TCloud.UPGRADE_START, {'from': topic})
             if topic == TUpgrade.BY_AUTO:
                 config = self._on_request_upgrade_config()
             else:

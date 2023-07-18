@@ -94,8 +94,8 @@ static int g_current_sensor = SENSOR_UNIVERSAL;
 static int g_repeat_counter = 0;
 static int g_trigger_pulse = 1;
 static int g_calm_step_ms = 20;
-static int g_calm_down_ms = 200;
-static int g_read_sleep_ms = 300;
+static int g_calm_down_ms = 1000;
+static int g_read_sleep_ms = 100;
 
 
 void _sensor_parse_config(const char* config)/*{{{*/

@@ -50,6 +50,7 @@ class TCloud:
     OTA_UPGRADE = f'cloud/{ADDRESS}/ota/upgrade'
     OTA_CONFIG = f'cloud/{ADDRESS}/ota/config'
     UPGRADE_REQUEST_ERROR = f'campi/{ADDRESS}/upgrade/request_error'
+    UPGRADE_START = f'campi/{ADDRESS}/upgrade/start'
     UPGRADE_SUCESS = f'campi/{ADDRESS}/upgrade/success'
     UPGRADE_FAIL = f'campi/{ADDRESS}/upgrade/fail'
 
