@@ -434,6 +434,7 @@ void sensor_detect()
                     }
                     default: {
                         syslog(LOG_DEBUG, "no operation\n");
+                        neza_pub("cloud/all/events/report", "{}");
                     }
                 }
                 short_press_count = 0;
