@@ -35,7 +35,7 @@ from campi.constants import (
 from campi.utils.net import (
     util_net_ping, util_get_mac, util_get_lanip,
     util_get_netip, util_get_gateway, util_get_subnet,
-    util_get_wifi_sigth, util_send_mail)
+    util_get_wifi_sigth, util_get_wifi_transrate, util_send_mail)
 
 from campi.utils.shell import (
     util_start_service,
@@ -192,6 +192,7 @@ class SysMessageHandler(MessageHandler):
                 'subnet': util_get_subnet(),
                 'gateway': util_get_gateway(),
                 'signal_strength': util_get_wifi_sigth(),
+                'transfer_rate': util_get_wifi_transrate(),
                 'software_version': C.APP_VERSION,
                 'hardware_product': C.BOARD,
             }

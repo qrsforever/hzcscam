@@ -92,6 +92,14 @@ def util_get_wifi_sigth():
         return int(result.read().strip('\n'))
     return 0
 
+def util_get_wifi_transrate():
+    # Mbit/s
+    result = os.popen("nmcli dev wifi list | awk '/\*/{if (NR!=1) {print $6}}'", 'r')
+    if result:
+        return int(result.read().strip('\n'))
+    return 0
+
+
 def util_wifi_connect(ssid, passwd, device='wlan0'):
     try:
         cmds = [
