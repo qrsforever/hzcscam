@@ -29,6 +29,11 @@ class TUsbCamera:
     PLUGIN = 'camera/plugin'
     PLUGOUT = 'camera/plugout'
 
+class TUpgrade:
+    BY_UDISK = 'upgrade/udisk'
+    BY_OTA = 'upgrade/ota'
+    BY_AUTO = 'upgrade/auto'
+
 class TLogger:
     ALL = 'logger/#'
     DEBUG = 'logger/debug'
@@ -54,6 +59,10 @@ class TCloud:
     UPGRADE_SUCESS = f'campi/{ADDRESS}/upgrade/success'
     UPGRADE_FAIL = f'campi/{ADDRESS}/upgrade/fail'
 
+    # Net
+    NETWORK_CONNECTED = f'campi/{ADDRESS}/net/connected'
+    NETWORK_DISCONNECTED = f'campi/{ADDRESS}/net/disconnected'
+
     # GST
     CAMERA_IMAGE = f'cloud/{ADDRESS}/camera/image'
     CAMERA_VIDEO = f'cloud/{ADDRESS}/camera/video'
@@ -73,8 +82,3 @@ class TCloud:
 
 class TApis:
     SET_WIFI = '/apis/set_wifi'
-
-class TUpgrade:
-    BY_UDISK = 'upgrade/udisk'
-    BY_OTA = 'upgrade/ota'
-    BY_AUTO = 'upgrade/auto'

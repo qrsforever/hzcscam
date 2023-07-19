@@ -12,7 +12,7 @@ import json
 import os
 from . import MessageHandler
 from campi.topics import TCloud
-from campi.constants import FRP_CONFIG_PATH
+from campi.constants import FRP_CONFIG_PATH, SVC_FRP
 
 from campi.utils.shell import util_start_service, util_stop_service
 
@@ -31,7 +31,7 @@ remote_port = %d
 
 class FrpMessageHandler(MessageHandler):
 
-    SNAME = 'campi_frp.service'
+    SNAME = SVC_FRP
 
     def __init__(self):
         super().__init__([TCloud.FRPC_CLOUD_CTRL])

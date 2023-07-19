@@ -33,7 +33,6 @@ static int on_message(void *context, char *topic, int length, MQTTClient_message
 
 static int _emqc_connect(MQTTClient client, const char* username, const char* password)
 {
-    int rc = -1;
     MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
     conn_opts.username = username;
     conn_opts.password = password;
@@ -42,6 +41,7 @@ static int _emqc_connect(MQTTClient client, const char* username, const char* pa
 
 static int on_message(void *context, char *topic, int length, MQTTClient_message *message)
 {
+    int rc = -1;
     char *payload = (char*)message->payload;
     if (strncmp(topic, "cloud/", 6) == 0) {
         syslog(LOG_DEBUG, "From Cloud to Campi Received `%s` from `%s` topic \n", payload, topic);
@@ -61,7 +61,11 @@ static int on_message(void *context, char *topic, int length, MQTTClient_message
     } else { // campi/
         syslog(LOG_DEBUG, "From Campi to Cloud: Received `%s` from `%s` topic \n", payload, topic);
         MQTTClient_deliveryToken token;
-        MQTTClient_publishMessage(r_client, topic, message, &token);
+        rc = MQTTClient_publishMessage(r_client, topic, message, &token);
+        if (rc < 0) {
+            syslog(LOG_ERR, "Failed to publish, return code %d\n", rc);
+            exit(-1);
+        }
         MQTTClient_waitForCompletion(r_client, token, 2000L);
     }
     MQTTClient_freeMessage(&message);

@@ -25,8 +25,11 @@ from campi.topics import (
     TApis)
 
 import campi.constants as C
+
+# from campi.utils.shell import util_get_uptime
 from campi.constants import (
-    SCRIPT_OF_SET_WIFI, SCRIPT_OF_START_AP, SCRIPT_OF_STOP_AP,
+    # SCRIPT_OF_START_AP,
+    SCRIPT_OF_SET_WIFI, SCRIPT_OF_STOP_AP,
     VERSION_OTA_FILE, WIFI_NM_CONF, WIFI_NM_FILE)
 
 from campi.utils.net import (
@@ -36,8 +39,9 @@ from campi.utils.net import (
     util_get_netip,
     util_send_mail)
 
-from campi.utils.shell import util_get_uptime
-
+from campi.utils.shell import (
+    util_start_service,
+    util_stop_service)
 
 WIFIAP_TIMEOUT = 250
 WIFIAP_NOSTATE = 0
@@ -64,7 +68,7 @@ class SysMessageHandler(MessageHandler):
     def on_network_connected(self, message):# {{{
         # TODO
         self.network_connected = True
-
+        util_start_service(C.SVC_EMQ)
         util_send_mail(json.dumps({
             'mac': util_get_mac(),
             'lanip': util_get_lanip(),
@@ -74,32 +78,31 @@ class SysMessageHandler(MessageHandler):
 
     def on_network_disconnect(self, message):# {{{
         self.network_connected = False
-        # TODO
-        return
+        util_stop_service(C.SVC_EMQ)
 
-        def _start_wifiap():
-            self.logger.error(f'start wifiap: {self.wifiap_state}')
-            try:
-                process = subprocess.Popen(
-                        SCRIPT_OF_START_AP,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        shell=True)
-                for line in process.stdout:
-                    self.logger.info(line.decode("utf-8").strip())
-            except subprocess.CalledProcessError as cerr:
-                self.logger.error(f'start ap err[{SCRIPT_OF_START_AP}]: {cerr}')
-            except Exception as oerr:
-                self.logger.error(f'start ap err[{SCRIPT_OF_START_AP}]: {oerr}')
+        # def _start_wifiap():
+        #     self.logger.error(f'start wifiap: {self.wifiap_state}')
+        #     try:
+        #         process = subprocess.Popen(
+        #                 SCRIPT_OF_START_AP,
+        #                 stdout=subprocess.PIPE,
+        #                 stderr=subprocess.PIPE,
+        #                 shell=True)
+        #         for line in process.stdout:
+        #             self.logger.info(line.decode("utf-8").strip())
+        #     except subprocess.CalledProcessError as cerr:
+        #         self.logger.error(f'start ap err[{SCRIPT_OF_START_AP}]: {cerr}')
+        #     except Exception as oerr:
+        #         self.logger.error(f'start ap err[{SCRIPT_OF_START_AP}]: {oerr}')
 
-        if util_get_uptime() < WIFIAP_TIMEOUT:
-            if self.wifiap_state == WIFIAP_NOSTATE:
-                multiprocessing.Process(target=_start_wifiap).start()
-                self.wifiap_state = WIFIAP_RUNNING
-        else:
-            if os.path.exists(WIFI_NM_CONF):
-                with open(WIFI_NM_CONF, 'r') as fr:
-                    self.on_network_setwifi(fr.read())
+        # if util_get_uptime() < WIFIAP_TIMEOUT:
+        #     if self.wifiap_state == WIFIAP_NOSTATE:
+        #         multiprocessing.Process(target=_start_wifiap).start()
+        #         self.wifiap_state = WIFIAP_RUNNING
+        # else:
+        #     if os.path.exists(WIFI_NM_CONF):
+        #         with open(WIFI_NM_CONF, 'r') as fr:
+        #             self.on_network_setwifi(fr.read())
 # }}}
 
     def on_network_setwifi(self, message):# {{{

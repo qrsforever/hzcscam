@@ -22,6 +22,16 @@ BOARD_PATH = f'{WS_ROOT}/board/{BOARD}'
 
 ARCHIVES_ROOT_PATH = '/var/campi/archives'
 
+## Services
+SVC_API = 'campi_api.service'
+SVC_GST = 'campi_gst.service'
+SVC_NMQ = 'campi_nmq.service'
+SVC_SYS = 'campi_sys.service'
+SVC_SOS = 'campi_sos.service'
+SVC_FRP = 'campi_frp.service'
+SVC_EMQ = 'campi_emq.service'
+SVC_CPI = 'campi_cpi.service'
+
 ## Scripts
 
 SCRIPT_OF_SET_WIFI = f'{BOARD_PATH}/bin/set_wifi.sh'

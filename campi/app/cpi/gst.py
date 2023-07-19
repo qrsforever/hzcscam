@@ -14,7 +14,7 @@ import json
 from campi.utils.shell import util_get_uptime
 from . import MessageHandler
 from campi.constants import (
-    ADDRESS,
+    ADDRESS, SVC_GST,
     GST_CAMERA_PROP,
     GST_CONFIG_PATH,
 )
@@ -33,7 +33,7 @@ from campi.topics import (
 
 class GstMessageHandler(MessageHandler):
 
-    SNAME = 'campi_gst.service'
+    SNAME = SVC_GST
     DEFAULT_VID = '/dev/video1'
 
     def __init__(self):
