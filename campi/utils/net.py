@@ -71,6 +71,27 @@ def util_get_netip():
         return result.read().strip('\n')
     return ''
 
+def util_get_subnet():
+    ip = util_get_lanip()
+    if len(ip) == 0:
+        return ''
+    result = os.popen("ip route | grep 'src " + ip + "' | awk '{print $1}'", 'r')
+    if result:
+        return result.read().strip('\n')
+    return ''
+
+def util_get_gateway():
+    result = os.popen("ip route show | grep default | awk '{print $3}'", 'r')
+    if result:
+        return result.read().strip('\n')
+    return ''
+
+def util_get_wifi_sigth():
+    result = os.popen("nmcli dev wifi list | awk '/\*/{if (NR!=1) {print $8}}'", 'r')
+    if result:
+        return int(result.read().strip('\n'))
+    return 0
+
 def util_wifi_connect(ssid, passwd, device='wlan0'):
     try:
         cmds = [

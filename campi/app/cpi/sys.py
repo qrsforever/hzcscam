@@ -33,11 +33,9 @@ from campi.constants import (
     VERSION_OTA_FILE, WIFI_NM_CONF, WIFI_NM_FILE)
 
 from campi.utils.net import (
-    util_net_ping,
-    util_get_mac,
-    util_get_lanip,
-    util_get_netip,
-    util_send_mail)
+    util_net_ping, util_get_mac, util_get_lanip,
+    util_get_netip, util_get_gateway, util_get_subnet,
+    util_get_wifi_sigth, util_send_mail)
 
 from campi.utils.shell import (
     util_start_service,
@@ -191,6 +189,9 @@ class SysMessageHandler(MessageHandler):
             'sys': {
                 'ip': util_get_lanip(),
                 'mac': C.ADDRESS,
+                'subnet': util_get_subnet(),
+                'gateway': util_get_gateway(),
+                'signal_strength': util_get_wifi_sigth(),
                 'software_version': C.APP_VERSION,
                 'hardware_product': C.BOARD,
             }
