@@ -161,7 +161,8 @@ class SysMessageHandler(MessageHandler):
         wifinm_path = f'{mntdir}/campi/{WIFI_NM_FILE}'
         if os.path.isfile(wifinm_path):
             shutil.copyfile(wifinm_path, WIFI_NM_CONF)
-            self.quit()
+            with open(WIFI_NM_CONF, 'r') as fr:
+                self.on_network_setwifi(fr.read())
 # }}}
 
     def handle_message(self, topic, message):

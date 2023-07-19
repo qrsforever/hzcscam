@@ -39,14 +39,16 @@ __run_and_log df
 echo "==============Campi==================" >> /tmp/campi_reboot.log
 __run_and_log ls -l ${TOP_DIR}/runtime
 
-
+# TODO set_wifi will delete wifi connection
 netok=$(nmcli --fields STATE,DEVICE device status | grep "^connected" | grep "$WIRELESS_ADAPTER")
 if [[ x${netok} == x && -f ${TOP_DIR}/runtime/nmwifi.json ]]
 then
     wifissid=$(cat ${TOP_DIR}/runtime/nmwifi.json | jq -r ".wifissid")
-    password=$(cat ${TOP_DIR}/runtime/nmwifi.json | jq -r ".password")
-    __run_and_log nmcli device wifi rescan; sleep 5
-    __run_and_log ${SYSROOT}/bin/set_wifi.sh ${wifissid} ${password}
+    if [[ -z $(nmcli --fields NAME connection | grep ${wifissid}) ]]
+    then
+        password=$(cat ${TOP_DIR}/runtime/nmwifi.json | jq -r ".password")
+        __run_and_log ${SYSROOT}/bin/set_wifi.sh ${wifissid} ${password}
+    fi
 fi
 
 for svc in ${CAMPI_ORDER_SVCS[@]}
