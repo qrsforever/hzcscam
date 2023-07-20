@@ -76,17 +76,17 @@ class GstMessageHandler(MessageHandler):
                 fw.write(f"{key}={value}\n")
 
     def set_config(self, jdata):
-        to_save = False
-        for key, value in jdata.items():
-            key = key.upper()
-            if key in self.config and value != self.config[key]:
-                self.config[key] = value
-                to_save = True
-        if to_save:
+        changed = {}
+        for _key, value in jdata.items():
+            key = _key.upper()
+            if key in self.config and str(value) != self.config[key]:
+                self.config[key] = str(value)
+                changed[_key] = value
+        if len(changed) > 0:
             self._save_config(self.config)
         else:
             self.logger.warn("same config, not restart gst")
-        return to_save
+        return changed
 # }}}
 
     def get_rtmp_config(self):# {{{
@@ -99,7 +99,7 @@ class GstMessageHandler(MessageHandler):
         }
 
     def _set_rtmp(self, jdata):
-        self.set_config(jdata)
+        changed = self.set_config(jdata)
         self.logger.info(f'{self.config}')
         enable = self.config.get('RTMP_ENABLE', True)
         if enable:
@@ -112,7 +112,7 @@ class GstMessageHandler(MessageHandler):
                 util_stop_service(self.SNAME)
 
         self.is_running = util_check_service(self.SNAME)
-        self.send_message(TCloud.CAMERA_CONFIG, self.get_rtmp_config())
+        self.send_message(TCloud.CAMERA_CONFIG, changed) 
 # }}}
 
     def get_overlay_config(self):# {{{
@@ -127,9 +127,10 @@ class GstMessageHandler(MessageHandler):
         }
 
     def _set_overlay(self, jdata):
-        if self.set_config(jdata):
+        changed = self.set_config(jdata)
+        if len(changed) > 0:
             self._restart_gst()
-        self.send_message(TCloud.CAMERA_CONFIG, self.get_overlay_config())
+        self.send_message(TCloud.CAMERA_CONFIG, changed)
 # }}}
 
     def get_image_config(self):# {{{
@@ -145,9 +146,24 @@ class GstMessageHandler(MessageHandler):
         }
 
     def _set_image(self, jdata):
-        if self.set_config(jdata):
-            self._restart_gst()
-        self.send_message(TCloud.CAMERA_CONFIG, self.get_image_config())
+        changed = self.set_config(jdata)
+        if len(changed) > 0:
+            if set(changed.keys()).intersection(
+                set(['frame_width', 'frame_height', 'frame_rate', 'flip_method'])): # noqa
+                self._restart_gst()
+            else:
+                if os.path.exists(GST_CAMERA_PROP):
+                    with open(GST_CAMERA_PROP, 'r') as fr:
+                        props = json.load(fr)
+                        for key, val in changed.items():
+                            if key not in props.keys():
+                                continue
+                            max, min = props[key]['max'], props[key]['min']
+                            val = int(val * (max - min) / 100 + min)
+                            cmd = f'v4l2-ctl --device {self.DEFAULT_VID} --set-ctrl {key}={val}'
+                            self.logger.info(cmd)
+                            subprocess.run(cmd, shell=True, capture_output=False, encoding='utf-8')
+            self.send_message(TCloud.CAMERA_CONFIG, changed)
 # }}}
 
     def get_video_config(self):# {{{
@@ -161,12 +177,14 @@ class GstMessageHandler(MessageHandler):
         }
 
     def _set_video(self, jdata):
-        if self.set_config(jdata):
+        changed = self.set_config(jdata)
+        if len(changed) > 0:
             self._restart_gst()
-        self.send_message(TCloud.CAMERA_CONFIG, self.get_video_config())
+        self.send_message(TCloud.CAMERA_CONFIG, changed)
 # }}}
 
     def on_camera_plugin(self, videoid):# {{{
+        self.DEFAULT_VID = videoid
         try:
             ret = subprocess.Popen(
                     f'v4l2-ctl --device {videoid} --list-ctrls',

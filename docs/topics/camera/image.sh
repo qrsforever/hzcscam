@@ -13,10 +13,10 @@ cat > /tmp/camera_image.json <<EOF
     "frame_width": 640,
     "frame_height": 352,
     "frame_rate": 15,
-    "brightness": 100,
+    "brightness": 50,
     "contrast": 50,
     "hue": 50,
-    "saturation":50,
+    "saturation": 50,
     "flip_method": ""
 }
 EOF
