@@ -45,7 +45,7 @@ then
          gstreamer1.0-libav gstreamer1.0-x
     apt install -y python3-gst-1.0
 
-    pip3 install requests psutil pyudev paho-mqtt quart PyEmail
+    __pip3_install requests psutil pyudev paho-mqtt quart PyEmail
 fi
 
 __pip_install cos-python-sdk-v5 qcloud_cos
