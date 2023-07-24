@@ -58,40 +58,17 @@ class GstMessageHandler(MessageHandler):
         config = {}
         with open(GST_CONFIG_PATH, 'r') as fr:
             config = json.load(fr)
-        # with open(GST_CONFIG_PATH, 'r') as fr:
-        #     for line in fr.readlines():
-        #         line = line.strip()
-        #         if line and line[0] != '#':
-        #             key, value = line.split('=')
-        #             if '#' in value:
-        #                 value = value.split('#')[0].strip()
-        #             if value == 'true':
-        #                 value = True
-        #             elif value == 'false':
-        #                 value = False
-        #             elif str.isdigit(value):
-        #                 value = int(value)
-        #             else:
-        #                 try:
-        #                     value = float(value)
-        #                 except ValueError:
-        #                     pass
-        #             config[key] = value
         return config
 
     def _save_config(self, config):
         with open(GST_CONFIG_PATH, 'w') as fw:
             json.dump(config, fw)
-            # for key, value in config.items():
-            #     if isinstance(value, bool):
-            #         value = 'true' if value else 'false'
-            #     fw.write(f"{key}={value}\n")
             with open(GST_CONFIG_SENV, 'w') as sw:
                 for _, jdata in config.items():
                     for key, value in jdata.items():
                         if isinstance(value, bool):
                             value = 'true' if value else 'false'
-                        sw.write(f"{key}={value}\n")
+                        sw.write(f"{key.upper()}={value}\n")
 
     def set_config(self, key, jdata):
         changed = {}
@@ -102,11 +79,6 @@ class GstMessageHandler(MessageHandler):
             if key in config and value != config[key]:
                 config[key] = value
                 changed[key] = value
-        # for _key, value in jdata.items():
-        #     key = _key.upper()
-        #     if key in self.config and value != self.config[key]:
-        #         self.config[key] = value
-        #         changed[_key] = value
         if len(changed) > 0:
             self._save_config(self.config)
         else:
@@ -116,13 +88,6 @@ class GstMessageHandler(MessageHandler):
 
     def get_rtmp_config(self):# {{{
         return self.config['rtmp']
-        # return {
-        #     "rtmp_enable": self.config.get('RTMP_ENABLE', True),
-        #     "rtmp_domain": self.config.get('RTMP_DOMAIN', 'srs.hzcsdata.com'),
-        #     "rtmp_room": self.config.get('RTMP_ROOM', 'live'),
-        #     "rtmp_stream": self.config.get('RTMP_STREAM', ADDRESS),
-        #     "rtmp_vhost": self.config.get('RTMP_VHOST', 'seg.300s')
-        # }
 
     def _set_rtmp(self, jdata):
         changed = self.set_config('rtmp', jdata)
@@ -143,15 +108,6 @@ class GstMessageHandler(MessageHandler):
 
     def get_overlay_config(self):# {{{
         return self.config['overlay']
-        # return {
-        #     "time_format": self.config.get('TIME_FORMAT', "%Y/%m/%d %H:%M:%S"),
-        #     "time_halignment": self.config.get('TIME_HALIGNMENT', 'right'),
-        #     "time_valignment": self.config.get('TIME_VALIGNMENT', 'top'),
-        #     "text_title": self.config.get('TEXT_TITLE', 'auto'),
-        #     "text_halignmen": self.config.get('TEXT_HALIGNMEN', 'left'),
-        #     "text_valignment": self.config.get('TEXT_VALIGNMENT', 'top'),
-        #     "text_sensor_count": self.config.get('TEXT_SENSOR_COUNT', False),
-        # }
 
     def _set_overlay(self, jdata):
         changed = self.set_config('overlay', jdata)
@@ -162,16 +118,6 @@ class GstMessageHandler(MessageHandler):
 
     def get_image_config(self):# {{{
         return self.config['image']
-        # return {
-        #     'frame_width': int(self.config.get('FRAME_WIDTH', '640')),
-        #     'frame_height': int(self.config.get('FRAME_HEIGHT', '480')),
-        #     'frame_rate': int(self.config.get('FRAME_RATE', '15')),
-        #     'brightness': int(self.config.get('BRIGHTNESS', '100')),
-        #     'contrast': int(self.config.get('CONTRAST', '50')),
-        #     'hue': int(self.config.get('HUE', '50')),
-        #     'saturation': int(self.config.get('SATURATION', '50')),
-        #     'flip_method': self.config.get('FLIP_METHOD', 'none'),
-        # }
 
     def _set_image(self, jdata):
         changed = self.set_config('image', jdata)
@@ -196,17 +142,20 @@ class GstMessageHandler(MessageHandler):
 
     def get_video_config(self):# {{{
         return self.config['video']
-        # return {
-        #     "video_bitrate": int(self.config.get('VIDEO_BITRATE', 600)),
-        #     "video_tune": self.config.get('VIDEO_TUNE', "zerolatency"),
-        #     "video_pass": self.config.get('VIDEO_TUNE', "qual"),
-        #     "video_speed_preset": self.config.get("VIDEO_SPEED_PRESET", "medium"),
-        #     "video_quantizer": int(self.config.get("VIDEO_QUANTIZER", 30)),
-        #     "video_profile": self.config.get("VIDEO_PROFILE", "none"),
-        # }
 
     def _set_video(self, jdata):
         changed = self.set_config('video', jdata)
+        if len(changed) > 0:
+            self._restart_gst()
+        self.send_message(TCloud.CAMERA_CONFIG, changed)
+# }}}
+
+    def get_audio_config(self):# {{{
+        return self.config['audio']
+# }}}
+
+    def _set_audio(self, jdata):# {{{
+        changed = self.set_config('audio', jdata)
         if len(changed) > 0:
             self._restart_gst()
         self.send_message(TCloud.CAMERA_CONFIG, changed)
@@ -253,6 +202,7 @@ class GstMessageHandler(MessageHandler):
                 'overlay': self.get_overlay_config(),
                 'image': self.get_image_config(),
                 'video': self.get_video_config(),
+                'audio': self.get_audio_config(),
             }
         }
         self.logger.info(f'gst config: {config}')
@@ -281,3 +231,6 @@ class GstMessageHandler(MessageHandler):
 
         if topic == TCloud.CAMERA_VIDEO:
             return self._set_video(jdata)
+
+        if topic == TCloud.CAMERA_AUDIO:
+            return self._set_AUDIO(jdata)

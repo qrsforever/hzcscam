@@ -66,6 +66,7 @@ class TCloud:
     # GST
     CAMERA_IMAGE = f'cloud/{ADDRESS}/camera/image'
     CAMERA_VIDEO = f'cloud/{ADDRESS}/camera/video'
+    CAMERA_AUDIO = f'cloud/{ADDRESS}/camera/audio'
     CAMERA_OVERLAY = f'cloud/{ADDRESS}/camera/overlay'
     CAMERA_RTMP = f'cloud/{ADDRESS}/camera/rtmp'
     CAMERA_CONFIG = f'campi/{ADDRESS}/camera/config'

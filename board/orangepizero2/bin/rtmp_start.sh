@@ -23,7 +23,7 @@ source /campi/runtime/gst_rtmp.env
 ADDRESS=${ADDRESS:-$(cat /sys/class/net/eth0/address | sed 's/://g')}
 
 FRAME_WIDTH=${FRAME_WIDTH:-640}
-FRAME_HEIGHT=${FRAME_HEIGHT:-480}
+FRAME_HEIGHT=${FRAME_HEIGHT:-352}
 FRAME_RATE=${FRAME_RATE:-15}
 
 BRIGHTNESS=${BRIGHTNESS:-100}
@@ -33,9 +33,20 @@ SATURATION=${SATURATION:-50}
 
 OVERLAY_FONT=${OVERLAY_FONT:-12}
 
+# wait for usb camera plugin
+VIDEO_DEVICE=${VIDEO_DEVICE:-/dev/video1}
+while (( 1 ))
+do
+    if [[ -e ${VIDEO_DEVICE} ]]
+    then
+        break
+    fi
+    sleep 5
+done
+
 if [[ x${VIDEO_DEVICE} != x ]]
 then
-    if [ -e ${PRO_FIL} ]
+    if [ -e ${PRO_FIL}]
     then
         JDATA=$(cat ${PRO_FIL})
         PROPS=('brightness' 'contrast' 'hue' 'saturation')
@@ -87,7 +98,7 @@ then
     then
         PROPS="${PROPS} ! video/x-h264,profile=${PROFILE}"
     fi
-    GSTSINK="x264enc ${PROPS} ! flvmux streamable=true ! rtmpsink location=rtmp://${RTMP_DOMAIN}/${RTMP_ROOM}/${RTMP_STREAM}?${RTMP_VHOST}"
+    GSTSINK="x264enc ${PROPS} ! flvmux streamable=true name=mux ! rtmpsink location=rtmp://${RTMP_DOMAIN}/${RTMP_ROOM}/${RTMP_STREAM}?${RTMP_VHOST}"
 else
     GSTSINK="autovideosink"
 fi
@@ -130,6 +141,15 @@ then
     fi
 fi
 
+AUDIO_CONVERT=
+if [[ x${AUDIO_ENABLE} == xtrue ]]
+then
+    AUDIO_DEVICE=${AUDIO_DEVICE:-"hw:3,0"}
+    AUDIO_RATE=${AUDIO_RATE:-44100}
+    AUDIO_CHANNELS=${AUDIO_CHANNELS:-1}
+    AUDIO_CONVERT="alsasrc device=\"${AUDIO_DEVICE}\" ! queue ! audioconvert ! audioresample ! audio/x-raw,rate=${AUDIO_RATE},channels=${AUDIO_CHANNELS} ! avenc_aac ! queue ! mux."
+fi
+
 PLAY_TEST="http://101.42.139.3:30808/players/rtc_player.html?${RTMP_VHOST}&ip=192.168.152.185&api=31985&app=live&stream=${ADDRESS}&autostart=true"
 
 while (( 1 ))
@@ -142,7 +162,7 @@ do
             if [[ x${netok} != x ]]
             then
                 echo ${PLAY_TEST} > /tmp/campi_gst_rtmp.log
-                __echo_and_run ${GST_CMD} ${GSTSRC} ${VIDEO_CONVERT} ${GSTSINK}
+                __echo_and_run ${GST_CMD} ${GSTSRC} ${VIDEO_CONVERT} ${GSTSINK} ${AUDIO_CONVERT}
             else
                 echo "ping ${RTMP_DOMAIN} not received!"
             fi

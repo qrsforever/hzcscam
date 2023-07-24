@@ -7,9 +7,16 @@ source ${CUR_DIR}/../env.sh
 PUB_TOPIC=cloud/${CLIENTID}/camera/rtmp
 CLOUD_REPORT=cloud/${CLIENTID}/events/report
 
+sw=true
+
+if [ x$1 == xfalse ] || [ x$1 == x0 ]
+then
+    sw=false
+fi
+
 cat > /tmp/camera_rtmp.json <<EOF
 {
-    "rtmp_enable": true,
+    "rtmp_enable": ${sw},
     "rtmp_domain": "srs.hzcsdata.com",
     "rtmp_room": "live",
     "rtmp_stream": "auto",
