@@ -10,7 +10,18 @@ ARCHIVES_PATH=${ARCHIVES_PATH:-/var/campi/archives}
 CURRENT_ARCHIVES_PATH=$(readlink /campi)
 
 mv ${CURRENT_ARCHIVES_PATH}  /tmp/campi_sos
+if [ ! -f ${ARCHIVES_PATH}/factory.zip ]
+then
+    echo "no factory.zip found" > ${ARCHIVES_PATH}/campi_sos.log
+    exit 1
+fi
 unzip -qo ${ARCHIVES_PATH}/factory.zip -d ${ARCHIVES_PATH}/factory
+
+if [ $? -ne 0 ]
+then
+    echo "unzip fail" > ${ARCHIVES_PATH}/campi_sos.log
+    exit 1
+fi
 
 if [[ -d /tmp/campi_sos/runtime ]]
 then

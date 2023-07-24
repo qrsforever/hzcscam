@@ -1,0 +1,36 @@
+{
+    "rtmp": {
+        "rtmp_enable": false,
+        "rtmp_domain": "srs.hzcsdata.com",
+        "rtmp_room": "live",
+        "rtmp_stream": "auto",
+        "rtmp_vhost": "seg.300s"
+    },
+    "overlay": {
+        "time_format": "\"%Y/%m/%d %H:%M:%S\"",
+        "time_halignment": "right",
+        "time_valignment": "top",
+        "text_title": "auto",
+        "text_halignmen": "left",
+        "text_valignment": "top",
+        "text_sensor_count": false
+    },
+    "image": {
+        "frame_width": 640,
+        "frame_height": 352,
+        "frame_rate": 15,
+        "brightness": 100,
+        "contrast": 50,
+        "hue": 50,
+        "saturation": 50,
+        "flip_method": "none"
+    },
+    "video": {
+        "video_bitrate": 600,
+        "video_tune": "zerolatency",
+        "video_pass": "qual",
+        "video_speed_preset": "medium",
+        "video_quantizer": 30,
+        "video_profile": "baseline"
+    }
+}

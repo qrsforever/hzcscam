@@ -54,7 +54,8 @@ APP_VERSION = os.environ.get('APP_VERSION', '1.0.0')
 
 ## Gst
 
-GST_CONFIG_PATH = f'{RUNTIME_PATH}/gst_rtmp.env'
+GST_CONFIG_PATH = f'{RUNTIME_PATH}/gst.json'
+GST_CONFIG_SENV = f'{RUNTIME_PATH}/gst_rtmp.env'
 GST_CAMERA_PROP = f'{RUNTIME_PATH}/camera_props.json'
 
 ## FRP

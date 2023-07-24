@@ -16,13 +16,19 @@ source ${TOP_DIR}/_env
 if [[ ! -d ${TOP_DIR}/runtime ]]
 then
     mkdir -p ${TOP_DIR}/runtime
-    cp ${TOP_DIR}/board/${BOARD}/etc/nmwifi.json ${TOP_DIR}/runtime/
-    cp ${TOP_DIR}/board/${BOARD}/etc/gst_rtmp.env ${TOP_DIR}/runtime/
 fi
+
+[ ! -f ${TOP_DIR}/runtime/nmwifi.json ] && cp ${TOP_DIR}/board/${BOARD}/etc/nmwifi.json ${TOP_DIR}/runtime/nmwifi.json
+[ ! -f ${TOP_DIR}/runtime/gst.json ] && cp ${TOP_DIR}/board/${BOARD}/etc/gst.json ${TOP_DIR}/runtime/gst.json
+[ ! -f ${TOP_DIR}/runtime/gst_rtmp.env ] && cp ${TOP_DIR}/board/${BOARD}/etc/gst_rtmp.env ${TOP_DIR}/runtime/gst_rtmp.env
 
 __pip_install()
 {
-    check=`python3 -c "import $2" 2>&1`
+    if [[ -z $2 ]]
+    then
+        lib=$1
+    fi
+    check=`python3 -c "import $lib" 2>&1`
     if [[ x$check != x ]]                         
     then
         pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple --trusted-host pypi.tuna.tsinghua.edu.cn $1
@@ -44,11 +50,17 @@ then
          gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
          gstreamer1.0-libav gstreamer1.0-x
     apt install -y python3-gst-1.0
-
-    pip3 install requests psutil pyudev paho-mqtt quart PyEmail
+    pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple \
+        --trusted-host pypi.tuna.tsinghua.edu.cn \
+        requests psutil pyudev paho-mqtt quart PyEmail
+    __pip_install requests
+    __pip_install psutil
+    __pip_install pyudev
+    __pip_install quart
+    __pip_install paho-mqtt paho.mqtt
+    __pip_install PyEmail smtplib
+    __pip_install cos-python-sdk-v5 qcloud_cos
 fi
-
-__pip_install cos-python-sdk-v5 qcloud_cos
 
 chmod +x ${TOP_DIR}/board/${BOARD}/bin/*
 
