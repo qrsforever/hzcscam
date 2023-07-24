@@ -73,7 +73,8 @@ class GstMessageHandler(MessageHandler):
     def set_config(self, key, jdata):
         changed = {}
         if key not in self.config:
-            return changed
+            self.config[key] = {}
+
         config = self.config[key]
         for key, value in jdata.items():
             if key in config and value != config[key]:
@@ -87,7 +88,7 @@ class GstMessageHandler(MessageHandler):
 # }}}
 
     def get_rtmp_config(self):# {{{
-        return self.config['rtmp']
+        return self.config.get('rtmp', {})
 
     def _set_rtmp(self, jdata):
         changed = self.set_config('rtmp', jdata)
@@ -107,7 +108,7 @@ class GstMessageHandler(MessageHandler):
 # }}}
 
     def get_overlay_config(self):# {{{
-        return self.config['overlay']
+        return self.config.get('overlay', {})
 
     def _set_overlay(self, jdata):
         changed = self.set_config('overlay', jdata)
@@ -117,7 +118,7 @@ class GstMessageHandler(MessageHandler):
 # }}}
 
     def get_image_config(self):# {{{
-        return self.config['image']
+        return self.config.get('image', {})
 
     def _set_image(self, jdata):
         changed = self.set_config('image', jdata)
@@ -141,7 +142,7 @@ class GstMessageHandler(MessageHandler):
 # }}}
 
     def get_video_config(self):# {{{
-        return self.config['video']
+        return self.config.get('video', {})
 
     def _set_video(self, jdata):
         changed = self.set_config('video', jdata)
@@ -151,7 +152,7 @@ class GstMessageHandler(MessageHandler):
 # }}}
 
     def get_audio_config(self):# {{{
-        return self.config['audio']
+        return self.config.get('audio', {})
 # }}}
 
     def _set_audio(self, jdata):# {{{

@@ -46,7 +46,7 @@ done
 
 if [[ x${VIDEO_DEVICE} != x ]]
 then
-    if [ -e ${PRO_FIL}]
+    if [ -e ${PRO_FIL} ]
     then
         JDATA=$(cat ${PRO_FIL})
         PROPS=('brightness' 'contrast' 'hue' 'saturation')
