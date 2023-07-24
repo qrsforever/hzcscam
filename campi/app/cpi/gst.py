@@ -41,7 +41,8 @@ class GstMessageHandler(MessageHandler):
     def __init__(self):
         super().__init__([
             TUsbCamera.ALL,
-            TCloud.CAMERA_RTMP, TCloud.CAMERA_OVERLAY, TCloud.CAMERA_IMAGE, TCloud.CAMERA_VIDEO,
+            TCloud.CAMERA_RTMP, TCloud.CAMERA_OVERLAY, TCloud.CAMERA_IMAGE,
+            TCloud.CAMERA_VIDEO, TCloud.CAMERA_AUDIO
         ])
         self.is_running = util_check_service(self.SNAME)
         self.config = self._read_config()
@@ -50,7 +51,7 @@ class GstMessageHandler(MessageHandler):
                 self.on_camera_plugin(self.DEFAULT_VID)
 
     def _restart_gst(self):
-        if self.config['rtmp'].get('RTMP_ENABLE', True):
+        if self.config['rtmp'].get('rtmp_enable', False):
             util_start_service(self.SNAME, restart=True)
 
 # Read & Save Config {{{
@@ -234,4 +235,4 @@ class GstMessageHandler(MessageHandler):
             return self._set_video(jdata)
 
         if topic == TCloud.CAMERA_AUDIO:
-            return self._set_AUDIO(jdata)
+            return self._set_audio(jdata)
