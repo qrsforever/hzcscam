@@ -71,6 +71,7 @@ services:
       DB_USER: root
       DB_PASSWORD: 123456
     networks:
+      - bridge-app
       - bridge-emqx
       - bridge-mysql
     depends_on:
@@ -82,9 +83,35 @@ services:
       - ./flask/entrypoint.sh:/entrypoint.sh
     entrypoint: /entrypoint.sh
 
+  ossrs:
+    image: hzcsk8s.io/frepai/srs_rtc
+    restart: always
+    container_name: ossrs
+    # network_mode: host
+    networks:
+      - bridge-emqx
+      - bridge-app
+    depends_on:
+      - flaskapp
+    ports:
+      - 8080:8080
+      - 1935:1935
+      - 1985:1985
+      - "8000:8000/udp"
+    volumes:
+      - ./ossrs/srs_rtmp.conf:/usr/local/srs/conf/srs_rtmp.conf
+      - ./ossrs/rtc_player.html:/usr/local/srs/objs/nginx/html/players/rtc_player.html
+    command:
+      - /bin/bash                                                                                                                                          
+      - -c
+      - CANDIDATE=`curl -s ipecho.net/plain` ./objs/srs -c conf/srs_rtmp.conf
+
 networks:
   bridge-emqx:
     driver: bridge
 
   bridge-mysql:
+    driver: bridge
+
+  bridge-app:
     driver: bridge

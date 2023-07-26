@@ -4,8 +4,15 @@
 import os
 import aiomysql
 import logging
+import json
+import time
 from quart import Quart, request, Response
+from quart_cors import cors
 from sql import TableMessagePublish, TableClientConnected, TableClientDisconnected
+
+import paho.mqtt.client as mqtt
+
+g_mqtt_client = None
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
@@ -13,7 +20,10 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S')
 
 app = Quart(__name__)
+app = cors(app, allow_origin="*")
 app.dbpool = None
+player_count = 0
+player_last_time = int(time.time())
 
 @app.before_serving
 async def startup():# {{{
@@ -65,6 +75,76 @@ async def _mqtt_msg():# {{{
         return Response(status=401)
     return Response(status=200)
 # }}}
+
+# cros (or POST -> OPTIONS)
+@app.route("/rtmp", methods=['POST'])
+async def _mqtt_rtmp_enable():# {{{
+    global g_mqtt_client
+    if g_mqtt_client is None:
+        g_mqtt_client = mqtt.Client('flaskapp')
+        g_mqtt_client.username_pw_set('campi', '123456')
+        g_mqtt_client.connect('emqx', 1883, 60)
+    try:
+        jdata = await request.get_json()
+        app.logger.info(f'{jdata}')
+        did = jdata.get('stream')
+        topic = f'cloud/{did}/camera/rtmp'
+        payload = json.dumps({"rtmp_enable": jdata.get('enable')})
+        g_mqtt_client.publish(topic=topic, payload=payload)
+        app.logger.info('publish[%s]: [%s] ok!' % (topic, payload))
+        return Response(status=200)
+    except Exception as err:
+        app.logger.error(f'{err}')
+        return Response(status=401)
+# }}}
+
+@app.route("/apis/srs/v1/on_connect", methods=['POST'])
+async def _srs_on_connnect():# {{{
+    jdata = await request.get_json()
+    app.logger.info(f'{jdata}')
+    return '0'
+# }}}
+
+@app.route("/apis/srs/v1/on_close", methods=['POST'])
+async def _srs_on_close():# {{{
+    jdata = await request.get_json()
+    app.logger.info(f'{jdata}')
+    return '0'
+# }}}
+
+@app.route("/apis/srs/v1/on_play", methods=['POST'])
+async def _srs_on_paly():# {{{
+    global player_count
+    current_time = int(time.time())
+    if (current_time - player_last_time) > 21600: # 6 hours
+        player_count = 0
+    player_count += 1
+    jdata = await request.get_json()
+    app.logger.info(f'player count[{player_count}]: {jdata}')
+    did = jdata.get('stream')
+    topic = f'cloud/{did}/camera/rtmp'
+    payload = json.dumps({"rtmp_enable": True})
+    g_mqtt_client.publish(topic=topic, payload=payload)
+    app.logger.info('publish[%s]: [%s] ok!' % (topic, payload))
+    return '0'
+# }}}
+
+@app.route("/apis/srs/v1/on_stop", methods=['POST'])
+async def _srs_on_stop():# {{{
+    global player_count
+    player_count -= 1
+    jdata = await request.get_json()
+    app.logger.info(f'player count[{player_count}]: {jdata}')
+    if player_count <= 0:
+        did = jdata.get('stream')
+        topic = f'cloud/{did}/camera/rtmp'
+        payload = json.dumps({"rtmp_enable": False})
+        g_mqtt_client.publish(topic=topic, payload=payload)
+        app.logger.info('publish[%s]: [%s] ok!' % (topic, payload))
+        player_count = 0
+    return '0'
+# }}}
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8686, use_reloader=False)

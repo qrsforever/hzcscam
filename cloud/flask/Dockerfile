@@ -18,7 +18,9 @@ RUN ${APT_INSTALL} \
         python3 python3-pip
 
 RUN ${PIP_INSTALL} \
-        asyncio aiomysql quart
+        asyncio aiomysql quart quart-cors
+
+RUN ${PIP_INSTALL} paho-mqtt
 
 RUN mkdir /app && apt autoclean && rm -rf /var/lib/apt/lists/*
 
