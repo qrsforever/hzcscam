@@ -6,6 +6,7 @@ TOP_DIR=/campi
 echo "===============SYS REBOOT==============" > /tmp/campi_reboot.log
 
 source ${TOP_DIR}/_env
+rm -rf ${TOP_DIR}/*-1883
 
 RUNTIME_PATH=${RUNTIME_PATH:-/campi/runtime}
 
@@ -44,11 +45,26 @@ netok=$(nmcli --fields STATE,DEVICE device status | grep "^connected" | grep "$W
 if [[ x${netok} == x && -f ${TOP_DIR}/runtime/nmwifi.json ]]
 then
     wifissid=$(cat ${TOP_DIR}/runtime/nmwifi.json | jq -r ".wifissid")
+    password=$(cat ${TOP_DIR}/runtime/nmwifi.json | jq -r ".password")
     if [[ -z $(nmcli --fields NAME connection | grep ${wifissid}) ]]
     then
-        password=$(cat ${TOP_DIR}/runtime/nmwifi.json | jq -r ".password")
         __run_and_log ${SYSROOT}/bin/set_wifi.sh ${wifissid} ${password}
+    else
+        __run_and_log nmcli device wifi rescan; sleep 3
+        __run_and_log nmcli device wifi connect ${wifissid} password "${password}"
     fi
+    i=0
+    while (( i < 5 ))
+    do
+        netok=$(nmcli --fields STATE,DEVICE device status | grep "^connected" | grep "$WIRELESS_ADAPTER")
+        if [[ -z ${netok} ]]
+        then
+            sleep 3
+            (( i += 1 ))
+            continue
+        fi
+        break
+    done
 fi
 
 for svc in ${CAMPI_ORDER_SVCS[@]}

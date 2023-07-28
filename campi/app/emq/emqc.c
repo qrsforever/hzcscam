@@ -116,19 +116,7 @@ int emqc_init(const char* host, int port, const char* client_id, const char* use
     char buff[64] = {0};
     memset(s_messageHandlers, 0, sizeof(s_messageHandlers));
 
-    MQTTClient_create(&l_client, "tcp://127.0.0.1:1883", "campi_emq", 0, NULL);
-    MQTTClient_setCallbacks(l_client, NULL, NULL, on_message, NULL);
-    rc = _emqc_connect(l_client, "eqmx", "public");
-    if (rc != MQTTCLIENT_SUCCESS) {
-        syslog(LOG_ERR, "Failed to connect local emqx, return code %d\n", rc);
-        exit(-1);
-    }
-    syslog(LOG_DEBUG, "Connected to Local MQTT Broker!\n");
-    snprintf(buff, 63, "campi/%s/#", client_id);
-    MQTTClient_subscribe(l_client, buff, 0);
-    LOCAL_TOPIC_PREFIX_LEN = strlen(buff) - 1;
-    syslog(LOG_DEBUG, "campi sub: %s: %d\n", buff, LOCAL_TOPIC_PREFIX_LEN);
-
+    // cloud emq
     snprintf(buff, 63, "tcp://%s:%d", host, port);
     MQTTClient_create(&r_client, buff, client_id, 0, NULL);
     MQTTClient_setCallbacks(r_client, NULL, NULL, on_message, NULL);
@@ -143,6 +131,21 @@ int emqc_init(const char* host, int port, const char* client_id, const char* use
     MQTTClient_subscribe(r_client, "cloud/all/events/#", 0);
     CLOUD_TOPIC_PREFIX_LEN = strlen(buff) - 1;
     syslog(LOG_DEBUG, "cloud sub: %s: %d\n", buff, CLOUD_TOPIC_PREFIX_LEN);
+
+    // local emq
+    MQTTClient_create(&l_client, "tcp://127.0.0.1:1883", "campi_emq", 0, NULL);
+    MQTTClient_setCallbacks(l_client, NULL, NULL, on_message, NULL);
+    rc = _emqc_connect(l_client, "eqmx", "public");
+    if (rc != MQTTCLIENT_SUCCESS) {
+        syslog(LOG_ERR, "Failed to connect local emqx, return code %d\n", rc);
+        exit(-1);
+    }
+    syslog(LOG_DEBUG, "Connected to Local MQTT Broker!\n");
+    snprintf(buff, 63, "campi/%s/#", client_id);
+    MQTTClient_subscribe(l_client, buff, 0);
+    LOCAL_TOPIC_PREFIX_LEN = strlen(buff) - 1;
+    syslog(LOG_DEBUG, "campi sub: %s: %d\n", buff, LOCAL_TOPIC_PREFIX_LEN);
+
     return 0;
 }
 

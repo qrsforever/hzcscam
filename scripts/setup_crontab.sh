@@ -13,7 +13,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 47 6	* * 7	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )
 52 6	1 * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
 
-@reboot root test -x ${BINDIR}/sys_reboot.sh && ${BINDIR}/sys_reboot.sh || /usr/local/bin/campi_sos.sh 
+@reboot root test -x ${BINDIR}/sys_reboot.sh && ${BINDIR}/sys_reboot.sh || /usr/local/bin/usb_sos.sh
 EOF
 
 mv /tmp/crontab /etc/crontab

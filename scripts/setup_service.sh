@@ -29,7 +29,7 @@ __pip_install()
         lib=$1
     fi
     check=`python3 -c "import $lib" 2>&1`
-    if [[ x$check != x ]]                         
+    if [[ x$check != x ]]
     then
         pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple --trusted-host pypi.tuna.tsinghua.edu.cn $1
     fi
