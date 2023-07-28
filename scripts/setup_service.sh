@@ -13,6 +13,9 @@ fi
 
 source ${TOP_DIR}/_env
 
+cp ${TOP_DIR}/board/${BOARD}/bin/campi_safe_run.sh /usr/local/bin/campi_safe_run.sh
+chmod +x /usr/local/bin/campi_safe_run.sh
+
 if [[ ! -d ${TOP_DIR}/runtime ]]
 then
     mkdir -p ${TOP_DIR}/runtime
