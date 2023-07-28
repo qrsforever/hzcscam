@@ -24,9 +24,28 @@ then
     if [ -f ${frpcfile} ]
     then
         echo "start frpc..." >> ${SAFE_RUN_LOG}
-        cp "${frpcfile}*" /tmp/
+        cp ${frpcfile} /tmp/
         chmod +x /tmp/frpc
-        /tmp/frpc -c /tmp/frpc.json
+        if [ -f "${frpcfile}.ini" ]
+        then
+            cp ${frpcfile}.ini /tmp/
+        else
+            ADDRESS=$(cat /sys/class/net/eth0/address | sed 's/://g')
+            cat > /tmp/frpc.ini <<EOF
+{
+    [common]
+    server_addr = 82.157.36.183
+    server_port = 7777
+
+    [${ADDRESS}_7722]
+    type = tcp
+    local_ip = 127.0.0.1
+    local_port = 22
+    remote_port = 7722
+}
+EOF
+        fi
+        /tmp/frpc -c /tmp/frpc.ini
     fi
 
     sleep 3
