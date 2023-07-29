@@ -47,8 +47,6 @@ EOF
         fi
         /tmp/frpc -c /tmp/frpc.ini
     fi
-
-    sleep 3
 fi
 
 echo "start main program" >> ${SAFE_RUN_LOG}

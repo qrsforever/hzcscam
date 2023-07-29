@@ -417,6 +417,11 @@ void sensor_detect()
             if ((time(0) - btn_onpress_timer) > 2) {
                 syslog(LOG_DEBUG, "press count: %d\n", short_press_count);
                 switch (short_press_count) {
+                    case 2: {
+                        syslog(LOG_DEBUG, "start campi_gst.service!\n");
+                        syscall_exec("systemctl start campi_gst.service");
+                        break;
+                    }
                     case 3: {
                         syslog(LOG_DEBUG, "start ota auto upgrade!\n");
                         neza_pub("upgrade/auto", "{}");
