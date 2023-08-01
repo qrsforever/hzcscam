@@ -52,6 +52,7 @@ class TCloud:
     EVENTS_CAMPI_REPORT = f'campi/{ADDRESS}/events/report'
 
     # OTA
+    OTA_AUTO = 'cloud/all/ota/upgrade'
     OTA_UPGRADE = f'cloud/{ADDRESS}/ota/upgrade'
     OTA_CONFIG = f'cloud/{ADDRESS}/ota/config'
     UPGRADE_REQUEST_ERROR = f'campi/{ADDRESS}/upgrade/request_error'
@@ -80,6 +81,10 @@ class TCloud:
     # LOG
     LOGCAT_COLLECT = f'cloud/{ADDRESS}/log/collect'
     LOGCAT_MESSAGE = f'campi/{ADDRESS}/log/message'
+
+
+class TSensor:
+    COLOR_BLINK = f'campi/{ADDRESS}/sensor/blink'
 
 class TApis:
     SET_WIFI = '/apis/set_wifi'

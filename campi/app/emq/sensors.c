@@ -97,6 +97,10 @@ static int g_calm_step_ms = 20;
 static int g_calm_down_ms = 1000;
 static int g_read_sleep_ms = 100;
 
+static int g_blink_color = 1;
+static int g_blink_count = 0;
+static int g_blink_interval = 500; // ms
+
 
 void _sensor_parse_config(const char* config)/*{{{*/
 {
@@ -206,19 +210,41 @@ void _emq_report(const char* extra)/*{{{*/
     syslog(LOG_DEBUG, "pub [%s]: %s\n", SENSOR_TOPIC, payload);
 }/*}}}*/
 
-void _emq_on_message(const char* topic, const char* payload)/*{{{*/
+void _emq_on_cloud_message(const char* topic, const char* payload)/*{{{*/
 {
-    syslog(LOG_DEBUG, "receive [%s]: %s\n", topic, payload);
+    syslog(LOG_DEBUG, "receive cloud [%s]: %s\n", topic, payload);
     _sensor_parse_config(payload);
     _save_current_state();
+}/*}}}*/
+
+void _emq_on_campi_message(const char* topic, const char* payload)/*{{{*/
+{
+    syslog(LOG_DEBUG, "receive campi [%s]: %s\n", topic, payload);
+
+    cJSON* cjson = cJSON_Parse(payload);
+    syslog(LOG_DEBUG, "receive campi1 [%s]: %s\n", topic, payload);
+    if (strcmp(topic + strlen(topic) - 5, "blink") == 0) {
+        syslog(LOG_DEBUG, "receive campi2 [%s]: %s\n", topic, payload);
+        if (cjson == NULL) {
+            syslog(LOG_ERR, "cjson parse error!\n");
+            return;
+        }
+        cJSON* jcolor = cJSON_GetObjectItem(cjson, "color");
+        if (cJSON_IsNumber(jcolor))
+            g_blink_color = jcolor->valueint;
+        cJSON* jcount = cJSON_GetObjectItem(cjson, "count");
+        if (cJSON_IsNumber(jcount))
+            g_blink_count = jcount->valueint;
+        cJSON* jinterval = cJSON_GetObjectItem(cjson, "interval");
+        if (cJSON_IsNumber(jinterval))
+            g_blink_interval = jinterval->valueint;
+    }
 }/*}}}*/
 
 static void _sensor_universal_task(int s)/*{{{*/
 {
     int value, sumtimer, len = 0;
     char buff[MAX_BUF] = { 0 };
-    int debug_mode = g_sensor_debug;
-    int calm_down_ms = g_calm_down_ms, calm_step_ms = g_calm_step_ms;
     while (g_current_sensor == s) {
         value = digitalRead(TSKPIN);
         /*
@@ -229,7 +255,7 @@ static void _sensor_universal_task(int s)/*{{{*/
         if (g_trigger_pulse == value) {
             _change_color_to(g_current_color);
             sumtimer = 0;
-            if (debug_mode) {
+            if (g_sensor_debug) {
                 memset(buff, 0, MAX_BUF);
                 strcpy(buff, "\"_calm_disturb_serial_\": [0");
             }
@@ -242,13 +268,13 @@ static void _sensor_universal_task(int s)/*{{{*/
                     }
                     sumtimer = 0;
                 } else {
-                    sumtimer += calm_step_ms;
+                    sumtimer += g_calm_step_ms;
                 }
                 delay(g_calm_step_ms);
-            } while(g_current_sensor == s && sumtimer < calm_down_ms);
+            } while(g_current_sensor == s && sumtimer < g_calm_down_ms);
             g_repeat_counter += 1;
             _change_color_to(COLOR_BLACK);
-            if (debug_mode) {
+            if (g_sensor_debug) {
                 buff[strlen(buff)] = ']';
                 _emq_report(buff);
             } else {
@@ -256,32 +282,6 @@ static void _sensor_universal_task(int s)/*{{{*/
             }
         }
         delay(g_read_sleep_ms);
-    }
-}/*}}}*/
-
-static void _sensor_vibration_switch(int s)/*{{{*/
-{
-    syslog(LOG_DEBUG, "sensor vibrate switch\n");
-    pinMode(TSKPIN, INPUT);
-    int value = 0, sumtimer = 0;
-    char buff[64] = { 0 };
-    while (g_current_sensor == s) {
-        value = digitalRead(TSKPIN);
-        if (1 == value) { // vibrate
-            sumtimer = 0;
-            _change_color_to(COLOR_BLACK);
-            do {
-                if (value == digitalRead(TSKPIN))
-                    sumtimer = 0;
-                else
-                    sumtimer += 20;
-                delay(20);
-            } while(g_current_sensor == s && sumtimer < g_thresh_quiet);
-            g_repeat_counter += 1;
-            _change_color_to(g_current_color);
-            _emq_report(NULL);
-        }
-        delay(200);
     }
 }/*}}}*/
 
@@ -349,9 +349,6 @@ static void *_sensor_worker(void *arg)
             case SENSOR_UNIVERSAL:
                 _sensor_universal_task(s);
                 break;
-            // case SENSOR_VIBRATSW:
-            //     _sensor_vibration_switch(s);
-            //     break;
             case SENSOR_PIR:
                 _sensor_passive_infrared(s);
                 break;
@@ -403,7 +400,10 @@ int sensor_init(const char* client_id)
     snprintf(SENSOR_TOPIC, sizeof(SENSOR_TOPIC) - 1, "campi/%s/sensor/report", client_id);
     char buff[64] = {0};
     snprintf(buff, 63, "cloud/%s/sensor/config", client_id);
-    emqc_sub(buff, _emq_on_message);
+    emqc_sub(buff, _emq_on_cloud_message);
+    memset(buff, 0, 64);
+    snprintf(buff, 63, "campi/%s/sensor/blink", client_id);
+    emqc_sub(buff, _emq_on_campi_message);
     return 0;
 }/*}}}*/
 
@@ -445,6 +445,14 @@ void sensor_detect()
                 short_press_count = 0;
                 _change_color_to(COLOR_BLACK);
             }
+        }
+        if (g_blink_count > 0) {
+            _change_color_to(g_blink_color);
+            delay(g_blink_interval);
+            _change_color_to(COLOR_BLACK);
+            g_blink_count -= 1;
+        } else {
+            delay(50);
         }
         return;
     }

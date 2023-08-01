@@ -54,7 +54,7 @@ async def main():
             loop.call_later(sys_h.heartbeat_interval, sys_h.queue.put_nowait, 'h')
 
     import os
-    os.system("sleep 1; reboot")
+    os.system("sleep 3; reboot")
 
 if __name__ == "__main__":
     asyncio.run(main())
