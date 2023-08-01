@@ -222,9 +222,7 @@ void _emq_on_campi_message(const char* topic, const char* payload)/*{{{*/
     syslog(LOG_DEBUG, "receive campi [%s]: %s\n", topic, payload);
 
     cJSON* cjson = cJSON_Parse(payload);
-    syslog(LOG_DEBUG, "receive campi1 [%s]: %s\n", topic, payload);
     if (strcmp(topic + strlen(topic) - 5, "blink") == 0) {
-        syslog(LOG_DEBUG, "receive campi2 [%s]: %s\n", topic, payload);
         if (cjson == NULL) {
             syslog(LOG_ERR, "cjson parse error!\n");
             return;
