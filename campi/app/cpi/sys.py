@@ -55,6 +55,7 @@ class SysMessageHandler(MessageHandler):
             TUsbDisk.ALL,
             TSystem.SHUTDOWN,
             TApis.SET_WIFI,
+            TCloud.SYS_REBOOT,
             TCloud.EVENTS_REPORT,
             TCloud.EVENTS_CLOUD_REPORT,
         ])
@@ -145,6 +146,12 @@ class SysMessageHandler(MessageHandler):
 # }}}
 
     def on_udisk_mounted(self, mntdir):# {{{
+        wifinm_path = f'{mntdir}/campi/{WIFI_NM_FILE}'
+        if os.path.isfile(wifinm_path):
+            shutil.copyfile(wifinm_path, WIFI_NM_CONF)
+            with open(WIFI_NM_CONF, 'r') as fr:
+                self.on_network_setwifi(fr.read())
+
         verinfo_path = f'{mntdir}/campi/{VERSION_OTA_FILE}'
         if os.path.isfile(verinfo_path):
             self.logger.info(f'{verinfo_path} found!')
@@ -155,12 +162,6 @@ class SysMessageHandler(MessageHandler):
                     version_info['zip_path'] = zip_path
                     self.send_message(TUpgrade.BY_UDISK, json.dumps(version_info))
             return
-
-        wifinm_path = f'{mntdir}/campi/{WIFI_NM_FILE}'
-        if os.path.isfile(wifinm_path):
-            shutil.copyfile(wifinm_path, WIFI_NM_CONF)
-            with open(WIFI_NM_CONF, 'r') as fr:
-                self.on_network_setwifi(fr.read())
 # }}}
 
     def handle_message(self, topic, message):
@@ -181,7 +182,7 @@ class SysMessageHandler(MessageHandler):
         if topic == TCloud.EVENTS_CLOUD_REPORT or topic == TCloud.EVENTS_REPORT:
             return self.do_report(message)
 
-        if topic == TSystem.SHUTDOWN:
+        if topic == TSystem.SHUTDOWN or TCloud.SYS_REBOOT:
             self.quit()
 
     def get_info(self):

@@ -24,6 +24,16 @@ cat > /tmp/camera_rtmp.json <<EOF
 }
 EOF
 
+# cat > /tmp/camera_rtmp.json <<EOF
+# {
+    # "rtmp_enable": ${sw},
+    # "rtmp_domain": "aiot.hzcsdata.com",
+    # "rtmp_room": "live",
+    # "rtmp_stream": "auto",
+    # "rtmp_vhost": ""
+# }
+# EOF
+
 mosquitto_pub -h ${EMQX_HOST} -p ${EMQX_PORT} -u campi -P 123456 -t ${PUB_TOPIC} -d -f /tmp/camera_rtmp.json
 sleep 1
 mosquitto_pub -h ${EMQX_HOST} -p ${EMQX_PORT} -u campi -P 123456 -t ${CLOUD_REPORT} -m "{\"gst\": true}"

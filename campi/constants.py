@@ -69,3 +69,15 @@ OSS_LOGCAT_PATH = f'logcat/{ADDRESS}'
 ## EMQ
 
 SENSOR_CONFIG_PATH = f'{RUNTIME_PATH}/emq_sensor.json'
+
+## COLOR
+
+class SCOLOR:
+    BLACK = 0
+    WHITE = 1
+    RED = 2
+    GREEN = 3
+    BLUE = 4
+    YELLOW = 5
+    CYAN = 6
+    MAGENTA = 7

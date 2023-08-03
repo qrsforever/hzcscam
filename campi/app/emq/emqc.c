@@ -60,13 +60,23 @@ static int on_message(void *context, char *topic, int length, MQTTClient_message
         }
     } else { // campi/
         syslog(LOG_DEBUG, "From Campi to Cloud: Received `%s` from `%s` topic \n", payload, topic);
-        MQTTClient_deliveryToken token;
-        rc = MQTTClient_publishMessage(r_client, topic, message, &token);
-        if (rc < 0) {
-            syslog(LOG_ERR, "Failed to publish, return code %d\n", rc);
-            exit(-1);
+        if (strncmp(topic + LOCAL_TOPIC_PREFIX_LEN, "sensor", 6) == 0) {
+            for (int i = 0; i < MAX_MESSAGE_HANDLERS; ++i) {
+                if (s_messageHandlers[i].topic[0] != 0 && strcmp(s_messageHandlers[i].topic, topic) == 0) {
+                    if (s_messageHandlers[i].fp != NULL) {
+                        s_messageHandlers[i].fp(topic, payload);
+                    }
+                }
+            }
+        } else {
+            MQTTClient_deliveryToken token;
+            rc = MQTTClient_publishMessage(r_client, topic, message, &token);
+            if (rc < 0) {
+                syslog(LOG_ERR, "Failed to publish, return code %d\n", rc);
+                exit(-1);
+            }
+            MQTTClient_waitForCompletion(r_client, token, 2000L);
         }
-        MQTTClient_waitForCompletion(r_client, token, 2000L);
     }
     MQTTClient_freeMessage(&message);
     MQTTClient_free(topic);
@@ -116,6 +126,23 @@ int emqc_init(const char* host, int port, const char* client_id, const char* use
     char buff[64] = {0};
     memset(s_messageHandlers, 0, sizeof(s_messageHandlers));
 
+    // cloud emq
+    snprintf(buff, 63, "tcp://%s:%d", host, port);
+    MQTTClient_create(&r_client, buff, client_id, 0, NULL);
+    MQTTClient_setCallbacks(r_client, NULL, NULL, on_message, NULL);
+    rc = _emqc_connect(r_client, username, password);
+    if (rc != MQTTCLIENT_SUCCESS) {
+        syslog(LOG_ERR, "Failed to connect [%s:%d], return code %d\n", host, port, rc);
+        exit(-1);
+    }
+    syslog(LOG_DEBUG, "Connected to Cloud MQTT Broker!\n");
+    snprintf(buff, 63, "cloud/%s/#", client_id);
+    MQTTClient_subscribe(r_client, buff, 0);
+    MQTTClient_subscribe(r_client, "cloud/all/#", 0);
+    CLOUD_TOPIC_PREFIX_LEN = strlen(buff) - 1;
+    syslog(LOG_DEBUG, "cloud sub: %s: %d\n", buff, CLOUD_TOPIC_PREFIX_LEN);
+
+    // local emq
     MQTTClient_create(&l_client, "tcp://127.0.0.1:1883", "campi_emq", 0, NULL);
     MQTTClient_setCallbacks(l_client, NULL, NULL, on_message, NULL);
     rc = _emqc_connect(l_client, "eqmx", "public");
@@ -129,20 +156,6 @@ int emqc_init(const char* host, int port, const char* client_id, const char* use
     LOCAL_TOPIC_PREFIX_LEN = strlen(buff) - 1;
     syslog(LOG_DEBUG, "campi sub: %s: %d\n", buff, LOCAL_TOPIC_PREFIX_LEN);
 
-    snprintf(buff, 63, "tcp://%s:%d", host, port);
-    MQTTClient_create(&r_client, buff, client_id, 0, NULL);
-    MQTTClient_setCallbacks(r_client, NULL, NULL, on_message, NULL);
-    rc = _emqc_connect(r_client, username, password);
-    if (rc != MQTTCLIENT_SUCCESS) {
-        syslog(LOG_ERR, "Failed to connect [%s:%d], return code %d\n", host, port, rc);
-        exit(-1);
-    }
-    syslog(LOG_DEBUG, "Connected to Cloud MQTT Broker!\n");
-    snprintf(buff, 63, "cloud/%s/#", client_id);
-    MQTTClient_subscribe(r_client, buff, 0);
-    MQTTClient_subscribe(r_client, "cloud/all/events/#", 0);
-    CLOUD_TOPIC_PREFIX_LEN = strlen(buff) - 1;
-    syslog(LOG_DEBUG, "cloud sub: %s: %d\n", buff, CLOUD_TOPIC_PREFIX_LEN);
     return 0;
 }
 

@@ -20,9 +20,11 @@ from campi.constants import (
     RUNTIME_PATH,
     OTA_UPGRADE_CONF,
     APP_VERSION,
+    SCOLOR,
 )
 from campi.topics import TCloud
 from campi.topics import TUpgrade
+from campi.topics import TSensor
 
 
 def compare_version(vnew, vold):
@@ -46,7 +48,7 @@ class OtaMessageHandler(MessageHandler):
 
     def __init__(self):
         super().__init__([
-            TCloud.OTA_UPGRADE, TCloud.OTA_CONFIG,
+            TCloud.OTA_AUTO, TCloud.OTA_UPGRADE, TCloud.OTA_CONFIG,
             TUpgrade.BY_UDISK, TUpgrade.BY_OTA, TUpgrade.BY_AUTO])
 
         self.ota_config = self._load_config()
@@ -145,25 +147,29 @@ class OtaMessageHandler(MessageHandler):
         if topic == TCloud.OTA_CONFIG:
             return self._save_config(json.loads(message))
 
-        if topic in (TUpgrade.BY_UDISK, TCloud.OTA_UPGRADE, TUpgrade.BY_AUTO):
-            self.logger.error("upgrade start...")
-            self.send_message(TCloud.UPGRADE_START, {'from': topic})
-            if topic == TUpgrade.BY_AUTO:
-                config = self._on_request_upgrade_config()
-            else:
-                config = json.loads(message) if isinstance(message, str) else message
-            if not self._on_check_upgrade(config):
+        self.logger.info("upgrade start...")
+        self.send_message(TCloud.UPGRADE_START, {'from': topic})
+        self.send_message(TSensor.COLOR_BLINK, {'color': SCOLOR.RED, 'count': 8, 'interval': 200})
+
+        if topic == TCloud.OTA_UPGRADE or topic == TUpgrade.BY_UDISK:
+            config = json.loads(message) if isinstance(message, str) else message
+        else:
+            config = self._on_request_upgrade_config()
+
+        if not self._on_check_upgrade(config):
+            return
+
+        if topic == TUpgrade.BY_UDISK:
+            shutil.copyfile(config['zip_path'], self.zip_path)
+        else:
+            if not self._on_request_upgrade_zip(config):
                 return
 
-            if topic == TCloud.OTA_UPGRADE or topic == TUpgrade.BY_AUTO:
-                if not self._on_request_upgrade_zip(config):
-                    return
-
-            if self.UPGRADE_SUCESS == self._do_upgrade(config):
-                self.logger.info("upgrade success")
-                self.send_message(TCloud.UPGRADE_SUCESS, config)
-                self.quit()
-            else:
-                self.logger.error(f"upgrade fail {config}")
-                self.send_message(TCloud.UPGRADE_FAIL, config)
-            return
+        if self.UPGRADE_SUCESS == self._do_upgrade(config):
+            self.logger.info("upgrade success")
+            self.send_message(TCloud.UPGRADE_SUCESS, config)
+            self.quit()
+        else:
+            self.logger.error(f"upgrade fail {config}")
+            self.send_message(TCloud.UPGRADE_FAIL, config)
+        return

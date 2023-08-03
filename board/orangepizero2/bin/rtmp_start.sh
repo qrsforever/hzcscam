@@ -161,8 +161,14 @@ do
             netok=$(ping -c 1 -W 2 ${RTMP_DOMAIN} 2>/dev/null | grep -o "received")
             if [[ x${netok} != x ]]
             then
+                if [ -f ${LOGS_PATH}/campi_gst.log ]
+                then
+                    python3 ${CUR_DIR}/send_log.py ${LOGS_PATH}/campi_gst.log
+                    rm -f ${LOGS_PATH}/campi_gst.log
+                fi
                 echo ${PLAY_TEST} > /tmp/campi_gst_rtmp.log
                 __echo_and_run ${GST_CMD} ${GSTSRC} ${VIDEO_CONVERT} ${GSTSINK} ${AUDIO_CONVERT}
+                journalctl -u campi_gst.service -n 200 > ${LOGS_PATH}/campi_gst.log
             else
                 echo "ping ${RTMP_DOMAIN} not received!"
             fi

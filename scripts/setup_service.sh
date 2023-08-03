@@ -13,6 +13,9 @@ fi
 
 source ${TOP_DIR}/_env
 
+cp ${TOP_DIR}/board/${BOARD}/bin/campi_safe_run.sh /usr/local/bin/campi_safe_run.sh
+chmod +x /usr/local/bin/campi_safe_run.sh
+
 if [[ ! -d ${TOP_DIR}/runtime ]]
 then
     mkdir -p ${TOP_DIR}/runtime
@@ -29,7 +32,7 @@ __pip_install()
         lib=$1
     fi
     check=`python3 -c "import $lib" 2>&1`
-    if [[ x$check != x ]]                         
+    if [[ x$check != x ]]
     then
         pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple --trusted-host pypi.tuna.tsinghua.edu.cn $1
     fi

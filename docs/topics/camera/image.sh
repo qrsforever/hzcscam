@@ -7,11 +7,17 @@ source ${CUR_DIR}/../env.sh
 PUB_TOPIC=cloud/${CLIENTID}/camera/image
 CLOUD_REPORT=cloud/${CLIENTID}/events/report
 
+width=640
+height=352
+
+# width=1280
+# height=720
+
 # flip_method: "" or "vertical-flip" or "horizontal-flip"
 cat > /tmp/camera_image.json <<EOF
 {
-    "frame_width": 640,
-    "frame_height": 352,
+    "frame_width": $width,
+    "frame_height": $height,
     "frame_rate": 15,
     "brightness": 50,
     "contrast": 50,
