@@ -16,6 +16,16 @@ from campi.topics import TNetwork
 async def _dnsnet_ping(ip, port=53):
     reader, writer = await asyncio.open_connection(ip, port)
 
+# import socket
+# 
+# def internet(host="8.8.8.8", port=53, timeout=3):
+#     try:
+#         socket.setdefaulttimeout(timeout)
+#         socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
+#         return True
+#     except socket.error as ex:
+#         print(ex)
+#         return False
 
 class NetEventDetector(EventDetector):
     subsystem = 'net'
@@ -25,11 +35,10 @@ class NetEventDetector(EventDetector):
         super().__init__(mqtt)
         self.ping_hosts = (
             ('8.8.8.8', 53),
-            ('1.1.1.1', 53),
             ('8.8.4.4', 53),
-            ('185.222.222.222', 53),
             ('aiot.hzcsdata.com', 1883),
             ('www.baidu.com', 80)
+            ('www.qq.com', 80)
         )
         self.ping_trycnt = 5
         self.ping_timeout = 3
