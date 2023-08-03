@@ -37,7 +37,6 @@ do
                 -c ${EMQ_CLIENTID} -u ${EMQ_USERNAME} -p ${EMQ_PASSWORD}
             # et=$(date +%s)
             journalctl -u campi_emq.service -n 200 > ${LOGS_PATH}/campi_emq.log
-            reboot
             # if [ $(($et - $st)) -lt 180 ]
             # then
             #     (( i += 1 ))
