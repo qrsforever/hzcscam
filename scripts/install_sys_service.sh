@@ -16,8 +16,8 @@ cat > ${TMP_DIR}/$SERVICE <<EOF
 [Unit]
     Description=System Monitor Event
     Documentation=http://campi.hzcsai.com
-    StartLimitIntervalSec=120
-    StartLimitBurst=5
+    StartLimitIntervalSec=180
+    StartLimitBurst=10
     OnFailure=campi_sos.service
 
 [Service]

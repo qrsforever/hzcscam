@@ -37,7 +37,7 @@ class NetEventDetector(EventDetector):
             ('8.8.8.8', 53),
             ('8.8.4.4', 53),
             ('aiot.hzcsdata.com', 1883),
-            ('www.baidu.com', 80)
+            ('www.baidu.com', 80),
             ('www.qq.com', 80)
         )
         self.ping_trycnt = 5
