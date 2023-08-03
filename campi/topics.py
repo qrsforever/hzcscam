@@ -44,6 +44,9 @@ class TLogger:
     COLLECT = 'logger/collect'
 
 class TCloud:
+    # SYS
+    SYS_REBOOT = f'cloud/{ADDRESS}/sys/reboot'
+
     # EVENTS
     EVENTS_HEARTBEAT = f'campi/{ADDRESS}/events/heartbeat'
     EVENTS_ABOUT = f'campi/{ADDRESS}/events/about'

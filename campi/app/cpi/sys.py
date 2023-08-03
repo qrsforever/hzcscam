@@ -55,6 +55,7 @@ class SysMessageHandler(MessageHandler):
             TUsbDisk.ALL,
             TSystem.SHUTDOWN,
             TApis.SET_WIFI,
+            TCloud.SYS_REBOOT,
             TCloud.EVENTS_REPORT,
             TCloud.EVENTS_CLOUD_REPORT,
         ])
@@ -181,7 +182,7 @@ class SysMessageHandler(MessageHandler):
         if topic == TCloud.EVENTS_CLOUD_REPORT or topic == TCloud.EVENTS_REPORT:
             return self.do_report(message)
 
-        if topic == TSystem.SHUTDOWN:
+        if topic == TSystem.SHUTDOWN or TCloud.SYS_REBOOT:
             self.quit()
 
     def get_info(self):
