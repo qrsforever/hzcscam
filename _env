@@ -11,6 +11,7 @@ PATH=${SYSROOT}/bin:${PATH}
 PYTHONPATH=/campi:.
 
 RUNTIME_PATH=/campi/runtime
+LOGS_PATH=/campi/logs
 
 WIRELESS_ADAPTER=wlan0
 DEFAULT_WIFI_SSID="hzcsdata"

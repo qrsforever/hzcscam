@@ -80,6 +80,8 @@ do
     cp $fil ${logdir}
 done
 
+cp -arf ${LOGS_PATH} ${logdir}
+
 # "==============campi=================="
 
 cp -aprf /campi/runtime ${logdir}

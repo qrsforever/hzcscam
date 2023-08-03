@@ -3,16 +3,23 @@
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 TOP_DIR=/campi
 
-echo "===============SYS REBOOT==============" > /tmp/campi_reboot.log
-
 source ${TOP_DIR}/_env
 rm -rf ${TOP_DIR}/*-1883
 
 RUNTIME_PATH=${RUNTIME_PATH:-/campi/runtime}
+LOGS_PATH=${LOGS_PATH:-/campi/logs}
+
+
+echo "===============SYS REBOOT==============" > ${LOGS_PATH}/campi_reboot.log
 
 if [ ! -d ${RUNTIME_PATH}/start ]
 then
     mkdir -p ${RUNTIME_PATH}/start
+fi
+
+if [ ! -d ${RUNTIME_PATH} ]
+then
+    mkdir -p ${LOGS_PATH}
 fi
 
 if [[ ! -e ${RUNTIME_PATH}/gst_rtmp.env ]]
@@ -22,7 +29,7 @@ fi
 
 __run_and_log() {
     echo "$*"
-    /bin/bash -c "$*" >> /tmp/campi_reboot.log
+    /bin/bash -c "$*" >> ${LOGS_PATH}/campi_reboot.log
 }
 
 if [[ ! -e ${TOP_DIR}/runtime/nmwifi.json ]]
@@ -31,13 +38,13 @@ then
     cp ${SYSROOT}/etc/nmwifi.json ${TOP_DIR}/runtime/nmwifi.json
 fi
 
-echo "==============Network================" >> /tmp/campi_reboot.log
+echo "==============Network================" >> ${LOGS_PATH}/campi_reboot.log
 __run_and_log nmcli device status
-echo "==============Memory=================" >> /tmp/campi_reboot.log
+echo "==============Memory=================" >> ${LOGS_PATH}/campi_reboot.log
 __run_and_log free
-echo "===============Disk==================" >> /tmp/campi_reboot.log
+echo "===============Disk==================" >> ${LOGS_PATH}/campi_reboot.log
 __run_and_log df
-echo "==============Campi==================" >> /tmp/campi_reboot.log
+echo "==============Campi==================" >> ${LOGS_PATH}/campi_reboot.log
 __run_and_log ls -l ${TOP_DIR}/runtime
 
 # TODO set_wifi will delete wifi connection
@@ -69,14 +76,14 @@ fi
 
 for svc in ${CAMPI_ORDER_SVCS[@]}
 do
-    echo "start ${svc} at $(date +"%Y/%m/%d-%H:%M:%S")" >> /tmp/campi_reboot.log
+    echo "start ${svc} at $(date +"%Y/%m/%d-%H:%M:%S")" >> ${LOGS_PATH}/campi_reboot.log
     svc=campi_${svc}.service
     systemctl start ${svc}
 done
 
 for svc in `ls ${RUNTIME_PATH}/start`
 do
-    echo "start ${svc} at $(date +"%Y/%m/%d-%H:%M:%S")" >> /tmp/campi_reboot.log
+    echo "start ${svc} at $(date +"%Y/%m/%d-%H:%M:%S")" >> ${LOGS_PATH}/campi_reboot.log
     svc=campi_${svc}.service
     systemctl start ${svc}
 done

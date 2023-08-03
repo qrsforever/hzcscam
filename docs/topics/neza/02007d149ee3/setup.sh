@@ -15,7 +15,7 @@ cat > /tmp/neza.json <<EOF
   "count": 0,
   "trigger_pulse": 1,
   "calm_step_ms": 15,
-  "calm_down_ms": 300,
+  "calm_down_ms": 100,
   "read_sleep_ms": 100
 }
 EOF

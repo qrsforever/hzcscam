@@ -163,6 +163,8 @@ do
             then
                 echo ${PLAY_TEST} > /tmp/campi_gst_rtmp.log
                 __echo_and_run ${GST_CMD} ${GSTSRC} ${VIDEO_CONVERT} ${GSTSINK} ${AUDIO_CONVERT}
+                journalctl -u campi_gst.service -n 200 > ${LOGS_PATH}/campi_gst.log
+                python3 ${CUR_DIR}/send_log.py ${LOGS_PATH}/campi_gst.log
             else
                 echo "ping ${RTMP_DOMAIN} not received!"
             fi
