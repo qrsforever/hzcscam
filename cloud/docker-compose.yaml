@@ -40,7 +40,7 @@ services:
       - 3306:3306
     volumes:
       - ./mysql/etc/:/etc/mysql
-      - ./mysql/data:/var/lib/mysq
+      - ./mysql/data:/var/lib/mysql
       - ./mysql/files:/var/lib/mysql-files
       - ./mysql/initdb:/docker-entrypoint-initdb.d
     networks:
