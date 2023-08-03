@@ -435,6 +435,11 @@ void sensor_detect()
                         syscall_exec("systemctl start campi_frp.service");
                         break;
                     }
+                    case 6: {
+                        syslog(LOG_DEBUG, "reboot!\n");
+                        syscall_exec("reboot");
+                        break;
+                    }
                     default: {
                         syslog(LOG_DEBUG, "no operation\n");
                         neza_pub("cloud/all/events/report", "{}");
