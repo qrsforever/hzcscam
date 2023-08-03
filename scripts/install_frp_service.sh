@@ -25,7 +25,6 @@ cat > ${TMP_DIR}/$SERVICE <<EOF
     ExecStart=bash ${ROOT_DIR}/board/${BOARD}/bin/frpc_start.sh
     ExecStartPost=/usr/bin/touch ${ROOT_DIR}/runtime/start/frp
     ExecStopPost=/usr/bin/rm -f ${ROOT_DIR}/runtime/start/frp
-    ExecStopPost=/usr/bin/rm -f ${ROOT_DIR}/runtime/frpc.ini
 
 [Install]
     WantedBy=multi-user.target
