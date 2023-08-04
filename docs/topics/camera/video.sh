@@ -14,7 +14,7 @@ CLOUD_REPORT=cloud/${CLIENTID}/events/report
 # video_quantizer: 0 - 50
 cat > /tmp/camera_video.json <<EOF
 {
-    "video_bitrate": 600,
+    "video_bitrate": 200,
     "video_quantizer": 30,
     "video_tune": "zerolatency",
     "video_speed_preset": "faster",
