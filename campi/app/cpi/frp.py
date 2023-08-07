@@ -12,7 +12,7 @@ import json
 import os
 from . import MessageHandler
 from campi.topics import TCloud
-from campi.constants import FRP_CONFIG_PATH, SVC_FRP
+from campi.constants import FRP_CONFIG_PATH, SVC_FRP, STARTUP_PATH
 
 from campi.utils.shell import util_start_service, util_stop_service
 
@@ -45,7 +45,9 @@ class FrpMessageHandler(MessageHandler):
         if not enable:
             self.config = {'frpc_enable': False}
             util_stop_service(self.SNAME)
-            os.remove(FRP_CONFIG_PATH)
+            if os.path.exists(f'{STARTUP_PATH}/frp'):
+                os.remove(f'{STARTUP_PATH}/frp')
+                os.remove(FRP_CONFIG_PATH)
             return
 
         server_addr = config.get('server_addr', None)

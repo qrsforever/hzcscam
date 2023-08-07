@@ -16,6 +16,7 @@ BOARD = os.environ.get('BOARD', 'orangepi3-lts')
 ADDRESS = os.environ.get('ADDRESS', '001122334466')
 WS_ROOT = '/campi'
 RUNTIME_PATH = f'{WS_ROOT}/runtime'
+STARTUP_PATH = f'{WS_ROOT}/runtime/start'
 BOARD_PATH = f'{WS_ROOT}/board/{BOARD}'
 
 ## Archives
