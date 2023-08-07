@@ -16,10 +16,8 @@ source ${TOP_DIR}/_env
 cp ${TOP_DIR}/board/${BOARD}/bin/campi_safe_run.sh /usr/local/bin/campi_safe_run.sh
 chmod +x /usr/local/bin/campi_safe_run.sh
 
-if [[ ! -d ${TOP_DIR}/runtime ]]
-then
-    mkdir -p ${TOP_DIR}/runtime
-fi
+[[ ! -d ${TOP_DIR}/runtime ]] &&  mkdir -p ${TOP_DIR}/runtime
+[[ ! -d ${TOP_DIR}/logs ]] && mkdir -p ${TOP_DIR}/logs
 
 [ ! -f ${TOP_DIR}/runtime/nmwifi.json ] && cp ${TOP_DIR}/board/${BOARD}/etc/nmwifi.json ${TOP_DIR}/runtime/nmwifi.json
 [ ! -f ${TOP_DIR}/runtime/gst.json ] && cp ${TOP_DIR}/board/${BOARD}/etc/gst.json ${TOP_DIR}/runtime/gst.json
