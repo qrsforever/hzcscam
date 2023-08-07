@@ -64,6 +64,7 @@ FRP_CONFIG_PATH = f'{RUNTIME_PATH}/frpc.ini'
 
 ## LOG
 
+LOGS_PATH = f'{WS_ROOT}/logs'
 OSS_LOGCAT_PATH = f'logcat/{ADDRESS}'
 
 ## EMQ

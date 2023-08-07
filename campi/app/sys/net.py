@@ -55,7 +55,7 @@ class NetEventDetector(EventDetector):
                 self.mqtt.logi(f'ping interval: {i} {ip}: {self.ping_interval}')
                 if not self.connected:
                     self.connected = True
-                    self.mqtt.publish(TNetwork.CONNECTED, "connection")
+                    self.mqtt.publish(TNetwork.CONNECTED, "connection", qos=2)
                 self.ping_interval = min(self.ping_max_interval, self.ping_interval * 2)
                 return
             except ConnectionRefusedError as cerr:
@@ -68,7 +68,7 @@ class NetEventDetector(EventDetector):
 
         self.connected = False
         self.ping_interval = 1
-        self.mqtt.publish(TNetwork.DISCONNECTED, "disconnection")
+        self.mqtt.publish(TNetwork.DISCONNECTED, "disconnection", qos=2)
 
     async def handle_event(self, device):
         pass

@@ -60,3 +60,4 @@ class LogMessageHandler(MessageHandler):
         else:
             if topic == TCloud.LOGCAT_COLLECT or topic == TLogger.COLLECT:
                 return self._do_logcat(json.loads(message))
+        self.logger.flush()

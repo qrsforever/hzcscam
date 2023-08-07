@@ -11,9 +11,8 @@
 import abc
 import asyncio
 from campi.core.amqtt import AsyncMqtt
-
-import logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+from campi.utils.logger import easy_get_logger
+from campi.constants import LOGS_PATH
 
 
 class MessageHandler(metaclass=abc.ABCMeta):
@@ -24,7 +23,7 @@ class MessageHandler(metaclass=abc.ABCMeta):
     handlers = []
 
     def __init__(self, topics):
-        self.logger = logging.getLogger('campi')
+        self.logger = easy_get_logger('campi', filepath=f'{LOGS_PATH}/campi.log', backup_count=7)
         if MessageHandler.mqtt is None:
             mqtt = AsyncMqtt('campi', asyncio.get_running_loop())
             mqtt.message_callback = MessageHandler.dispatch_message

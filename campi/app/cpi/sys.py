@@ -60,24 +60,27 @@ class SysMessageHandler(MessageHandler):
             TCloud.EVENTS_CLOUD_REPORT,
         ])
         self.heartbeat_interval = 300
+        self.heartbeat_fail_cnt = 0
         self.wifiap_state = WIFIAP_NOSTATE
         self.network_connected = util_net_ping()
         self.wifi_ssid_pswd = None
 
     def on_network_connected(self, message):# {{{
         # TODO
-        self.network_connected = True
-        util_start_service(C.SVC_EMQ)
-        util_send_mail(json.dumps({
-            'mac': util_get_mac(),
-            'lanip': util_get_lanip(),
-            'netip': util_get_netip()
-        }))
+        if not self.network_connected:
+            util_start_service(C.SVC_EMQ)
+            util_send_mail(json.dumps({
+                'mac': util_get_mac(),
+                'lanip': util_get_lanip(),
+                'netip': util_get_netip()
+            }))
+            self.network_connected = True
 # }}}
 
     def on_network_disconnect(self, message):# {{{
-        self.network_connected = False
-        util_stop_service(C.SVC_EMQ)
+        if self.network_connected:
+            util_stop_service(C.SVC_EMQ)
+            self.network_connected = False
 
         # def _start_wifiap():
         #     self.logger.error(f'start wifiap: {self.wifiap_state}')
@@ -212,6 +215,9 @@ class SysMessageHandler(MessageHandler):
     async def do_heartbeat(self, more=False):
         if not self.network_connected:
             self.logger.warn("network is not connected, heartbeat fail")
+            self.heartbeat_fail_cnt += 1
+            if self.heartbeat_fail_cnt > 3:
+                pass
             return
         about = {
             'disk_usage_percent': psutil.disk_usage('/').percent,
@@ -225,3 +231,5 @@ class SysMessageHandler(MessageHandler):
             self.send_message(TCloud.EVENTS_ABOUT, about)
         else:
             self.send_message(TCloud.EVENTS_HEARTBEAT, about)
+            if self.heartbeat_fail_cnt > 0:
+                self.heartbeat_fail_cnt = 0
