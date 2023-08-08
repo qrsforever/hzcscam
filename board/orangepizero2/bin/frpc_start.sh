@@ -16,7 +16,7 @@ if [[ ! -e ${FRPC_INI} ]]
 then
     FRPC_INI="/tmp/frpc.ini"
     cp ${SYSROOT}/etc/frpc.ini ${FRPC_INI}
-    sed -i "s/ssh/ssh${ADDRESS}/g" ${FRPC_INI}
+    sed -i "s/ssh/ssh_${ADDRESS}/g" ${FRPC_INI}
 fi
 
 while (( 1 ))
