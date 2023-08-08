@@ -88,7 +88,7 @@ __run_and_log ls -l ${TOP_DIR}/runtime
     fi
 # fi
 
-__led_blink white 3
+__led_blink magenta 5 0.2
 
 for svc in ${CAMPI_ORDER_SVCS[@]}
 do
