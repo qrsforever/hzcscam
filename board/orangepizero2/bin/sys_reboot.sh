@@ -9,7 +9,6 @@ rm -rf ${TOP_DIR}/*-1883
 RUNTIME_PATH=${RUNTIME_PATH:-/campi/runtime}
 LOGS_PATH=${LOGS_PATH:-/campi/logs}
 
-
 echo "===============SYS REBOOT==============" > ${LOGS_PATH}/campi_reboot.log
 
 if [ ! -d ${RUNTIME_PATH}/start ]
@@ -59,9 +58,10 @@ __run_and_log ls -l ${TOP_DIR}/runtime
     else
         __run_and_log nmcli device wifi rescan
         __run_and_log nmcli connection down ${wifissid}
-        sleep 3
+        __led_blink yellow 3
         __run_and_log nmcli connection up ${wifissid}
         __run_and_log nmcli device wifi connect ${wifissid} password "${password}"
+        __led_blink yellow 2
     fi
     i=0
     while (( i < 5 ))
@@ -69,13 +69,22 @@ __run_and_log ls -l ${TOP_DIR}/runtime
         netok=$(nmcli --fields STATE,DEVICE device status | grep "^connected" | grep "$WIRELESS_ADAPTER")
         if [[ -z ${netok} ]]
         then
-            sleep 3
+            __led_blink yellow 2
             (( i += 1 ))
             continue
         fi
         break
     done
+    if (( i == 5 ))
+    then
+        __led_blink red 2
+        __led_blink green 2
+        __led_blink blue 2
+        reboot
+    fi
 # fi
+
+__led_blink white 3
 
 for svc in ${CAMPI_ORDER_SVCS[@]}
 do

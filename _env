@@ -16,3 +16,15 @@ LOGS_PATH=/campi/logs
 WIRELESS_ADAPTER=wlan0
 DEFAULT_WIFI_SSID="hzcsdata"
 DEFAULT_WIFI_PASS="Hzcsai@123"
+
+__led_blink() {
+    color=$1
+    count=${2:-3}
+    while (( count > 0 ))
+    do
+        sysled --color black
+        sleep 1
+        sysled --color ${color}
+        (( count -= 1 ))
+    done
+}

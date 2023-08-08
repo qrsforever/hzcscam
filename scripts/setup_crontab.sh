@@ -8,7 +8,10 @@ M=$(( RANDOM % 45 + 1 ))
 H=$(( RANDOM % 6 ))
 
 cp ${TOP_DIR}/board/${BOARD}/bin/campi_safe_run.sh /usr/local/bin/campi_safe_run.sh
+cp ${TOP_DIR}/board/${BOARD}/bin/sysled /usr/local/bin/sysled
+
 chmod +x /usr/local/bin/campi_safe_run.sh
+chmod +x /usr/local/bin/sysled
 
 
 cat > /tmp/crontab <<EOF
@@ -23,7 +26,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
 ${M} ${H}	* * *	root    sleep 10 && reboot
 
-@reboot root /usr/local/bin/campi_safe_run.sh
+@reboot root campi_safe_run.sh
 EOF
 
 mv /tmp/crontab /etc/crontab
