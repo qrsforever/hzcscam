@@ -8,11 +8,13 @@ WIRELESS_ADAPTER=${WIFI_DEVICE:-"wlan0"}
 __led_blink() {
     color=$1
     count=${2:-3}
+    interval=${3:-0.5}
     while (( count > 0 ))
     do
         sysled --color black
-        sleep 1
+        sleep ${interval}
         sysled --color ${color}
+        sleep ${interval}
         (( count -= 1 ))
     done
 }

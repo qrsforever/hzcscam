@@ -9,12 +9,13 @@ echo "=======SAFE RUN========" > ${SAFE_RUN_LOG}
 __led_blink() {
     color=$1
     count=${2:-3}
+    interval=${3:-0.5}
     while (( count > 0 ))
     do
         sysled --color black
-        sleep 0.5
+        sleep ${interval}
         sysled --color ${color}
-        sleep 0.5
+        sleep ${interval}
         (( count -= 1 ))
     done
 }

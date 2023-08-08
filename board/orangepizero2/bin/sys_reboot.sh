@@ -59,11 +59,13 @@ __run_and_log ls -l ${TOP_DIR}/runtime
         __run_and_log ${SYSROOT}/bin/set_wifi.sh ${wifissid} ${password}
     else
         __run_and_log nmcli device wifi rescan
+        __led_blink yellow 2 0.3
         __run_and_log nmcli connection down ${wifissid}
-        __led_blink yellow 3
+        __led_blink yellow 2 0.3
         __run_and_log nmcli connection up ${wifissid}
+        __led_blink yellow 2 0.3
         __run_and_log nmcli device wifi connect ${wifissid} password "${password}"
-        __led_blink yellow 2
+        __led_blink yellow 2 0.3
     fi
     i=0
     while (( i < 5 ))
@@ -71,7 +73,7 @@ __run_and_log ls -l ${TOP_DIR}/runtime
         netok=$(nmcli --fields STATE,DEVICE device status | grep "^connected" | grep "$WIRELESS_ADAPTER")
         if [[ -z ${netok} ]]
         then
-            __led_blink cyan 1
+            __led_blink cyan 2 0.3
             (( i += 1 ))
             continue
         fi
