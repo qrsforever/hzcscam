@@ -71,7 +71,7 @@ __run_and_log ls -l ${TOP_DIR}/runtime
         netok=$(nmcli --fields STATE,DEVICE device status | grep "^connected" | grep "$WIRELESS_ADAPTER")
         if [[ -z ${netok} ]]
         then
-            __led_blink yellow 2
+            __led_blink cyan 1
             (( i += 1 ))
             continue
         fi

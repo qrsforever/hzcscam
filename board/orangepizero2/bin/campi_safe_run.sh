@@ -12,8 +12,9 @@ __led_blink() {
     while (( count > 0 ))
     do
         sysled --color black
-        sleep 1
+        sleep 0.5
         sysled --color ${color}
+        sleep 0.5
         (( count -= 1 ))
     done
 }
