@@ -6,9 +6,14 @@ echo "=======SAFE RUN========" > ${SAFE_RUN_LOG}
 
 if [ -e /dev/sda1 ]
 then
-    mkdir -p /mnt/usb_sos
-    mount /dev/sda1 /mnt/usb_sos
-    wififile=/mnt/usb_sos/campi/nmwifi.json
+    MNTDIR=/mnt/usb_sos
+    ARCHIVES_ROOT_PATH=/var/campi/archives
+    RUNTIME_PATH=/campi/runtime
+    mkdir -p ${MNTDIR}
+    mount /dev/sda1 ${MNTDIR}
+
+    # set network
+    wififile=${MNTDIR}/campi/nmwifi.json
     if [ -f ${wififile} ]
     then
         wifissid=$(cat ${wififile} | jq -r ".wifissid")
@@ -16,11 +21,32 @@ then
         echo "set wifi: ${wifissid} ${password}" >> ${SAFE_RUN_LOG}
         nmcli device wifi rescan; sleep 3
         nmcli device wifi connect "${wifissid}" password "${password}"
+        sleep 3
     fi
 
-    sleep 3
+    # set ota
+    otafile=${MNTDIR}/campi/version_info.json
+    if [ -f ${otafile} ]
+    then
+        zipfil=$(cat ${otafile} | jq -r ".url")
+        md5sum=$(cat ${otafile} | jq -r ".md5")
+        compat=$(cat ${otafile} | jq -r ".compatible")
+        rsetup=$(cat ${otafile} | jq -r ".execsetup")
 
-    frpcfile=/mnt/usb_sos/campi/frpc
+        unzip -qo ${MNTDIR}/campi/${zipfil} -d ${ARCHIVES_ROOT_PATH}/${md5sum}
+        if [ $compat == "true" ] && [ -f ${RUNTIME_PATH} ]
+        then
+            cp -aprf ${RUNTIME_PATH} ${ARCHIVES_ROOT_PATH}/${md5sum}
+        fi
+        if [ $rsetup == "true" ]
+        then
+            ${ARCHIVES_ROOT_PATH}/${md5sum}/scripts/setup_service.sh
+        fi
+        rm -f /campi; ln -s ${ARCHIVES_ROOT_PATH}/${md5sum} /campi
+    fi
+
+    # set remote control
+    frpcfile=${MNTDIR}/campi/frpc
     if [ -f ${frpcfile} ]
     then
         echo "start frpc..." >> ${SAFE_RUN_LOG}
