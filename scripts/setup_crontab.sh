@@ -21,7 +21,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 47 6	* * 7	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )
 52 6	1 * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
 
-${M} ${H} * * *	sleep 10 && reboot
+${M} ${H}	* * *	root    sleep 10 && reboot
 
 @reboot root /usr/local/bin/campi_safe_run.sh
 EOF
