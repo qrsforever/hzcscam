@@ -23,7 +23,6 @@ cat > ${TMP_DIR}/$SERVICE <<EOF
     UMask=0000
     WorkingDirectory=${ROOT_DIR}
     ExecStart=bash ${ROOT_DIR}/board/${BOARD}/bin/frpc_start.sh
-    ExecStartPost=/usr/bin/touch ${ROOT_DIR}/runtime/start/frp
 
 [Install]
     WantedBy=multi-user.target
