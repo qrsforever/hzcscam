@@ -1,14 +1,19 @@
 #!/bin/bash
 
+CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
+TOP_DIR=$(cd ${CUR_DIR}/..; pwd)
 BOARD=$(cat /etc/orangepi-release | grep BOARD= | cut -d= -f2)
-BINDIR=/campi/board/${BOARD}/bin
 
 M=$(( RANDOM % 45 + 1 ))
 H=$(( RANDOM % 6 ))
 
+cp ${TOP_DIR}/board/${BOARD}/bin/campi_safe_run.sh /usr/local/bin/campi_safe_run.sh
+chmod +x /usr/local/bin/campi_safe_run.sh
+
+
 cat > /tmp/crontab <<EOF
 SHELL=/bin/sh
-PATH=${BINDIR}:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
 # m h dom mon dow user	command
 17 *	* * *	root    cd / && run-parts --report /etc/cron.hourly
@@ -17,7 +22,8 @@ PATH=${BINDIR}:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 52 6	1 * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
 
 ${M} ${H} * * *	sleep 10 && reboot
-@reboot root campi_safe_run.sh
+
+@reboot root /usr/local/bin/campi_safe_run.sh
 EOF
 
 mv /tmp/crontab /etc/crontab
