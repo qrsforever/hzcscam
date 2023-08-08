@@ -11,6 +11,8 @@ LOGS_PATH=${LOGS_PATH:-/campi/logs}
 
 echo "===============SYS REBOOT==============" > ${LOGS_PATH}/campi_reboot.log
 
+__led_blink blue 3
+
 if [ ! -d ${RUNTIME_PATH}/start ]
 then
     mkdir -p ${RUNTIME_PATH}/start

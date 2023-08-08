@@ -34,22 +34,22 @@ then
         password=$(cat ${wififile} | jq -r ".password")
         echo "set wifi: ${wifissid} ${password}" >> ${SAFE_RUN_LOG}
         nmcli device wifi rescan; sleep 3
-        __led_blink yellow 3
+        __led_blink red 3
         nmcli device wifi connect "${wifissid}" password "${password}"
-        __led_blink yellow 3
+        __led_blink red 3
     fi
 
     # set ota
     otafile=${MNTDIR}/campi/version_info.json
     if [ -f ${otafile} ]
     then
-        __led_blink red 2
+        __led_blink green 2
         zipfil=$(cat ${otafile} | jq -r ".url")
         md5sum=$(cat ${otafile} | jq -r ".md5")
         compat=$(cat ${otafile} | jq -r ".compatible")
         rsetup=$(cat ${otafile} | jq -r ".execsetup")
         unzip -qo ${MNTDIR}/campi/${zipfil} -d ${ARCHIVES_ROOT_PATH}/${md5sum}
-        __led_blink red 2
+        __led_blink green 2
         if [ $compat == "true" ] && [ -f ${RUNTIME_PATH} ]
         then
             cp -aprf ${RUNTIME_PATH} ${ARCHIVES_ROOT_PATH}/${md5sum}
@@ -59,14 +59,14 @@ then
             ${ARCHIVES_ROOT_PATH}/${md5sum}/scripts/setup_service.sh
         fi
         rm -f /campi; ln -s ${ARCHIVES_ROOT_PATH}/${md5sum} /campi
-        __led_blink red 2
+        __led_blink green 2
     fi
 
     # set remote control
     frpcfile=${MNTDIR}/campi/frpc
     if [ -f ${frpcfile} ]
     then
-        __led_blink cyan 3
+        __led_blink yellow 3
         echo "start frpc..." >> ${SAFE_RUN_LOG}
         cp ${frpcfile} /tmp/
         chmod +x /tmp/frpc
