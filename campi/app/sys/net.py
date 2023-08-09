@@ -17,7 +17,7 @@ async def _dnsnet_ping(ip, port=53):
     reader, writer = await asyncio.open_connection(ip, port)
 
 # import socket
-# 
+#
 # def internet(host="8.8.8.8", port=53, timeout=3):
 #     try:
 #         socket.setdefaulttimeout(timeout)
@@ -42,9 +42,10 @@ class NetEventDetector(EventDetector):
         )
         self.ping_trycnt = 5
         self.ping_timeout = 3
-        self.ping_interval = 1
+        self.ping_interval = 2
         self.ping_max_interval = 120
         self.connected = False
+        self.fail_count = 0
 
     async def on_ping(self):
         for i in range(self.ping_trycnt):
@@ -54,6 +55,7 @@ class NetEventDetector(EventDetector):
                 await asyncio.wait_for(task, timeout=self.ping_timeout)
                 self.mqtt.logi(f'ping interval: {i} {ip}: {self.ping_interval}')
                 if not self.connected:
+                    self.fail_count = 0
                     self.connected = True
                     self.mqtt.publish(TNetwork.CONNECTED, "connection", qos=2)
                 self.ping_interval = min(self.ping_max_interval, self.ping_interval * 2)
@@ -67,7 +69,12 @@ class NetEventDetector(EventDetector):
                 await asyncio.sleep(self.ping_timeout)
 
         self.connected = False
-        self.ping_interval = 1
+        self.ping_interval = 2
+        self.fail_count += 1
+        if self.fail_count > 10:
+            self.mqtt.loge('network lost to long, reboot')
+            import os
+            os.system('sleep 3; reboot')
         self.mqtt.publish(TNetwork.DISCONNECTED, "disconnection", qos=2)
 
     async def handle_event(self, device):

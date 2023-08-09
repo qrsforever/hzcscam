@@ -39,6 +39,12 @@ static int _emqc_connect(MQTTClient client, const char* username, const char* pa
     return MQTTClient_connect(client, &conn_opts);
 }
 
+static void on_connection_lost(void *context, char *cause)
+{
+    syslog(LOG_ERR, "connect lost: %s", cause);
+    exit(-1);
+}
+
 static int on_message(void *context, char *topic, int length, MQTTClient_message *message)
 {
     int rc = -1;
@@ -129,7 +135,8 @@ int emqc_init(const char* host, int port, const char* client_id, const char* use
     // cloud emq
     snprintf(buff, 63, "tcp://%s:%d", host, port);
     MQTTClient_create(&r_client, buff, client_id, 0, NULL);
-    MQTTClient_setCallbacks(r_client, NULL, NULL, on_message, NULL);
+
+    MQTTClient_setCallbacks(r_client, NULL, on_connection_lost, on_message, NULL);
     rc = _emqc_connect(r_client, username, password);
     if (rc != MQTTCLIENT_SUCCESS) {
         syslog(LOG_ERR, "Failed to connect [%s:%d], return code %d\n", host, port, rc);

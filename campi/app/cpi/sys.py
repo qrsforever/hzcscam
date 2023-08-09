@@ -37,14 +37,18 @@ from campi.utils.net import (
     util_get_netip, util_get_gateway, util_get_subnet,
     util_get_wifi_sigth, util_get_wifi_transrate, util_send_mail)
 
-from campi.utils.shell import (
-    util_start_service,
-    util_stop_service)
+# from campi.utils.shell import (
+#     util_start_service,
+#     util_stop_service)
 
 WIFIAP_TIMEOUT = 250
 WIFIAP_NOSTATE = 0
 WIFIAP_RUNNING = 1
 WIFIAP_STOPING = 2
+
+NET_STATE_UNINITED = 0
+NET_STATE_CONNECTED = 1
+NET_STATE_DISCONNECTED = 2
 
 
 class SysMessageHandler(MessageHandler):
@@ -59,28 +63,29 @@ class SysMessageHandler(MessageHandler):
             TCloud.EVENTS_REPORT,
             TCloud.EVENTS_CLOUD_REPORT,
         ])
-        self.heartbeat_interval = 300
-        self.heartbeat_fail_cnt = 0
         self.wifiap_state = WIFIAP_NOSTATE
-        self.network_connected = util_net_ping()
+        self.network_state = NET_STATE_UNINITED
+        if util_net_ping():
+            self.on_network_connected('')
+        else:
+            self.on_network_disconnect('')
         self.wifi_ssid_pswd = None
 
     def on_network_connected(self, message):# {{{
-        # TODO
-        if not self.network_connected:
-            util_start_service(C.SVC_EMQ)
+        self.logger.warn('network connect')
+        if self.network_state != NET_STATE_CONNECTED:
             util_send_mail(json.dumps({
                 'mac': util_get_mac(),
                 'lanip': util_get_lanip(),
                 'netip': util_get_netip()
             }))
-            self.network_connected = True
+            self.network_state = NET_STATE_CONNECTED
 # }}}
 
     def on_network_disconnect(self, message):# {{{
-        if self.network_connected:
-            util_stop_service(C.SVC_EMQ)
-            self.network_connected = False
+        self.logger.warn('network disconnect')
+        if self.network_state != NET_STATE_DISCONNECTED:
+            self.network_connected = NET_STATE_DISCONNECTED
 
         # def _start_wifiap():
         #     self.logger.error(f'start wifiap: {self.wifiap_state}')
@@ -213,12 +218,7 @@ class SysMessageHandler(MessageHandler):
         self.send_message(TCloud.EVENTS_CAMPI_REPORT, report)
 
     async def do_heartbeat(self, more=False):
-        if not self.network_connected:
-            self.logger.warn("network is not connected, heartbeat fail")
-            self.heartbeat_fail_cnt += 1
-            if self.heartbeat_fail_cnt > 3:
-                pass
-            return
+        self.logger.info('do heartbeat')
         about = {
             'disk_usage_percent': psutil.disk_usage('/').percent,
             'cpu_percent': psutil.cpu_percent(),
@@ -231,5 +231,3 @@ class SysMessageHandler(MessageHandler):
             self.send_message(TCloud.EVENTS_ABOUT, about)
         else:
             self.send_message(TCloud.EVENTS_HEARTBEAT, about)
-            if self.heartbeat_fail_cnt > 0:
-                self.heartbeat_fail_cnt = 0

@@ -16,7 +16,7 @@ sys.path.append('/campi')
 from campi.utils.oss import coss3_put
 
 if __name__ == "__main__":
-    _, log_src_file, log_dst_path = sys.argv
+    _, log_src_file = sys.argv
     ndt = datetime.datetime.now().strftime('%Y%m%d')
     cid = 'unkown'
     if os.path.exists('/sys/class/net/eth0/address'):
