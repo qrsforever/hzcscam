@@ -12,7 +12,7 @@ import json
 import os
 from . import MessageHandler
 from campi.topics import TCloud
-from campi.constants import FRP_CONFIG_PATH, SVC_FRP, STARTUP_PATH
+from campi.constants import FRP_CONFIG_PATH, SVC_FRP, STARTUP_PATH, ADDRESS
 
 from campi.utils.shell import util_start_service, util_stop_service
 
@@ -21,7 +21,7 @@ FRPC_TEMPLATE_INI = """
 server_addr = %s
 server_port = %d
 
-[ssh%d]
+[ssh_%s_%d]
 type = tcp
 local_ip = 127.0.0.1
 local_port = 22
@@ -58,7 +58,7 @@ class FrpMessageHandler(MessageHandler):
             return
         self.config = config
         with open(FRP_CONFIG_PATH, 'w') as fw:
-            fw.write(FRPC_TEMPLATE_INI % (server_addr, server_port, remote_port, remote_port))
+            fw.write(FRPC_TEMPLATE_INI % (server_addr, server_port, ADDRESS, remote_port, remote_port))
         util_start_service(self.SNAME, False)
 
     def _read_config(self):
