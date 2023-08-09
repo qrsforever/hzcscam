@@ -3,6 +3,8 @@
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 TOP_DIR=$1
 
+__led_blink red 3 0.5
+
 source /campi/_env
 
 ARCHIVES_PATH=${ARCHIVES_PATH:-/var/campi/archives}
@@ -28,6 +30,8 @@ then
     cp -arpf /tmp/campi_sos/runtime ${ARCHIVES_PATH}/factory/
 fi
 
+${ARCHIVES_PATH}/factory/scripts/setup_service.sh 1
+
 rm -f /campi
 ln -s ${ARCHIVES_PATH}/factory /campi
 
@@ -42,6 +46,7 @@ to=$(cat /campi/version.txt)
 
 echo "$(date +"%Y/%m/%d-%H:%M:%S") from ${from} to ${to}"  >> ${ARCHIVES_PATH}/campi_sos.log
 
+__led_blink blue 7 0.5
 reboot
 
 # for svc in ${CAMPI_ORDER_SVCS[@]}

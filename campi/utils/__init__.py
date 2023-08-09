@@ -8,6 +8,8 @@
 # @date 2023-08-07 20:33
 
 
+import errno
+import os
 import threading
 
 class SingletonType(type):
@@ -19,3 +21,13 @@ class SingletonType(type):
                 if not hasattr(cls, "_instance"):
                     cls._instance = super(SingletonType, cls).__call__(*args, **kwargs)
         return cls._instance
+
+
+def mkdirs(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise

@@ -13,8 +13,7 @@ fi
 
 source ${TOP_DIR}/_env
 
-[[ ! -d ${TOP_DIR}/runtime ]] &&  mkdir -p ${TOP_DIR}/runtime
-[[ ! -d ${TOP_DIR}/logs ]] && mkdir -p ${TOP_DIR}/logs
+[[ ! -d ${TOP_DIR}/runtime/logs ]] &&  mkdir -p ${TOP_DIR}/runtime/logs
 
 [ ! -f ${TOP_DIR}/runtime/nmwifi.json ] && cp ${TOP_DIR}/board/${BOARD}/etc/nmwifi.json ${TOP_DIR}/runtime/nmwifi.json
 [ ! -f ${TOP_DIR}/runtime/gst.json ] && cp ${TOP_DIR}/board/${BOARD}/etc/gst.json ${TOP_DIR}/runtime/gst.json

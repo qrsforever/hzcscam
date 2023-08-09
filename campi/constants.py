@@ -16,7 +16,8 @@ BOARD = os.environ.get('BOARD', 'orangepi3-lts')
 ADDRESS = os.environ.get('ADDRESS', '001122334466')
 WS_ROOT = '/campi'
 RUNTIME_PATH = f'{WS_ROOT}/runtime'
-STARTUP_PATH = f'{WS_ROOT}/runtime/start'
+STARTUP_PATH = f'{RUNTIME_PATH}/start'
+LOGS_PATH = f'{RUNTIME_PATH}/logs'
 BOARD_PATH = f'{WS_ROOT}/board/{BOARD}'
 
 ## Archives
@@ -65,7 +66,6 @@ FRP_CONFIG_PATH = f'{RUNTIME_PATH}/frpc.ini'
 
 ## LOG
 
-LOGS_PATH = f'{WS_ROOT}/logs'
 OSS_LOGCAT_PATH = f'logcat/{ADDRESS}'
 
 ## EMQ

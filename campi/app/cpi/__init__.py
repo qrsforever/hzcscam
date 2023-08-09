@@ -23,7 +23,7 @@ class MessageHandler(metaclass=abc.ABCMeta):
     handlers = []
 
     def __init__(self, topics):
-        self.logger = easy_get_logger('campi', filepath=f'{LOGS_PATH}/campi.log', backup_count=7)
+        self.logger = easy_get_logger('campi', filepath=f'{LOGS_PATH}/campi.log', backup_count=3)
         if MessageHandler.mqtt is None:
             mqtt = AsyncMqtt('campi', asyncio.get_running_loop())
             mqtt.message_callback = MessageHandler.dispatch_message
