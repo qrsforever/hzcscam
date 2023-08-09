@@ -94,12 +94,13 @@ then
     rm -f ${LOGS_PATH}/fail_reboot.tar.gz
 fi
 
+__led_blink white 2 0.3
+
 for svc in ${CAMPI_ORDER_SVCS[@]}
 do
     echo "start ${svc} at $(date +"%Y/%m/%d-%H:%M:%S")" >> ${LOGS_PATH}/campi_reboot.log
     svc=campi_${svc}.service
     systemctl start ${svc}
-    __led_blink yellow 2 0.2
 done
 
 for svc in `ls ${RUNTIME_PATH}/start`
@@ -107,5 +108,4 @@ do
     echo "start ${svc} at $(date +"%Y/%m/%d-%H:%M:%S")" >> ${LOGS_PATH}/campi_reboot.log
     svc=campi_${svc}.service
     systemctl start ${svc}
-    __led_blink cyan 2 0.2
 done
