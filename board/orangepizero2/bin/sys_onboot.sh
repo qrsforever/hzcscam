@@ -88,10 +88,10 @@ __run_and_log ls -l ${TOP_DIR}/runtime
     fi
 # fi
 
-if [[ -f ${LOGS_PATH}/fail_reboot.zip ]]
+if [[ -f ${LOGS_PATH}/fail_reboot.tar.gz ]]
 then
-    python3 ${SYSROOT}/bin/send_log.py ${LOGS_PATH}/fail_reboot.zip
-    rm -f ${LOGS_PATH}/fail_reboot.zip
+    python3 ${SYSROOT}/bin/send_log.py ${LOGS_PATH}/fail_reboot.tar.gz
+    rm -f ${LOGS_PATH}/fail_reboot.tar.gz
 fi
 
 for svc in ${CAMPI_ORDER_SVCS[@]}

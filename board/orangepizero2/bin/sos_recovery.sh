@@ -45,7 +45,7 @@ then
     cp -arpf /tmp/campi_sos/runtime ${ARCHIVES_PATH}/factory/
 fi
 
-${ARCHIVES_PATH}/factory/scripts/setup_service.sh 1
+${ARCHIVES_PATH}/factory/scripts/setup_service.sh
 
 rm -f /campi
 ln -s ${ARCHIVES_PATH}/factory /campi

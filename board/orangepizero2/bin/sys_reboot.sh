@@ -18,7 +18,7 @@ do
             python3 ${SYSROOT}/bin/send_log.py ${logpath}
             rm -rf ${logpath}
         else
-            mv ${logpath} ${LOGS_PATH}/fail_reboot.zip
+            mv ${logpath} ${LOGS_PATH}/fail_reboot.tar.gz
         fi
     fi
 done
