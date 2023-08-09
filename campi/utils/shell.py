@@ -41,6 +41,12 @@ def util_stop_service(sname):
     return -1
 
 
+def utils_syscall(cmd):
+    try:
+        return subprocess.check_output(cmd, shell=True).strip().decode()
+    except subprocess.CalledProcessError:
+        return ''
+
 def util_get_pids(proname=None, keystr=None):
     if proname:
         try:

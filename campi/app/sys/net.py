@@ -11,6 +11,7 @@ import asyncio
 import random
 from . import EventDetector
 from campi.topics import TNetwork
+from campi.utils.shell import utils_syscall
 
 
 async def _dnsnet_ping(ip, port=53):
@@ -71,10 +72,11 @@ class NetEventDetector(EventDetector):
         self.connected = False
         self.ping_interval = 2
         self.fail_count += 1
+        self.mqtt.loge(f'network lost: {self.fail_count}')
         if self.fail_count > 10:
             self.mqtt.loge('network lost to long, reboot')
-            import os
-            os.system('sleep 3; reboot')
+            utils_syscall('reboot')
+        utils_syscall('nmcli device wifi rescan')
         self.mqtt.publish(TNetwork.DISCONNECTED, "disconnection", qos=2)
 
     async def handle_event(self, device):

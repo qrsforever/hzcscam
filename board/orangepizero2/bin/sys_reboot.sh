@@ -11,7 +11,7 @@ LOGS_PATH=${LOGS_PATH:-/campi/logs}
 
 echo "===============SYS REBOOT==============" > ${LOGS_PATH}/campi_reboot.log
 
-__led_blink blue 3
+__led_blink red 3
 
 if [ ! -d ${RUNTIME_PATH}/start ]
 then
@@ -59,13 +59,13 @@ __run_and_log ls -l ${TOP_DIR}/runtime
         __run_and_log ${SYSROOT}/bin/set_wifi.sh ${wifissid} ${password}
     else
         __run_and_log nmcli device wifi rescan
-        __led_blink yellow 2 0.3
+        __led_blink green 2 0.3
         __run_and_log nmcli connection down ${wifissid}
-        __led_blink yellow 2 0.3
+        __led_blink green 2 0.3
         __run_and_log nmcli connection up ${wifissid}
-        __led_blink yellow 2 0.3
+        __led_blink green 2 0.3
         __run_and_log nmcli device wifi connect ${wifissid} password "${password}"
-        __led_blink yellow 2 0.3
+        __led_blink green 2 0.3
     fi
     i=0
     while (( i < 5 ))
@@ -73,7 +73,7 @@ __run_and_log ls -l ${TOP_DIR}/runtime
         netok=$(nmcli --fields STATE,DEVICE device status | grep "^connected" | grep "$WIRELESS_ADAPTER")
         if [[ -z ${netok} ]]
         then
-            __led_blink cyan 2 0.3
+            __led_blink blue 2 0.5
             (( i += 1 ))
             continue
         fi
@@ -88,13 +88,12 @@ __run_and_log ls -l ${TOP_DIR}/runtime
     fi
 # fi
 
-__led_blink magenta 5 0.2
-
 for svc in ${CAMPI_ORDER_SVCS[@]}
 do
     echo "start ${svc} at $(date +"%Y/%m/%d-%H:%M:%S")" >> ${LOGS_PATH}/campi_reboot.log
     svc=campi_${svc}.service
     systemctl start ${svc}
+    __led_blink yellow 2 0.2
 done
 
 for svc in `ls ${RUNTIME_PATH}/start`
@@ -102,4 +101,5 @@ do
     echo "start ${svc} at $(date +"%Y/%m/%d-%H:%M:%S")" >> ${LOGS_PATH}/campi_reboot.log
     svc=campi_${svc}.service
     systemctl start ${svc}
+    __led_blink cyan 2 0.2
 done

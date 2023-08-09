@@ -16,7 +16,6 @@ fi
 
 source /campi/runtime/emqx.env
 
-i=0
 while (( 1 ))
 do
     if [[ x${EMQ_HOST} != x ]]
@@ -30,24 +29,14 @@ do
                 rm -f ${LOGS_PATH}/campi_emq.log
             fi
             rm -rf /campi/*-1883
-            st=$(date +%s)
+            # st=$(date +%s)
             ${SYSROOT}/bin/emqs \
                 --emq_host ${EMQ_HOST} \
                 --emq_port ${EMQ_PORT:-1883} \
                 -c ${EMQ_CLIENTID} -u ${EMQ_USERNAME} -p ${EMQ_PASSWORD}
-            et=$(date +%s)
+            # et=$(date +%s)
             journalctl -u campi_emq.service -n 200 > ${LOGS_PATH}/campi_emq.log
-            if [ $(($et - $st)) -lt 180 ]
-            then
-                (( i += 1 ))
-            else
-                i=0
-            fi
         fi
-    fi
-    if (( i == 3 ))
-    then
-        reboot
     fi
     sleep 10
 done
