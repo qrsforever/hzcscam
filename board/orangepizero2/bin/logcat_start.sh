@@ -75,7 +75,7 @@ mkdir ${logdir}
 
 # "==============/tmp/campi_*================"
 
-for fil in `ls /tmp/campi_*`
+for fil in `ls /tmp/campi_* 2>/dev/null`
 do
     cp $fil ${logdir}
 done

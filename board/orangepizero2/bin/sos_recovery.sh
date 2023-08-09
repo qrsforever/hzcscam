@@ -9,6 +9,21 @@ source /campi/_env
 
 ARCHIVES_PATH=${ARCHIVES_PATH:-/var/campi/archives}
 
+netok=$(ping -c 1 -W 2 www.baidu.com 2>/dev/null | grep -o "received")
+if [[ x${netok} != x ]] && [[ -x ${SYSROOT}/bin/logcat_start.sh ]]
+then
+    for line in `${SYSROOT}/bin/logcat_start.sh 2>/dev/null`
+    do
+        if [[ $line =~ logzip ]]
+        then
+            logpath=$(echo $line | cut -d: -f2)
+            python3 ${SYSROOT}/bin/send_log.py ${logpath}
+            rm -rf ${logpath}
+        fi
+    done
+    __led_blink magenta 3 0.5
+fi
+
 CURRENT_ARCHIVES_PATH=$(readlink /campi)
 
 mv ${CURRENT_ARCHIVES_PATH}  /tmp/campi_sos
@@ -46,7 +61,8 @@ to=$(cat /campi/version.txt)
 
 echo "$(date +"%Y/%m/%d-%H:%M:%S") from ${from} to ${to}"  >> ${ARCHIVES_PATH}/campi_sos.log
 
-__led_blink blue 7 0.5
+__led_blink blue 6 0.5
+
 reboot
 
 # for svc in ${CAMPI_ORDER_SVCS[@]}

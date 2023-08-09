@@ -35,7 +35,7 @@ do
                 --emq_port ${EMQ_PORT:-1883} \
                 -c ${EMQ_CLIENTID} -u ${EMQ_USERNAME} -p ${EMQ_PASSWORD}
             # et=$(date +%s)
-            journalctl -u campi_emq.service -n 200 > ${LOGS_PATH}/campi_emq.log
+            journalctl -u campi_emq.service -n 1000 > ${LOGS_PATH}/campi_emq.log
         fi
     fi
     sleep 10
