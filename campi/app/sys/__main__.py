@@ -16,7 +16,6 @@ from campi.core.amqtt import AsyncMqtt
 
 from campi.topics import TSystem
 
-from . import EventDetector
 from campi.app.sys.usb import UsbEventDetector
 from campi.app.sys.blk import BlkEventDetector
 from campi.app.sys.net import NetEventDetector
@@ -66,7 +65,7 @@ class SystemEventMonitor(AsyncTask):
         loop = asyncio.get_running_loop()
         loop.add_reader(self.monitor.fileno(), self.handle_udev_event)
         self.loop.call_later(self.enet.ping_interval, self.queue.put_nowait, 'p')
-        EventDetector.setup()
+        await self.einput.on_setup()
         while True:
             r = await self.queue.get()
             if r == 'q':
