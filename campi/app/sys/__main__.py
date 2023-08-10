@@ -64,13 +64,16 @@ class SystemEventMonitor(AsyncTask):
         self.monitor.start()
         loop = asyncio.get_running_loop()
         loop.add_reader(self.monitor.fileno(), self.handle_udev_event)
-        self.loop.call_later(self.enet.ping_interval, self.queue.put_nowait, 'p')
-        await self.einput.on_setup()
+        self.loop.call_later(2, self.queue.put_nowait, 's')
         while True:
             r = await self.queue.get()
             if r == 'q':
                 print("system quit")
                 break
+            elif r == 's':
+                await self.enet.on_setup()
+                await self.einput.on_setup()
+                self.loop.call_later(1, self.queue.put_nowait, 'p')
             elif r == 'p':
                 await self.enet.on_ping()
                 self.loop.call_later(self.enet.ping_interval, self.queue.put_nowait, 'p')

@@ -36,7 +36,7 @@ from campi.topics import (
 class GstMessageHandler(MessageHandler):
 
     SNAME = SVC_GST
-    DEFAULT_VID = '/dev/video1'
+    camera_device = '/dev/video1'
 
     def __init__(self):
         super().__init__([
@@ -46,9 +46,6 @@ class GstMessageHandler(MessageHandler):
         ])
         self.is_running = util_check_service(self.SNAME)
         self.config = self._read_config()
-        if os.path.exists(self.DEFAULT_VID):
-            if util_get_uptime() < 60:
-                self.on_camera_plugin(self.DEFAULT_VID)
 
     def _restart_gst(self):
         if self.config['rtmp'].get('rtmp_enable', False):
@@ -136,7 +133,7 @@ class GstMessageHandler(MessageHandler):
                                 continue
                             max, min = props[key]['max'], props[key]['min']
                             val = int(val * (max - min) / 100 + min)
-                            cmd = f'v4l2-ctl --device {self.DEFAULT_VID} --set-ctrl {key}={val}'
+                            cmd = f'v4l2-ctl --device {self.camera_device} --set-ctrl {key}={val}'
                             self.logger.info(cmd)
                             subprocess.run(cmd, shell=True, capture_output=False, encoding='utf-8')
             self.send_message(TCloud.CAMERA_CONFIG, changed)
@@ -164,7 +161,7 @@ class GstMessageHandler(MessageHandler):
 # }}}
 
     def on_camera_plugin(self, videoid):# {{{
-        self.DEFAULT_VID = videoid
+        self.camera_device = videoid
         try:
             ret = subprocess.Popen(
                     f'v4l2-ctl --device {videoid} --list-ctrls',
