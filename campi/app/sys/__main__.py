@@ -64,7 +64,7 @@ class SystemEventMonitor(AsyncTask):
         self.monitor.start()
         loop = asyncio.get_running_loop()
         loop.add_reader(self.monitor.fileno(), self.handle_udev_event)
-        self.loop.call_later(2, self.queue.put_nowait, 's')
+        self.loop.call_later(5, self.queue.put_nowait, 's')
         while True:
             r = await self.queue.get()
             if r == 'q':
