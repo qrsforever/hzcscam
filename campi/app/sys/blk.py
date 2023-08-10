@@ -36,6 +36,9 @@ class BlkEventDetector(EventDetector):
             subprocess.call(f'umount -l {mntdir}', shell=True)
             self.mqtt.publish(TUsbDisk.UMOUNTED, mntdir)
 
+    async def on_setup(self):
+        pass
+
     async def handle_event(self, device):
         if device.device_type == 'partition':
             if not device.device_node.startswith('/dev/sd'):

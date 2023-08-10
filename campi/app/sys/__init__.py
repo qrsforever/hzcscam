@@ -19,6 +19,15 @@ class EventDetector(metaclass=abc.ABCMeta):
         self.mqtt = mqtt
         self.detectors.append(self)
 
+    @classmethod
+    async def setup(self):
+        for d in self.detectors:
+            await d.on_setup()
+
+    @abc.abstractmethod
+    async def on_setup(self):
+        pass
+
     @abc.abstractmethod
     async def handle_event(self, device):
         pass

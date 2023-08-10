@@ -80,5 +80,8 @@ class NetEventDetector(EventDetector):
             self.mqtt.loge('network lost to long, reboot')
             utils_syscall(SCRIPT_OF_SYSREBOOT)
 
+    async def on_setup(self):
+        pass
+
     async def handle_event(self, device):
         pass
