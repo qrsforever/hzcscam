@@ -184,7 +184,7 @@ class GstMessageHandler(MessageHandler):
                         config[psegs[0]] = props
                 with open(GST_CAMERA_PROP, 'w') as fw:
                     json.dump(config, fw)
-            self._restart_gst()
+            self._set_video({"video_device":videoid})
         except Exception as err:
             self.logger.error(f'{err}')
 # }}}
