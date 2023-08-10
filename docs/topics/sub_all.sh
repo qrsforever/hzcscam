@@ -12,7 +12,7 @@ else
     ALL_TOPICS=campi/$ID/#
 fi
 
-mosquitto_sub -h ${EMQX_HOST} -p ${EMQX_PORT} -u campi -P 123456 -t ${ALL_TOPICS} -i mosquitto_sub --pretty -v | while read -r line
+mosquitto_sub -h ${EMQX_HOST} -p ${EMQX_PORT} -u campi -P 123456 -t ${ALL_TOPICS} -i mosquitto_sub_all --pretty -v | while read -r line
 do
     topic=`echo $line | cut -d\  -f1`
     jdata=`echo $line | cut -d\  -f2-`

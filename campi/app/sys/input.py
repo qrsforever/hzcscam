@@ -8,9 +8,9 @@
 # @date 2023-06-15 20:12
 
 
-import os
 from . import EventDetector
 from campi.topics import TUsbCamera
+from campi.utils.shell import utils_syscall
 
 
 class InputEventDetector(EventDetector):
@@ -19,26 +19,33 @@ class InputEventDetector(EventDetector):
 
     def __init__(self, mqtt):
         super().__init__(mqtt)
-        self.devices = []
+        self.camera = self.get_camera_device()
+        if self.camera:
+            self.mqtt.publish(TUsbCamera.PLUGIN, self.camera)
 
     def filter_by(self, monitor):
         monitor.filter_by(self.subsystem)
         return self
 
+    def get_camera_device(self):
+        return utils_syscall("v4l2-ctl --list-devices | grep usb-1 -A1 | grep video")
+
     def on_plugin(self, device_path, sys_name):
         # check usb camera
         self.mqtt.logi(f'plugin: {device_path} {sys_name}')
-        if sys_name not in self.devices:
-            self.devices.append(sys_name)
-        if os.path.exists('/dev/video1'):
-            self.mqtt.publish(TUsbCamera.PLUGIN, '/dev/video1')
+        if not self.camera:
+            camera = self.get_camera_device()
+            if camera:
+                self.mqtt.publish(TUsbCamera.PLUGIN, camera)
+                self.camera = camera
 
     def on_plugout(self, device_path, sys_name):
         self.mqtt.logi(f'plugout: {device_path} {sys_name}')
-        if sys_name in self.devices:
-            if not os.path.exists('/dev/video1'):
-                self.mqtt.publish(TUsbCamera.PLUGOUT, '/dev/video1')
-            self.devices.remove(sys_name)
+        if self.camera:
+            camera = self.get_camera_device()
+            if not camera:
+                self.mqtt.publish(TUsbCamera.PLUGOUT, self.camera)
+                self.camera = ''
 
     async def handle_event(self, device):
         if device.action == 'add':
