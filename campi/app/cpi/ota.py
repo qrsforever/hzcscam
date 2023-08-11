@@ -93,14 +93,17 @@ class OtaMessageHandler(MessageHandler):
                 self.logger.error(f'md5: {md5} vs {zip_md5}')
                 config['reason'] = 'md5 not match'
                 return self.UPGRADE_FAIL
+            self.logger.info("upgrade ma5 ok ...")
             subprocess.call(f'unzip -qo {self.zip_path} -d {ARCHIVES_ROOT_PATH}/{zip_md5}', shell=True)
             if os.path.isdir(f'{ARCHIVES_ROOT_PATH}/{zip_md5}'):
+                self.logger.info("upgrade unzip ok ...")
                 if compatible:
                     subprocess.call(f'cp -aprf {RUNTIME_PATH} {ARCHIVES_ROOT_PATH}/{zip_md5}', shell=True)
                 if execsetup:
                     subprocess.call(f'{ARCHIVES_ROOT_PATH}/{zip_md5}/scripts/setup_service.sh', shell=True)
                 subprocess.call('rm -rf $(readlink /campi)', shell=True)
                 subprocess.call(f'rm -f /campi; ln -s {ARCHIVES_ROOT_PATH}/{zip_md5} /campi', shell=True)
+                self.logger.info("upgrade setup ok ...")
                 return self.UPGRADE_SUCESS
             config['reason'] = 'unzip fail!'
             return self.UPGRADE_FAIL

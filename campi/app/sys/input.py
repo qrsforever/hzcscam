@@ -47,7 +47,7 @@ class InputEventDetector(EventDetector):
     async def on_setup(self):
         self.camera = self.get_camera_device()
         if self.camera:
-            self.mqtt.publish(TUsbCamera.PLUGIN, self.camera)
+            self.mqtt.publish(TUsbCamera.PLUGIN, self.camera, qos=2)
 
     async def handle_event(self, device):
         if device.action == 'add':

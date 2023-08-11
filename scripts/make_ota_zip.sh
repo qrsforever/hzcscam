@@ -23,7 +23,7 @@ if [[ x$1 == 1 ]]
 then
     FORCE=true
 fi
-
+APP_VERSION=99.99.99
 echo -n "${APP_VERSION}" > $TOP_DIR/version.txt
 
 chmod +x $TOP_DIR/board/${BOARD}/bin/* -R
