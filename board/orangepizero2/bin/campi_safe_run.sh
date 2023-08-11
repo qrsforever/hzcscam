@@ -20,6 +20,18 @@ __led_blink() {
     done
 }
 
+count=5
+while (( count > 0 ))
+do
+    sysled --color blue
+    sleep 0.3
+    sysled --color white
+    sleep 0.3
+    sysled --color yellow
+    sleep 0.3
+    (( count -= 1 ))
+done
+
 if [ -e /dev/sda1 ]
 then
     MNTDIR=/mnt/usb_sos
@@ -96,4 +108,4 @@ EOF
 fi
 
 echo "start main program" >> ${SAFE_RUN_LOG}
-${BINDIR}/sys_onboot.sh &
+systemctl start campi_boot.service

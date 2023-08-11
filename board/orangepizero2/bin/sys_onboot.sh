@@ -81,9 +81,6 @@ __run_and_log ls -l ${TOP_DIR}/runtime
     done
     if (( i == 5 ))
     then
-        __led_blink red 2
-        __led_blink green 2
-        __led_blink blue 2
         # TODO some orangepizero2 cannot boot
         # reboot -f
         ${SYSROOT}/bin/campi_safe_run.sh
@@ -108,6 +105,7 @@ for svc in ${CAMPI_ORDER_SVCS[@]}
 do
     echo "start ${svc} at $(date +"%Y/%m/%d-%H:%M:%S")" >> ${LOGS_PATH}/campi_reboot.log
     svc=campi_${svc}.service
+    __led_blink magenta 1 0.3
     systemctl start ${svc}
 done
 
@@ -115,6 +113,5 @@ for svc in `ls ${RUNTIME_PATH}/start`
 do
     echo "start ${svc} at $(date +"%Y/%m/%d-%H:%M:%S")" >> ${LOGS_PATH}/campi_reboot.log
     svc=campi_${svc}.service
-    systemctl stop ${svc}
-    systemctl start ${svc}
+    systemctl restart ${svc}
 done

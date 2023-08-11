@@ -3,7 +3,7 @@
 BOARD=$(cat /etc/orangepi-release | grep BOARD= | cut -d= -f2)
 ADDRESS=$(cat /sys/class/net/eth0/address | sed 's/://g')
 
-CAMPI_ORDER_SVCS=("nmq" "emq" "cpi" "sys" "api")
+CAMPI_ORDER_SVCS=("nmq" "emq" "cpi" "sys")
 
 SYSROOT=/campi/board/${BOARD}
 LD_LIBRARY_PATH=${SYSROOT}/lib:${LD_LIBRARY_PATH}
