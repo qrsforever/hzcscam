@@ -95,7 +95,7 @@ then
     server_addr = 82.157.36.183
     server_port = 7777
 
-    [${ADDRESS}_7722]
+    [ssh_${ADDRESS}_7722]
     type = tcp
     local_ip = 127.0.0.1
     local_port = 22
