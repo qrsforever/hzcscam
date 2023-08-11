@@ -3,9 +3,9 @@
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 TOP_DIR=$1
 
-__led_blink yellow 3 0.5
-
 source /campi/_env
+
+__led_blink yellow 3 0.5
 
 for line in `${SYSROOT}/bin/logcat_start.sh 2>/dev/null`
 do
