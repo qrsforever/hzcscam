@@ -96,4 +96,4 @@ EOF
 fi
 
 echo "start main program" >> ${SAFE_RUN_LOG}
-${BINDIR}/sys_onboot.sh
+${BINDIR}/sys_onboot.sh &

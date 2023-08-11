@@ -63,7 +63,8 @@ echo "$(date +"%Y/%m/%d-%H:%M:%S") from ${from} to ${to}"  >> ${ARCHIVES_PATH}/c
 
 __led_blink blue 6 0.5
 
-reboot -f
+# reboot -f
+${SYSROOT}/bin/campi_safe_run.sh
 
 # for svc in ${CAMPI_ORDER_SVCS[@]}
 # do

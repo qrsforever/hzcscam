@@ -25,4 +25,5 @@ done
 
 __led_blink blue 6 0.5
 
-reboot
+# reboot -f
+${SYSROOT}/bin/campi_safe_run.sh

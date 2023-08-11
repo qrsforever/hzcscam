@@ -28,6 +28,9 @@ from campi.app.cpi.gst import GstMessageHandler
 from campi.app.cpi.emq import EmqMessageHandler
 from campi.app.cpi.frp import FrpMessageHandler
 
+from campi.utils.shell import utils_syscall
+from campi.constants import SCRIPT_OF_SYSREBOOT
+
 heartbeat_interval = 300
 
 async def main():
@@ -55,8 +58,10 @@ async def main():
             loop.call_later(heartbeat_interval, sys_h.queue.put_nowait, 'h')
 
     await asyncio.sleep(3)
-    import os
-    os.system("reboot -f")
+    # TODO orangepizero2 reboot will fail, cannot startup.
+    # import os
+    # os.system("reboot -f")
+    utils_syscall(SCRIPT_OF_SYSREBOOT)
 
 if __name__ == "__main__":
     asyncio.run(main())
