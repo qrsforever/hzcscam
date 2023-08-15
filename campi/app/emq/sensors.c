@@ -436,8 +436,8 @@ void sensor_detect()
                         break;
                     }
                     case 6: { // cyan
-                        syslog(LOG_DEBUG, "reboot!\n");
-                        syscall_exec("reboot");
+                        syslog(LOG_DEBUG, "campi_safe_run.sh!\n");
+                        syscall_exec("campi_safe_run.sh");
                         break;
                     }
                     default: {
