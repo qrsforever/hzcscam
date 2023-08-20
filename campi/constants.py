@@ -16,6 +16,8 @@ BOARD = os.environ.get('BOARD', 'orangepi3-lts')
 ADDRESS = os.environ.get('ADDRESS', '001122334466')
 WS_ROOT = '/campi'
 RUNTIME_PATH = f'{WS_ROOT}/runtime'
+STARTUP_PATH = f'{RUNTIME_PATH}/start'
+LOGS_PATH = f'{RUNTIME_PATH}/logs'
 BOARD_PATH = f'{WS_ROOT}/board/{BOARD}'
 
 ## Archives
@@ -39,6 +41,7 @@ SCRIPT_OF_START_AP = f'{BOARD_PATH}/bin/hostap_start.sh'
 SCRIPT_OF_STOP_AP = f'{BOARD_PATH}/bin/hostap_stop.sh'
 SCRIPT_OF_START_UPGRADE = f'{BOARD_PATH}/bin/upgrade_start.sh'
 SCRIPT_OF_LOGCAT = f'{BOARD_PATH}/bin/logcat_start.sh'
+SCRIPT_OF_SYSREBOOT = f'{BOARD_PATH}/bin/sys_reboot.sh'
 
 ## Network
 

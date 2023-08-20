@@ -18,3 +18,6 @@ class UsbEventDetector(EventDetector):
 
     async def handle_event(self, device):
         self.mqtt.logi(f'usb: {device}')
+
+    async def on_setup(self):
+        pass

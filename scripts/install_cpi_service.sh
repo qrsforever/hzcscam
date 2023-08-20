@@ -25,7 +25,6 @@ cat > ${TMP_DIR}/$SERVICE <<EOF
     User=$USER
     Group=$USER
     UMask=0000
-    WorkingDirectory=${ROOT_DIR}
     Environment="PYTHONPATH=${ROOT_DIR}"
     Environment="BOARD=${BOARD}"
     Environment="ADDRESS=${ADDRESS}"

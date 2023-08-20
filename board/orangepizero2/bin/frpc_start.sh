@@ -10,13 +10,15 @@ __echo_and_run() {
 }
 
 TEST_DOMAIN="www.baidu.com"
-FRPC_INI="/campi/runtime/frpc.ini"
+FRPC_INI="${RUNTIME_PATH}/frpc.ini"
 
 if [[ ! -e ${FRPC_INI} ]]
 then
     FRPC_INI="/tmp/frpc.ini"
     cp ${SYSROOT}/etc/frpc.ini ${FRPC_INI}
-    sed -i "s/ssh/ssh${ADDRESS}/g" ${FRPC_INI}
+    sed -i "s/ssh/ssh_${ADDRESS}/g" ${FRPC_INI}
+else
+    touch ${RUNTIME_PATH}/start/frp
 fi
 
 while (( 1 ))

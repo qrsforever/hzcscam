@@ -11,11 +11,10 @@ import subprocess
 import os
 import json
 
-from campi.utils.shell import util_get_uptime
 # from campi.utils.easydict import DotDict
 from . import MessageHandler
 from campi.constants import (
-    ADDRESS, SVC_GST,
+    SVC_GST,
     GST_CAMERA_PROP,
     GST_CONFIG_PATH,
     GST_CONFIG_SENV,
@@ -36,7 +35,7 @@ from campi.topics import (
 class GstMessageHandler(MessageHandler):
 
     SNAME = SVC_GST
-    DEFAULT_VID = '/dev/video1'
+    camera_device = '/dev/video1'
 
     def __init__(self):
         super().__init__([
@@ -46,9 +45,6 @@ class GstMessageHandler(MessageHandler):
         ])
         self.is_running = util_check_service(self.SNAME)
         self.config = self._read_config()
-        if os.path.exists(self.DEFAULT_VID):
-            if util_get_uptime() < 60:
-                self.on_camera_plugin(self.DEFAULT_VID)
 
     def _restart_gst(self):
         if self.config['rtmp'].get('rtmp_enable', False):
@@ -85,6 +81,8 @@ class GstMessageHandler(MessageHandler):
             self._save_config(self.config)
         else:
             self.logger.warn("same config, not restart gst")
+
+        self.send_message(TCloud.CAMERA_CONFIG, changed)
         return changed
 # }}}
 
@@ -105,7 +103,7 @@ class GstMessageHandler(MessageHandler):
                 util_stop_service(self.SNAME)
 
         self.is_running = util_check_service(self.SNAME)
-        self.send_message(TCloud.CAMERA_CONFIG, changed) 
+        return True
 # }}}
 
     def get_overlay_config(self):# {{{
@@ -115,7 +113,8 @@ class GstMessageHandler(MessageHandler):
         changed = self.set_config('overlay', jdata)
         if len(changed) > 0:
             self._restart_gst()
-        self.send_message(TCloud.CAMERA_CONFIG, changed)
+            return True
+        return False
 # }}}
 
     def get_image_config(self):# {{{
@@ -136,10 +135,11 @@ class GstMessageHandler(MessageHandler):
                                 continue
                             max, min = props[key]['max'], props[key]['min']
                             val = int(val * (max - min) / 100 + min)
-                            cmd = f'v4l2-ctl --device {self.DEFAULT_VID} --set-ctrl {key}={val}'
+                            cmd = f'v4l2-ctl --device {self.camera_device} --set-ctrl {key}={val}'
                             self.logger.info(cmd)
                             subprocess.run(cmd, shell=True, capture_output=False, encoding='utf-8')
-            self.send_message(TCloud.CAMERA_CONFIG, changed)
+            return True
+        return False
 # }}}
 
     def get_video_config(self):# {{{
@@ -149,7 +149,8 @@ class GstMessageHandler(MessageHandler):
         changed = self.set_config('video', jdata)
         if len(changed) > 0:
             self._restart_gst()
-        self.send_message(TCloud.CAMERA_CONFIG, changed)
+            return True
+        return False
 # }}}
 
     def get_audio_config(self):# {{{
@@ -160,11 +161,12 @@ class GstMessageHandler(MessageHandler):
         changed = self.set_config('audio', jdata)
         if len(changed) > 0:
             self._restart_gst()
-        self.send_message(TCloud.CAMERA_CONFIG, changed)
+            return True
+        return False
 # }}}
 
     def on_camera_plugin(self, videoid):# {{{
-        self.DEFAULT_VID = videoid
+        self.camera_device = videoid
         try:
             ret = subprocess.Popen(
                     f'v4l2-ctl --device {videoid} --list-ctrls',
@@ -187,7 +189,8 @@ class GstMessageHandler(MessageHandler):
                         config[psegs[0]] = props
                 with open(GST_CAMERA_PROP, 'w') as fw:
                     json.dump(config, fw)
-            self._restart_gst()
+            if not self._set_video({"video_device":videoid}):
+                self._restart_gst()
         except Exception as err:
             self.logger.error(f'{err}')
 # }}}

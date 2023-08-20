@@ -13,9 +13,15 @@ import abc
 class EventDetector(metaclass=abc.ABCMeta):
     subsystem = None
     device_types = [None]
+    detectors = []
 
     def __init__(self, mqtt):
         self.mqtt = mqtt
+        self.detectors.append(self)
+
+    @abc.abstractmethod
+    async def on_setup(self):
+        pass
 
     @abc.abstractmethod
     async def handle_event(self, device):

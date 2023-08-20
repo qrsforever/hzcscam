@@ -1,7 +1,17 @@
 #!/bin/bash
 
+CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
+TOP_DIR=$(cd ${CUR_DIR}/..; pwd)
 BOARD=$(cat /etc/orangepi-release | grep BOARD= | cut -d= -f2)
-BINDIR=/campi/board/${BOARD}/bin
+
+M=$(( RANDOM % 45 + 1 ))
+H=$(( RANDOM % 6 ))
+
+cp ${TOP_DIR}/board/${BOARD}/bin/campi_safe_run.sh /usr/local/bin/campi_safe_run.sh
+cp ${TOP_DIR}/board/${BOARD}/bin/sysled /usr/local/bin/sysled
+
+chmod +x /usr/local/bin/campi_safe_run.sh
+chmod +x /usr/local/bin/sysled
 
 cat > /tmp/crontab <<EOF
 SHELL=/bin/sh
@@ -13,10 +23,12 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 47 6	* * 7	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )
 52 6	1 * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
 
-@reboot root test -x /usr/local/bin/campi_safe_run.sh && /usr/local/bin/campi_safe_run.sh
+${M} ${H}	* * *	root    campi_safe_run.sh
+
+@reboot root campi_safe_run.sh
 EOF
 
 mv /tmp/crontab /etc/crontab
 chmod 644 /etc/crontab
 
-# systemctl status cron.service
+systemctl restart cron.service

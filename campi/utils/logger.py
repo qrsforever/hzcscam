@@ -12,12 +12,14 @@ import sys
 import os
 import traceback
 import logging
+import logging.handlers
 import queue
 import threading
 import multiprocessing
 from contextlib import contextmanager
 
 from . import SingletonType
+from . import mkdirs
 
 
 class MultiProcessingLogHandler(logging.Handler, metaclass=SingletonType):
@@ -114,6 +116,7 @@ def easy_get_logger(name, level=logging.DEBUG, filepath=None, backup_count=-1, c
     if console:
         handlers.append(logging.StreamHandler())
     if filepath:
+        mkdirs(os.path.dirname(filepath))
         if backup_count > 0:
             filelog = logging.handlers.TimedRotatingFileHandler(
                 filename=filepath,

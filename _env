@@ -3,7 +3,7 @@
 BOARD=$(cat /etc/orangepi-release | grep BOARD= | cut -d= -f2)
 ADDRESS=$(cat /sys/class/net/eth0/address | sed 's/://g')
 
-CAMPI_ORDER_SVCS=("nmq" "emq" "cpi" "sys" "api")
+CAMPI_ORDER_SVCS=("nmq" "emq" "cpi" "sys")
 
 SYSROOT=/campi/board/${BOARD}
 LD_LIBRARY_PATH=${SYSROOT}/lib:${LD_LIBRARY_PATH}
@@ -11,8 +11,22 @@ PATH=${SYSROOT}/bin:${PATH}
 PYTHONPATH=/campi:.
 
 RUNTIME_PATH=/campi/runtime
-LOGS_PATH=/campi/logs
+LOGS_PATH=${RUNTIME_PATH}/logs
 
 WIRELESS_ADAPTER=wlan0
 DEFAULT_WIFI_SSID="hzcsdata"
 DEFAULT_WIFI_PASS="Hzcsai@123"
+
+__led_blink() {
+    color=$1
+    count=${2:-3}
+    interval=${3:-0.5}
+    while (( count > 0 ))
+    do
+        sysled --color black
+        sleep ${interval}
+        sysled --color ${color}
+        sleep ${interval}
+        (( count -= 1 ))
+    done
+}

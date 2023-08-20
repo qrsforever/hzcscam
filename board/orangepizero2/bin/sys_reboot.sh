@@ -1,89 +1,29 @@
 #!/bin/bash
 
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
-TOP_DIR=/campi
+TOP_DIR=$1
 
-source ${TOP_DIR}/_env
-rm -rf ${TOP_DIR}/*-1883
+source /campi/_env
 
-RUNTIME_PATH=${RUNTIME_PATH:-/campi/runtime}
-LOGS_PATH=${LOGS_PATH:-/campi/logs}
+__led_blink yellow 3 0.5
 
-
-echo "===============SYS REBOOT==============" > ${LOGS_PATH}/campi_reboot.log
-
-if [ ! -d ${RUNTIME_PATH}/start ]
-then
-    mkdir -p ${RUNTIME_PATH}/start
-fi
-
-if [ ! -d ${RUNTIME_PATH} ]
-then
-    mkdir -p ${LOGS_PATH}
-fi
-
-if [[ ! -e ${RUNTIME_PATH}/gst_rtmp.env ]]
-then
-    cp ${SYSROOT}/etc/gst_rtmp.env ${RUNTIME_PATH}/gst_rtmp.env
-fi
-
-__run_and_log() {
-    echo "$*"
-    /bin/bash -c "$*" >> ${LOGS_PATH}/campi_reboot.log
-}
-
-if [[ ! -e ${TOP_DIR}/runtime/nmwifi.json ]]
-then
-    mkdir -p ${TOP_DIR}/runtime
-    cp ${SYSROOT}/etc/nmwifi.json ${TOP_DIR}/runtime/nmwifi.json
-fi
-
-echo "==============Network================" >> ${LOGS_PATH}/campi_reboot.log
-__run_and_log nmcli device status
-echo "==============Memory=================" >> ${LOGS_PATH}/campi_reboot.log
-__run_and_log free
-echo "===============Disk==================" >> ${LOGS_PATH}/campi_reboot.log
-__run_and_log df
-echo "==============Campi==================" >> ${LOGS_PATH}/campi_reboot.log
-__run_and_log ls -l ${TOP_DIR}/runtime
-
-# TODO set_wifi will delete wifi connection
-netok=$(nmcli --fields STATE,DEVICE device status | grep "^connected" | grep "$WIRELESS_ADAPTER")
-if [[ x${netok} == x && -f ${TOP_DIR}/runtime/nmwifi.json ]]
-then
-    wifissid=$(cat ${TOP_DIR}/runtime/nmwifi.json | jq -r ".wifissid")
-    password=$(cat ${TOP_DIR}/runtime/nmwifi.json | jq -r ".password")
-    if [[ -z $(nmcli --fields NAME connection | grep ${wifissid}) ]]
+for line in `${SYSROOT}/bin/logcat_start.sh 2>/dev/null`
+do
+    if [[ $line =~ logzip ]]
     then
-        __run_and_log ${SYSROOT}/bin/set_wifi.sh ${wifissid} ${password}
-    else
-        __run_and_log nmcli device wifi rescan; sleep 3
-        __run_and_log nmcli device wifi connect ${wifissid} password "${password}"
-    fi
-    i=0
-    while (( i < 5 ))
-    do
-        netok=$(nmcli --fields STATE,DEVICE device status | grep "^connected" | grep "$WIRELESS_ADAPTER")
-        if [[ -z ${netok} ]]
+        logpath=$(echo $line | cut -d: -f2)
+        netok=$(ping -c 1 -W 2 www.baidu.com 2>/dev/null | grep -o "received")
+        if [[ x${netok} != x ]]
         then
-            sleep 3
-            (( i += 1 ))
-            continue
+            python3 ${SYSROOT}/bin/send_log.py ${logpath}
+            rm -rf ${logpath}
+        else
+            mv ${logpath} ${LOGS_PATH}/fail_reboot.tar.gz
         fi
-        break
-    done
-fi
-
-for svc in ${CAMPI_ORDER_SVCS[@]}
-do
-    echo "start ${svc} at $(date +"%Y/%m/%d-%H:%M:%S")" >> ${LOGS_PATH}/campi_reboot.log
-    svc=campi_${svc}.service
-    systemctl start ${svc}
+    fi
 done
 
-for svc in `ls ${RUNTIME_PATH}/start`
-do
-    echo "start ${svc} at $(date +"%Y/%m/%d-%H:%M:%S")" >> ${LOGS_PATH}/campi_reboot.log
-    svc=campi_${svc}.service
-    systemctl start ${svc}
-done
+__led_blink blue 6 0.5
+
+# reboot -f
+${SYSROOT}/bin/campi_safe_run.sh

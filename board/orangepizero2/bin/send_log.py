@@ -16,10 +16,13 @@ sys.path.append('/campi')
 from campi.utils.oss import coss3_put
 
 if __name__ == "__main__":
-    _, log_src_file, log_dst_path = sys.argv
-    ndt = datetime.datetime.now().strftime('%Y%m%d')
+    _, log_src_file = sys.argv
+    now = datetime.datetime.now()
+    nd = now.strftime('%Y%m%d')
+    nt = now.strftime('%H%M%S')
     cid = 'unkown'
     if os.path.exists('/sys/class/net/eth0/address'):
         with open('/sys/class/net/eth0/address', 'r') as fr:
             cid = fr.readline().strip().replace(':', '')
-    coss3_put(log_src_file, [os.path.dirname(log_src_file), f'logs/{ndt}/{cid}'])
+    filename = os.path.basename(log_src_file)
+    coss3_put(log_src_file, [log_src_file, f'logs/{nd}/{cid}/{nt}_{filename}'])

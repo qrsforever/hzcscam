@@ -3,9 +3,26 @@
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 TOP_DIR=$1
 
+__led_blink red 3 0.5
+
 source /campi/_env
 
 ARCHIVES_PATH=${ARCHIVES_PATH:-/var/campi/archives}
+
+netok=$(ping -c 1 -W 2 www.baidu.com 2>/dev/null | grep -o "received")
+if [[ x${netok} != x ]] && [[ -x ${SYSROOT}/bin/logcat_start.sh ]]
+then
+    for line in `${SYSROOT}/bin/logcat_start.sh 2>/dev/null`
+    do
+        if [[ $line =~ logzip ]]
+        then
+            logpath=$(echo $line | cut -d: -f2)
+            python3 ${SYSROOT}/bin/send_log.py ${logpath}
+            rm -rf ${logpath}
+        fi
+    done
+    __led_blink magenta 3 0.5
+fi
 
 CURRENT_ARCHIVES_PATH=$(readlink /campi)
 
@@ -28,6 +45,8 @@ then
     cp -arpf /tmp/campi_sos/runtime ${ARCHIVES_PATH}/factory/
 fi
 
+${ARCHIVES_PATH}/factory/scripts/setup_service.sh
+
 rm -f /campi
 ln -s ${ARCHIVES_PATH}/factory /campi
 
@@ -42,7 +61,10 @@ to=$(cat /campi/version.txt)
 
 echo "$(date +"%Y/%m/%d-%H:%M:%S") from ${from} to ${to}"  >> ${ARCHIVES_PATH}/campi_sos.log
 
-reboot
+__led_blink blue 6 0.5
+
+# reboot -f
+${SYSROOT}/bin/campi_safe_run.sh
 
 # for svc in ${CAMPI_ORDER_SVCS[@]}
 # do

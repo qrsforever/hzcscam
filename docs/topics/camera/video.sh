@@ -14,7 +14,7 @@ CLOUD_REPORT=cloud/${CLIENTID}/events/report
 # video_quantizer: 0 - 50
 cat > /tmp/camera_video.json <<EOF
 {
-    "video_bitrate": 600,
+    "video_bitrate": 200,
     "video_quantizer": 30,
     "video_tune": "zerolatency",
     "video_speed_preset": "faster",
@@ -23,6 +23,6 @@ cat > /tmp/camera_video.json <<EOF
 }
 EOF
 
-mosquitto_pub -h ${EMQX_HOST} -p ${EMQX_PORT} -u campi -P 123456 -t ${PUB_TOPIC} -d -f /tmp/camera_video.json
+mosquitto_pub -h ${EMQX_HOST} -p ${EMQX_PORT} -u campi -P 123456 -t ${PUB_TOPIC} -i mosquitto_pub -d -f /tmp/camera_video.json
 sleep 1
-mosquitto_pub -h ${EMQX_HOST} -p ${EMQX_PORT} -u campi -P 123456 -t ${CLOUD_REPORT} -m "{\"gst\": true}"
+mosquitto_pub -h ${EMQX_HOST} -p ${EMQX_PORT} -u campi -P 123456 -t ${CLOUD_REPORT} -i mosquitto_pub -m "{\"gst\": true}"

@@ -28,6 +28,9 @@ from campi.app.cpi.gst import GstMessageHandler
 from campi.app.cpi.emq import EmqMessageHandler
 from campi.app.cpi.frp import FrpMessageHandler
 
+from campi.utils.shell import util_start_service
+
+heartbeat_interval = 300
 
 async def main():
     sys_h = SysMessageHandler()  # noqa
@@ -51,10 +54,12 @@ async def main():
                 report_more = True
             else:
                 await sys_h.do_heartbeat(False)
-            loop.call_later(sys_h.heartbeat_interval, sys_h.queue.put_nowait, 'h')
+            loop.call_later(heartbeat_interval, sys_h.queue.put_nowait, 'h')
 
-    import os
-    os.system("sleep 3; reboot")
+    await asyncio.sleep(3)
+    # TODO orangepizero2 reboot will fail, cannot startup.
+    # os.system("reboot -f")
+    util_start_service('campi_boot.service')
 
 if __name__ == "__main__":
     asyncio.run(main())

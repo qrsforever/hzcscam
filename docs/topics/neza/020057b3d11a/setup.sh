@@ -2,8 +2,9 @@
 
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 
-source ${CUR_DIR}/../env.sh
+source ${CUR_DIR}/../../env.sh
 
+CLIENTID=`basename $CUR_DIR`
 PUB_TOPIC=cloud/${CLIENTID}/sensor/config
 
 cat > /tmp/neza.json <<EOF
@@ -14,9 +15,9 @@ cat > /tmp/neza.json <<EOF
   "count": 0,
   "trigger_pulse": 1,
   "calm_step_ms": 20,
-  "calm_down_ms": 500,
-  "read_sleep_ms": 100
+  "calm_down_ms": 200,
+  "read_sleep_ms": 120
 }
 EOF
 
-mosquitto_pub -h ${EMQX_HOST} -p ${EMQX_PORT} -u campi -P 123456 -t ${PUB_TOPIC} -i mosquitto_pub -d -f /tmp/neza.json
+mosquitto_pub -h ${EMQX_HOST} -p ${EMQX_PORT} -u campi -P 123456 -t ${PUB_TOPIC} -d -f /tmp/neza.json

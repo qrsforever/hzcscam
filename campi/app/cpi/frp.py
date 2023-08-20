@@ -12,7 +12,7 @@ import json
 import os
 from . import MessageHandler
 from campi.topics import TCloud
-from campi.constants import FRP_CONFIG_PATH, SVC_FRP
+from campi.constants import FRP_CONFIG_PATH, SVC_FRP, STARTUP_PATH, ADDRESS
 
 from campi.utils.shell import util_start_service, util_stop_service
 
@@ -21,7 +21,7 @@ FRPC_TEMPLATE_INI = """
 server_addr = %s
 server_port = %d
 
-[ssh%d]
+[ssh_%s_%d]
 type = tcp
 local_ip = 127.0.0.1
 local_port = 22
@@ -36,10 +36,18 @@ class FrpMessageHandler(MessageHandler):
     def __init__(self):
         super().__init__([TCloud.FRPC_CLOUD_CTRL])
 
+        self.config = self._read_config()
+        if self.config.get('frpc_enable'):
+            util_start_service(self.SNAME)
+
     def _set_frpc(self, config):
         enable = config.get('frpc_enable', False)
         if not enable:
+            self.config = {'frpc_enable': False}
             util_stop_service(self.SNAME)
+            if os.path.exists(f'{STARTUP_PATH}/frp'):
+                os.remove(f'{STARTUP_PATH}/frp')
+                os.remove(FRP_CONFIG_PATH)
             return
 
         server_addr = config.get('server_addr', None)
@@ -48,11 +56,12 @@ class FrpMessageHandler(MessageHandler):
 
         if server_addr is None or remote_port is None:
             return
+        self.config = config
         with open(FRP_CONFIG_PATH, 'w') as fw:
-            fw.write(FRPC_TEMPLATE_INI % (server_addr, server_port, remote_port, remote_port))
+            fw.write(FRPC_TEMPLATE_INI % (server_addr, server_port, ADDRESS, remote_port, remote_port))
         util_start_service(self.SNAME, False)
 
-    def get_info(self):
+    def _read_config(self):
         config = {'frpc_enable': False}
         if os.path.exists(FRP_CONFIG_PATH):
             config['frpc_enable'] = True
@@ -64,7 +73,10 @@ class FrpMessageHandler(MessageHandler):
                         config['server_port'] = int(line.split('=')[1].strip())
                     elif 'remote_port' in line:
                         config['remote_port'] = int(line.split('=')[1].strip())
-        return {'frp': config}
+        return config
+
+    def get_info(self):
+        return {'frp': self.config}
 
     def handle_message(self, topic, message):
         self.logger.debug(f'frpc: {message}')

@@ -7,12 +7,12 @@ source ${CUR_DIR}/env.sh
 # CAMPI_REPORT=campi/+/events/#
 if [[ x$ID == x ]]
 then
-    ALL_TOPICS=campi/#
+    ALL_TOPICS=campi/+/events/#
 else
-    ALL_TOPICS=campi/$ID/#
+    ALL_TOPICS=campi/$ID/events/#
 fi
 
-mosquitto_sub -h ${EMQX_HOST} -p ${EMQX_PORT} -u campi -P 123456 -t ${ALL_TOPICS} -i mosquitto_sub_all --pretty -v | while read -r line
+mosquitto_sub -h ${EMQX_HOST} -p ${EMQX_PORT} -u campi -P 123456 -t ${ALL_TOPICS} -i mosquitto_sub_evt --pretty -v | while read -r line
 do
     topic=`echo $line | cut -d\  -f1`
     jdata=`echo $line | cut -d\  -f2-`

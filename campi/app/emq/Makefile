@@ -13,6 +13,12 @@ main:
 fifor:
 	gcc -O2 -Wall -Wno-unused -Wno-format -DDEBUG fifor.c -o $(PREFIX)/bin/fifor
 
+sysled:
+	gcc -I$(PREFIX)/include -L$(PREFIX)/lib \
+		-Wl,-rpath=$(PREFIX)/lib \
+		-O2 -Wall -Wno-unused -Wno-format -DDEBUG \
+		-o $(PREFIX)/bin/sysled sysled.c -lwiringPi 
+
 run: main
 	$(PREFIX)/bin/emqs --emq_host aiot.hzcsdata.com --emq_port 1883 -c 123456 -u campi -p 123456
 
