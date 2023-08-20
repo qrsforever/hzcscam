@@ -20,28 +20,22 @@ body{
 			<div class="form-inline">
 				URL:
 				<input type="text" id="txt_url" class="input-xxlarge" value="">
-				<button class="btn btn-primary" id="btn_play">播放视频</button>
+				<button class="btn btn-primary" id="btn_play_left">播放左边</button>
+				<button class="btn btn-primary" id="btn_play_right">播放右边</button>
+				<button class="btn btn-primary" id="btn_stop">停止</button>
 			</div>
 
 			<label></label>
 			<video id="rtc_media_player" width="100%" controls autoplay></video>
 		</div>
 		<script type="text/javascript">
-            
+
 			$(function(){
 				var query = parse_query_string();
                 <!-- 要触发浏览器自带的关闭弹窗，用户必须跟网页有过交互。简单的来说就是点击过网页。 -->
 				window.onbeforeunload= (e)=>{
-                    xmlhttp = new XMLHttpRequest();
-                    xmlhttp.open("POST", "http://aiot.hzcsdata.com:8686/rtmp");
-                    xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
                     xmlhttp.send(JSON.stringify({"enable":false, "stream": query.stream}));
 				};
-
-                xmlhttp = new XMLHttpRequest();
-                xmlhttp.open("POST", "http://aiot.hzcsdata.com:8686/rtmp");
-                xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-                xmlhttp.send(JSON.stringify({"enable":true, "stream": query.stream}));
 
 				var sdk = null; // Global handler to do cleanup when replaying.
 				var startPlay = function() {
@@ -66,20 +60,35 @@ body{
 				$('#rtc_media_player').hide();
 				srs_init_rtc("#txt_url", query);
 
-				$("#btn_play").click(function() {
+				$("#btn_play_right").click(function() {
+                    xmlhttp = new XMLHttpRequest();
+                    xmlhttp.open("POST", "http://aiot.hzcsdata.com:8686/rtmp");
+                    xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                    xmlhttp.send(JSON.stringify({"enable":true, "stream": query.stream, "device": "/dev/video1"}));
+
+					$('#rtc_media_player').prop('muted', false);
+					startPlay();
+				});
+				$("#btn_play_left").click(function() {
+                    xmlhttp = new XMLHttpRequest();
+                    xmlhttp.open("POST", "http://aiot.hzcsdata.com:8686/rtmp");
+                    xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                    xmlhttp.send(JSON.stringify({"enable":true, "stream": query.stream, "device": "/dev/video3"}));
+
 					$('#rtc_media_player').prop('muted', false);
 					startPlay();
 				});
 
-                /*
-				if (query.autostart === 'true') {
-					$('#rtc_media_player').prop('muted', true);
-					console.warn('For autostart, we should mute it, see https://www.jianshu.com/p/c3c6944eed5a ' +
-						'or https://developers.google.com/web/updates/2017/09/autoplay-policy-changes#audiovideo_elements');
-
-					startPlay();
-				}
-                */
+				$("#btn_stop").click(function() {
+                    xmlhttp = new XMLHttpRequest();
+                    xmlhttp.open("POST", "http://aiot.hzcsdata.com:8686/rtmp");
+                    xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                    xmlhttp.send(JSON.stringify({"enable":false, "stream": query.stream}));
+				    $('#rtc_media_player').hide();
+					if (sdk) {
+						sdk.close();
+					}
+				});
 			});
 		</script>
 	</body>
