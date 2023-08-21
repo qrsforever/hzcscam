@@ -25,7 +25,7 @@ class InputEventDetector(EventDetector):
         return self
 
     def get_camera_device(self):
-        return utils_syscall("v4l2-ctl --list-devices | grep usb-1 -A1 | grep video")
+        return utils_syscall("v4l2-ctl --list-devices | grep usb-1 -A1 | grep video | awk 'NR==1 {print $1}'")
 
     def on_plugin(self, device_path, sys_name):
         # check usb camera
