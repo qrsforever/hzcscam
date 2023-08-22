@@ -66,6 +66,7 @@ class TCloud:
     # Net
     NETWORK_CONNECTED = f'campi/{ADDRESS}/net/connected'
     NETWORK_DISCONNECTED = f'campi/{ADDRESS}/net/disconnected'
+    NETWORK_SET_WIFI = f'cloud/{ADDRESS}/net/setwifi'
 
     # GST
     CAMERA_IMAGE = f'cloud/{ADDRESS}/camera/image'

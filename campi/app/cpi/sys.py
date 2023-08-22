@@ -59,6 +59,7 @@ class SysMessageHandler(MessageHandler):
             TUsbDisk.ALL,
             TSystem.SHUTDOWN,
             TApis.SET_WIFI,
+            TCloud.NETWORK_SET_WIFI,
             TCloud.SYS_REBOOT,
             TCloud.EVENTS_REPORT,
             TCloud.EVENTS_CLOUD_REPORT,
@@ -133,8 +134,11 @@ class SysMessageHandler(MessageHandler):
                     self.logger.error(f'start ap err[{SCRIPT_OF_STOP_AP}]: {oerr}')
 
             try:
+                ssid = jdata.get("wifissid", "hzcsdata")
+                pswd = jdata.get("password", "Hzcsai@123")
+                bsid = jdata.get("expbssid", "")
                 process = subprocess.Popen(
-                        f'{SCRIPT_OF_SET_WIFI} {jdata["wifissid"]} {jdata["password"]}',
+                        f'{SCRIPT_OF_SET_WIFI} {ssid} {pswd} {bsid}',
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
                         shell=True)
@@ -181,7 +185,7 @@ class SysMessageHandler(MessageHandler):
         if topic == TNetwork.CONNECTED:
             return self.on_network_connected(message)
 
-        if topic == TApis.SET_WIFI:
+        if TCloud.NETWORK_SET_WIFI or topic == TApis.SET_WIFI:
             return self.on_network_setwifi(message)
 
         if topic == TUsbDisk.MOUNTED:
