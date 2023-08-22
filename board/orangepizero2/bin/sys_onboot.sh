@@ -54,9 +54,9 @@ __run_and_log ls -l ${TOP_DIR}/runtime
 # then
     wifissid=$(cat ${TOP_DIR}/runtime/nmwifi.json | jq -r ".wifissid")
     password=$(cat ${TOP_DIR}/runtime/nmwifi.json | jq -r ".password")
+    expbssid=$(cat ${TOP_DIR}/runtime/nmwifi.json | jq -r ".expbssid" | grep -v "null")
     if [[ -z $(nmcli --fields NAME connection | grep ${wifissid}) ]]
     then
-        expbssid=$(cat ${TOP_DIR}/runtime/nmwifi.json | jq -r ".expbssid" | grep -v "null")
         __run_and_log ${SYSROOT}/bin/set_wifi.sh ${wifissid} ${password} ${expbssid}
     else
         __run_and_log nmcli device wifi rescan
@@ -65,7 +65,12 @@ __run_and_log ls -l ${TOP_DIR}/runtime
         __led_blink green 2 0.3
         __run_and_log nmcli connection up ${wifissid}
         __led_blink green 2 0.3
-        __run_and_log nmcli device wifi connect ${wifissid} password "${password}"
+        if [[ x$expbssid != x ]]
+        then
+            __run_and_log nmcli device wifi connect ${wifissid} password "${password}" bssid=${expbssid}
+        else
+            __run_and_log nmcli device wifi connect ${wifissid} password "${password}"
+        fi
         __led_blink green 2 0.3
     fi
     i=0

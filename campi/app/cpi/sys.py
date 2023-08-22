@@ -70,7 +70,6 @@ class SysMessageHandler(MessageHandler):
             self.on_network_connected('')
         else:
             self.on_network_disconnect('')
-        self.wifi_ssid_pswd = None
 
     def on_network_connected(self, message):# {{{
         self.logger.warn('network connect')
@@ -118,20 +117,20 @@ class SysMessageHandler(MessageHandler):
 
         def _set_wifi():
             self.logger.error(f'set wfif, wifiap state: {self.wifiap_state}')
-            if self.wifiap_state != WIFIAP_STOPING:
-                try:
-                    process = subprocess.Popen(
-                            SCRIPT_OF_STOP_AP,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
-                            shell=True)
-                    for line in process.stdout:
-                        self.logger.info(line.decode("utf-8").strip())
-                    self.wifiap_state = WIFIAP_STOPING
-                except subprocess.CalledProcessError as cerr:
-                    self.logger.error(f'start ap err[{SCRIPT_OF_STOP_AP}]: {cerr}')
-                except Exception as oerr:
-                    self.logger.error(f'start ap err[{SCRIPT_OF_STOP_AP}]: {oerr}')
+            # if self.wifiap_state != WIFIAP_STOPING:
+            #     try:
+            #         process = subprocess.Popen(
+            #                 SCRIPT_OF_STOP_AP,
+            #                 stdout=subprocess.PIPE,
+            #                 stderr=subprocess.PIPE,
+            #                 shell=True)
+            #         for line in process.stdout:
+            #             self.logger.info(line.decode("utf-8").strip())
+            #         self.wifiap_state = WIFIAP_STOPING
+            #     except subprocess.CalledProcessError as cerr:
+            #         self.logger.error(f'start ap err[{SCRIPT_OF_STOP_AP}]: {cerr}')
+            #     except Exception as oerr:
+            #         self.logger.error(f'start ap err[{SCRIPT_OF_STOP_AP}]: {oerr}')
 
             try:
                 ssid = jdata.get("wifissid", "hzcsdata")
@@ -148,7 +147,7 @@ class SysMessageHandler(MessageHandler):
                     if 'success' in line:
                         with open(WIFI_NM_CONF, 'w') as fw:
                             json.dump(jdata, fw)
-                        self.wifi_ssid_pswd = jdata
+                        self.quit()
             except subprocess.CalledProcessError as cerr:
                 self.logger.error(f'set wifi err[{SCRIPT_OF_SET_WIFI}]: {cerr}')
             except Exception as oerr:
