@@ -185,7 +185,7 @@ class SysMessageHandler(MessageHandler):
         if topic == TNetwork.CONNECTED:
             return self.on_network_connected(message)
 
-        if TCloud.NETWORK_SET_WIFI or topic == TApis.SET_WIFI:
+        if topic == TCloud.NETWORK_SET_WIFI or topic == TApis.SET_WIFI:
             return self.on_network_setwifi(message)
 
         if topic == TUsbDisk.MOUNTED:

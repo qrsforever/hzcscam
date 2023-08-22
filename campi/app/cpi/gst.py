@@ -198,6 +198,7 @@ class GstMessageHandler(MessageHandler):
     def on_camera_plugout(self, videoid):# {{{
         if os.path.isfile(GST_CAMERA_PROP):
             os.unlink(GST_CAMERA_PROP)
+        util_stop_service(self.SNAME)
 # }}}
 
     def get_info(self):# {{{
