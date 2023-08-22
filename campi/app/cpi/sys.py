@@ -28,8 +28,8 @@ import campi.constants as C
 
 # from campi.utils.shell import util_get_uptime
 from campi.constants import (
-    # SCRIPT_OF_START_AP,
-    SCRIPT_OF_SET_WIFI, SCRIPT_OF_STOP_AP,
+    # SCRIPT_OF_START_AP, SCRIPT_OF_STOP_AP,
+    SCRIPT_OF_SET_WIFI,
     VERSION_OTA_FILE, WIFI_NM_CONF, WIFI_NM_FILE)
 
 from campi.utils.net import (
@@ -116,7 +116,7 @@ class SysMessageHandler(MessageHandler):
         jdata = json.loads(message)
 
         def _set_wifi():
-            self.logger.error(f'set wfif, wifiap state: {self.wifiap_state}')
+            self.logger.info('set wifi...')
             # if self.wifiap_state != WIFIAP_STOPING:
             #     try:
             #         process = subprocess.Popen(
@@ -154,11 +154,12 @@ class SysMessageHandler(MessageHandler):
                 self.logger.error(f'set wifi err[{SCRIPT_OF_SET_WIFI}]: {oerr}')
 
         multiprocessing.Process(target=_set_wifi).start()
-# }}}
+# }}
 
     def on_udisk_mounted(self, mntdir):# {{{
         wifinm_path = f'{mntdir}/campi/{WIFI_NM_FILE}'
         if os.path.isfile(wifinm_path):
+            self.logger.info(f'{wifinm_path} found!')
             shutil.copyfile(wifinm_path, WIFI_NM_CONF)
             with open(WIFI_NM_CONF, 'r') as fr:
                 self.on_network_setwifi(fr.read())
