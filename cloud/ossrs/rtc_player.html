@@ -64,7 +64,7 @@ body{
                     xmlhttp = new XMLHttpRequest();
                     xmlhttp.open("POST", "http://aiot.hzcsdata.com:8686/rtmp");
                     xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-                    xmlhttp.send(JSON.stringify({"enable":true, "stream": query.stream, "device": "/dev/video1"}));
+                    xmlhttp.send(JSON.stringify({"enable":true, "stream": query.stream, "device": "/dev/video3"}));
 
 					$('#rtc_media_player').prop('muted', false);
 					startPlay();
@@ -73,7 +73,7 @@ body{
                     xmlhttp = new XMLHttpRequest();
                     xmlhttp.open("POST", "http://aiot.hzcsdata.com:8686/rtmp");
                     xmlhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-                    xmlhttp.send(JSON.stringify({"enable":true, "stream": query.stream, "device": "/dev/video3"}));
+                    xmlhttp.send(JSON.stringify({"enable":true, "stream": query.stream, "device": "/dev/video1"}));
 
 					$('#rtc_media_player').prop('muted', false);
 					startPlay();
