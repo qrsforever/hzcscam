@@ -7,6 +7,12 @@ source ${CUR_DIR}/../env.sh
 PUB_TOPIC=cloud/${CLIENTID}/camera/overlay
 CLOUD_REPORT=cloud/${CLIENTID}/events/report
 
+sw=true
+if [ x$1 == xfalse ] || [ x$1 == x0 ]
+then
+    sw=false
+fi
+
 cat > /tmp/camera_overlay.json <<EOF
 {
     "time_format": "\"%Y/%m/%d %H:%M:%S\"",
@@ -15,7 +21,7 @@ cat > /tmp/camera_overlay.json <<EOF
     "text_title": "auto",
     "text_halignmen": "left",
     "text_valignment": "top",
-    "text_sensor_count": true
+    "text_sensor_count": $sw
 }
 EOF
 

@@ -94,13 +94,13 @@ class GstMessageHandler(MessageHandler):
         self.logger.info(f'{changed}')
         enable = changed.get('rtmp_enable', True)
         if enable:
-            if not self.is_running:
-                self.logger.info(f'start {self.SNAME}')
-                util_start_service(self.SNAME)
+            # if not self.is_running:
+            #     self.logger.info(f'start {self.SNAME}')
+            util_start_service(self.SNAME, restart=True)
         else:
-            if self.is_running:
-                self.logger.info(f'stop {self.SNAME}')
-                util_stop_service(self.SNAME)
+            # if self.is_running:
+            #     self.logger.info(f'stop {self.SNAME}')
+            util_stop_service(self.SNAME)
 
         self.is_running = util_check_service(self.SNAME)
         return True
