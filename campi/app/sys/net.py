@@ -18,6 +18,7 @@ from campi.constants import SCRIPT_OF_SYSREBOOT
 
 async def _dnsnet_ping(ip, port=53):
     reader, writer = await asyncio.open_connection(ip, port)
+    writer.close()
 
 # import socket
 #
@@ -69,8 +70,8 @@ class NetEventDetector(EventDetector):
                 return
             except ConnectionRefusedError as cerr:
                 self.mqtt.logw(f'ping {ip} refused: [{cerr}]')
-            except asyncio.TimeoutError as terr:
-                self.mqtt.logw(f'ping {ip} timeout: [{terr}]')
+            except asyncio.TimeoutError:
+                self.mqtt.logw(f'ping {ip} timeout')
             except Exception as err:
                 self.mqtt.logw(f'ping {ip} error: [{err}]')
                 await asyncio.sleep(self.ping_timeout)

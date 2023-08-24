@@ -158,10 +158,12 @@ class OtaMessageHandler(MessageHandler):
             config = json.loads(message) if isinstance(message, str) else message
         else:
             config = self._on_request_upgrade_config()
+            self.logger.info(f'request config: {config}')
 
         if not self._on_check_upgrade(config):
             return
 
+        self.logger.info('request zip file...')
         if topic == TUpgrade.BY_UDISK:
             shutil.copyfile(config['zip_path'], self.zip_path)
         else:
