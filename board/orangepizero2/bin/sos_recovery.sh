@@ -3,9 +3,9 @@
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 TOP_DIR=$1
 
-__led_blink red 3 0.5
-
 source /campi/_env
+
+__led_blink red 3 0.5
 
 ARCHIVES_PATH=${ARCHIVES_PATH:-/var/campi/archives}
 
@@ -26,20 +26,23 @@ fi
 
 CURRENT_ARCHIVES_PATH=$(readlink /campi)
 
-rm -rf /tmp/campi_sos
 mv ${CURRENT_ARCHIVES_PATH}  /tmp/campi_sos
 if [ ! -f ${ARCHIVES_PATH}/factory.zip ]
 then
     echo "no factory.zip found" > ${ARCHIVES_PATH}/campi_sos.log
     exit 1
 fi
-unzip -qo ${ARCHIVES_PATH}/factory.zip -d ${ARCHIVES_PATH}/factory
+unzip -qo ${ARCHIVES_PATH}/factory.zip -d ${ARCHIVES_PATH}/factory_
 
 if [ $? -ne 0 ]
 then
     echo "unzip fail" > ${ARCHIVES_PATH}/campi_sos.log
     exit 1
 fi
+
+# for safe
+rm -rf ${ARCHIVES_PATH}/factory
+mv ${ARCHIVES_PATH}/factory_ ${ARCHIVES_PATH}/factory
 
 if [[ -d /tmp/campi_sos/runtime ]]
 then

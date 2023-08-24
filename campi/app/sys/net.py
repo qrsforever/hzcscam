@@ -9,13 +9,13 @@
 
 import asyncio
 import random
-import json
 from timeit import default_timer as timer
 from . import EventDetector
 from campi.topics import TNetwork
 from campi.utils.shell import utils_syscall
 from campi.constants import SCRIPT_OF_SYSREBOOT
 
+random.seed(int(timer()))
 
 async def _dnsnet_ping(ip, port=53):
     reader, writer = await asyncio.open_connection(ip, port)

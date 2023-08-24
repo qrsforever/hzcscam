@@ -222,7 +222,7 @@ class SysMessageHandler(MessageHandler):
                 'gateway': util_get_gateway(),
                 'signal_strength': util_get_wifi_sigth(),
                 'transfer_rate': util_get_wifi_transrate(),
-                'ping_time_ms': '%.1f' % sum(self.conn_times) / MAX_TIMER_BUFLEN,
+                'ping_time_ms': '%.1f' % (sum(self.conn_times) / MAX_TIMER_BUFLEN),
                 'software_version': C.APP_VERSION,
                 'hardware_product': C.BOARD,
             }
