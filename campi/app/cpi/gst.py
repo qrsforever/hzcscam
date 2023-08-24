@@ -44,41 +44,49 @@ class GstMessageHandler(MessageHandler):
             TCloud.CAMERA_VIDEO, TCloud.CAMERA_AUDIO
         ])
         self.is_running = util_check_service(self.SNAME)
-        self.config = self._read_config()
+        self.rtmp_conf, self.prop_conf = self._read_config()
 
     def _restart_gst(self):
-        if self.config['rtmp'].get('rtmp_enable', False):
+        if self.rtmp_conf['rtmp'].get('rtmp_enable', False):
             util_start_service(self.SNAME, restart=True)
 
 # Read & Save Config {{{
     def _read_config(self):
-        config = {}
-        with open(GST_CONFIG_PATH, 'r') as fr:
-            config = json.load(fr)
-        return config
+        config, props = {}, {}
+        if os.path.exists(GST_CONFIG_PATH):
+            with open(GST_CONFIG_PATH, 'r') as fr:
+                config = json.load(fr)
+        if os.path.exists(GST_CAMERA_PROP):
+            with open(GST_CAMERA_PROP, 'r') as fr:
+                props = json.load(fr)
+        return config, props
 
     def _save_config(self, config):
         with open(GST_CONFIG_PATH, 'w') as fw:
             json.dump(config, fw)
             with open(GST_CONFIG_SENV, 'w') as sw:
                 for _, jdata in config.items():
-                    for key, value in jdata.items():
-                        if isinstance(value, bool):
-                            value = 'true' if value else 'false'
-                        sw.write(f"{key.upper()}={value}\n")
+                    for key, val in jdata.items():
+                        if key in self.prop_conf.keys():
+                            max, min = self.prop_conf[key]['max'], self.prop_conf[key]['min']
+                            val = int(val * (max - min) / 100 + min)
+                        else:
+                            if isinstance(val, bool):
+                                val = 'true' if val else 'false'
+                        sw.write(f"{key.upper()}={val}\n")
 
     def set_config(self, key, jdata):
         changed = {}
-        if key not in self.config:
-            self.config[key] = {}
+        if key not in self.rtmp_conf:
+            self.rtmp_conf[key] = {}
 
-        config = self.config[key]
+        config = self.rtmp_conf[key]
         for key, value in jdata.items():
             if key in config and value != config[key]:
                 config[key] = value
                 changed[key] = value
         if len(changed) > 0:
-            self._save_config(self.config)
+            self._save_config(self.rtmp_conf)
         else:
             self.logger.warn("same config, not restart gst")
 
@@ -87,7 +95,7 @@ class GstMessageHandler(MessageHandler):
 # }}}
 
     def get_rtmp_config(self):# {{{
-        return self.config.get('rtmp', {})
+        return self.rtmp_conf.get('rtmp', {})
 
     def _set_rtmp(self, jdata):
         changed = self.set_config('rtmp', jdata)
@@ -107,7 +115,7 @@ class GstMessageHandler(MessageHandler):
 # }}}
 
     def get_overlay_config(self):# {{{
-        return self.config.get('overlay', {})
+        return self.rtmp_conf.get('overlay', {})
 
     def _set_overlay(self, jdata):
         changed = self.set_config('overlay', jdata)
@@ -118,7 +126,7 @@ class GstMessageHandler(MessageHandler):
 # }}}
 
     def get_image_config(self):# {{{
-        return self.config.get('image', {})
+        return self.rtmp_conf.get('image', {})
 
     def _set_image(self, jdata):
         changed = self.set_config('image', jdata)
@@ -128,22 +136,21 @@ class GstMessageHandler(MessageHandler):
                 self._restart_gst()
             else:
                 if os.path.exists(GST_CAMERA_PROP):
-                    with open(GST_CAMERA_PROP, 'r') as fr:
-                        props = json.load(fr)
-                        for key, val in changed.items():
-                            if key not in props.keys():
-                                continue
-                            max, min = props[key]['max'], props[key]['min']
-                            val = int(val * (max - min) / 100 + min)
-                            cmd = f'v4l2-ctl --device {self.camera_device} --set-ctrl {key}={val}'
-                            self.logger.info(cmd)
-                            subprocess.run(cmd, shell=True, capture_output=False, encoding='utf-8')
+                    props = self.prop_conf
+                    for key, val in changed.items():
+                        if key not in props.keys():
+                            continue
+                        max, min = props[key]['max'], props[key]['min']
+                        val = int(val * (max - min) / 100 + min)
+                        cmd = f'v4l2-ctl --device {self.camera_device} --set-ctrl {key}={val}'
+                        self.logger.info(cmd)
+                        subprocess.run(cmd, shell=True, capture_output=False, encoding='utf-8')
             return True
         return False
 # }}}
 
     def get_video_config(self):# {{{
-        return self.config.get('video', {})
+        return self.rtmp_conf.get('video', {})
 
     def _set_video(self, jdata):
         changed = self.set_config('video', jdata)
@@ -154,7 +161,7 @@ class GstMessageHandler(MessageHandler):
 # }}}
 
     def get_audio_config(self):# {{{
-        return self.config.get('audio', {})
+        return self.rtmp_conf.get('audio', {})
 # }}}
 
     def _set_audio(self, jdata):# {{{
@@ -189,6 +196,7 @@ class GstMessageHandler(MessageHandler):
                         config[psegs[0]] = props
                 with open(GST_CAMERA_PROP, 'w') as fw:
                     json.dump(config, fw)
+                    self.prop_conf = config
             self._set_video({"video_device":videoid})
             self._restart_gst()
         except Exception as err:

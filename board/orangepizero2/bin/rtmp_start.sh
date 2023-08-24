@@ -46,21 +46,21 @@ done
 
 if [[ x${VIDEO_DEVICE} != x ]]
 then
-    if [ -e ${PRO_FIL} ]
-    then
-        JDATA=$(cat ${PRO_FIL})
-        PROPS=('brightness' 'contrast' 'hue' 'saturation')
-        for prop in ${PROPS[@]}
-        do
-            min=$(echo ${JDATA} | jq .$prop.min)
-            max=$(echo ${JDATA} | jq .$prop.max)
-            if [[ $min != null && $max != null ]]
-            then
-                PROP=$(echo $prop | tr '[:lower:]' '[:upper:]')
-                eval "(( $PROP = \$${PROP} * ($max - $min) / 100 + $min ))"
-            fi
-        done
-    fi
+    # if [ -e ${PRO_FIL} ]
+    # then
+    #     JDATA=$(cat ${PRO_FIL})
+    #     PROPS=('brightness' 'contrast' 'hue' 'saturation')
+    #     for prop in ${PROPS[@]}
+    #     do
+    #         min=$(echo ${JDATA} | jq .$prop.min)
+    #         max=$(echo ${JDATA} | jq .$prop.max)
+    #         if [[ $min != null && $max != null ]]
+    #         then
+    #             PROP=$(echo $prop | tr '[:lower:]' '[:upper:]')
+    #             eval "(( $PROP = \$${PROP} * ($max - $min) / 100 + $min ))"
+    #         fi
+    #     done
+    # fi
 
     GSTSRC="v4l2src device=${VIDEO_DEVICE} io-mode=4 extra-controls=\"c,brightness=${BRIGHTNESS},contrast=${CONTRAST},hue=${HUE},saturation=${SATURATION}\" !"
 else
