@@ -18,6 +18,7 @@ class TNetwork:
     ALL = 'network/#'
     CONNECTED = 'network/connected'
     DISCONNECTED = 'network/disconnected'
+    HEARTBEAT = 'network/heartbeat'
 
 class TUsbDisk:
     ALL = 'usbdisk/#'

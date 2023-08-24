@@ -9,6 +9,7 @@
 
 import asyncio
 import random
+from timeit import default_timer as timer
 from . import EventDetector
 from campi.topics import TNetwork
 from campi.utils.shell import utils_syscall
@@ -54,12 +55,16 @@ class NetEventDetector(EventDetector):
             ip = random.choice(self.ping_hosts)
             try:
                 task = asyncio.create_task(_dnsnet_ping(*ip))
+                stime = timer()
                 await asyncio.wait_for(task, timeout=self.ping_timeout)
-                self.mqtt.logi(f'ping interval: {i} {ip}: {self.ping_interval}')
+                str_times_ms = "%d" % int(1000 * (timer() - stime))
+                self.mqtt.logi(f'ping interval: {i} {ip}: {self.ping_interval} {str_times_ms}')
                 if not self.connected:
                     self.fail_count = 0
                     self.connected = True
-                    self.mqtt.publish(TNetwork.CONNECTED, "connection", qos=2)
+                    self.mqtt.publish(TNetwork.CONNECTED, str_times_ms, qos=2)
+                else:
+                    self.mqtt.publish(TNetwork.HEARTBEAT, str_times_ms, qos=2)
                 self.ping_interval = min(self.ping_max_interval, self.ping_interval * 2)
                 return
             except ConnectionRefusedError as cerr:

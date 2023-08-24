@@ -50,6 +50,7 @@ NET_STATE_UNINITED = 0
 NET_STATE_CONNECTED = 1
 NET_STATE_DISCONNECTED = 2
 
+MAX_TIMER_BUFLEN = 5
 
 class SysMessageHandler(MessageHandler):
 
@@ -71,8 +72,12 @@ class SysMessageHandler(MessageHandler):
         else:
             self.on_network_disconnect('')
 
+        self.conn_times = [0] * MAX_TIMER_BUFLEN
+        self.curr_index = 0
+
     def on_network_connected(self, message):# {{{
-        self.logger.warn('network connect')
+        self.logger.info('network connect: %s' % message)
+        self.conn_time = [int(message)] * MAX_TIMER_BUFLEN
         if self.network_state != NET_STATE_CONNECTED:
             util_send_mail(json.dumps({
                 'mac': util_get_mac(),
@@ -154,7 +159,16 @@ class SysMessageHandler(MessageHandler):
                 self.logger.error(f'set wifi err[{SCRIPT_OF_SET_WIFI}]: {oerr}')
 
         multiprocessing.Process(target=_set_wifi).start()
-# }}
+# }}}
+
+    def on_network_heartbeat(self, message):# {{{
+        self.logger.warn('network heartbeat: %s' % message)
+        self.curr_index = (self.curr_index + 1) % MAX_TIMER_BUFLEN
+        self.conn_times[self.curr_index] = int(message)
+        self.send_message(TCloud.EVENTS_HEARTBEAT, {
+            'ping_time_ms': sum(self.conn_times) / MAX_TIMER_BUFLEN
+        })
+# }}}
 
     def on_udisk_mounted(self, mntdir):# {{{
         wifinm_path = f'{mntdir}/campi/{WIFI_NM_FILE}'
@@ -184,6 +198,9 @@ class SysMessageHandler(MessageHandler):
 
         if topic == TNetwork.CONNECTED:
             return self.on_network_connected(message)
+
+        if topic == TNetwork.HEARTBEAT:
+            return self.on_network_heartbeat(message)
 
         if topic == TCloud.NETWORK_SET_WIFI or topic == TApis.SET_WIFI:
             return self.on_network_setwifi(message)
