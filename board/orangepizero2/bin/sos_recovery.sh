@@ -26,6 +26,7 @@ fi
 
 CURRENT_ARCHIVES_PATH=$(readlink /campi)
 
+rm -rf /tmp/campi_sos
 mv ${CURRENT_ARCHIVES_PATH}  /tmp/campi_sos
 if [ ! -f ${ARCHIVES_PATH}/factory.zip ]
 then

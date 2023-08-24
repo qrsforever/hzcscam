@@ -33,7 +33,8 @@ from campi.constants import (
     VERSION_OTA_FILE, WIFI_NM_CONF, WIFI_NM_FILE)
 
 from campi.utils.net import (
-    util_net_ping, util_get_mac, util_get_lanip,
+    # util_net_ping,
+    util_get_mac, util_get_lanip,
     util_get_netip, util_get_gateway, util_get_subnet,
     util_get_wifi_sigth, util_get_wifi_transrate, util_send_mail)
 
@@ -67,17 +68,13 @@ class SysMessageHandler(MessageHandler):
         ])
         self.wifiap_state = WIFIAP_NOSTATE
         self.network_state = NET_STATE_UNINITED
-        if util_net_ping():
-            self.on_network_connected('')
-        else:
-            self.on_network_disconnect('')
 
         self.conn_times = [0] * MAX_TIMER_BUFLEN
         self.curr_index = 0
 
     def on_network_connected(self, message):# {{{
-        self.logger.info('network connect: %s' % message)
-        self.conn_time = [int(message)] * MAX_TIMER_BUFLEN
+        self.logger.info(f'network connect: {message}')
+        self.conn_time = [int(message.get('ping_time_ms', -1))] * MAX_TIMER_BUFLEN
         if self.network_state != NET_STATE_CONNECTED:
             util_send_mail(json.dumps({
                 'mac': util_get_mac(),
@@ -162,10 +159,12 @@ class SysMessageHandler(MessageHandler):
 # }}}
 
     def on_network_heartbeat(self, message):# {{{
-        self.logger.warn('network heartbeat: %s' % message)
+        self.logger.info(f'network heartbeat: {message}')
         self.curr_index = (self.curr_index + 1) % MAX_TIMER_BUFLEN
-        self.conn_times[self.curr_index] = int(message)
+        self.conn_times[self.curr_index] = int(message.get('ping_time_ms', -1))
         self.send_message(TCloud.EVENTS_HEARTBEAT, {
+            'ping_host': message.get('ping_host', ''),
+            'ping_port': message.get('ping_port', -1),
             'ping_time_ms': sum(self.conn_times) / MAX_TIMER_BUFLEN
         })
 # }}}
@@ -193,14 +192,14 @@ class SysMessageHandler(MessageHandler):
     def handle_message(self, topic, message):
         self.logger.info(f'{topic} {message}')
 
+        if topic == TNetwork.HEARTBEAT:
+            return self.on_network_heartbeat(json.loads(message))
+
         if topic == TNetwork.DISCONNECTED:
-            return self.on_network_disconnect(message)
+            return self.on_network_disconnect(json.loads(message))
 
         if topic == TNetwork.CONNECTED:
-            return self.on_network_connected(message)
-
-        if topic == TNetwork.HEARTBEAT:
-            return self.on_network_heartbeat(message)
+            return self.on_network_connected(json.loads(message))
 
         if topic == TCloud.NETWORK_SET_WIFI or topic == TApis.SET_WIFI:
             return self.on_network_setwifi(message)

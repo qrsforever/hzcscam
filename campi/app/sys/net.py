@@ -9,6 +9,7 @@
 
 import asyncio
 import random
+import json
 from timeit import default_timer as timer
 from . import EventDetector
 from campi.topics import TNetwork
@@ -58,14 +59,18 @@ class NetEventDetector(EventDetector):
                 task = asyncio.create_task(_dnsnet_ping(*ip))
                 stime = timer()
                 await asyncio.wait_for(task, timeout=self.ping_timeout)
-                str_times_ms = "%d" % int(1000 * (timer() - stime))
-                self.mqtt.logi(f'ping interval: {i} {ip}: {self.ping_interval} {str_times_ms}')
+                message = {
+                    'ping_host': ip[0],
+                    'ping_port': ip[1],
+                    'ping_time_ms': int(1000 * (timer() - stime))
+                }
+                self.mqtt.logi(f'ping interval: {i} {ip}: {self.ping_interval} {message["ping_time_ms"]}')
                 if not self.connected:
                     self.fail_count = 0
                     self.connected = True
-                    self.mqtt.publish(TNetwork.CONNECTED, str_times_ms, qos=2)
+                    self.mqtt.publish(TNetwork.CONNECTED, message, qos=2)
                 else:
-                    self.mqtt.publish(TNetwork.HEARTBEAT, str_times_ms, qos=2)
+                    self.mqtt.publish(TNetwork.HEARTBEAT, message, qos=2)
                 self.ping_interval = min(self.ping_max_interval, self.ping_interval * 2)
                 return
             except ConnectionRefusedError as cerr:
@@ -78,7 +83,7 @@ class NetEventDetector(EventDetector):
 
         self.connected = False
         self.ping_interval = 2
-        self.mqtt.publish(TNetwork.DISCONNECTED, "disconnection", qos=2)
+        self.mqtt.publish(TNetwork.DISCONNECTED, {}, qos=2)
         utils_syscall('nmcli device wifi rescan')
         self.fail_count += 1
         self.mqtt.loge(f'network lost: {self.fail_count}')
