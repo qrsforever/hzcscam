@@ -64,6 +64,10 @@ echo "$(date +"%Y/%m/%d-%H:%M:%S") from ${from} to ${to}"  >> ${ARCHIVES_PATH}/c
 
 __led_blink blue 6 0.5
 
+# remove the problem update zip
+rm -f ${ARCHIVES_PATH}/update.zip
+rm -rf /tmp/campi_sos
+
 # reboot -f
 ${SYSROOT}/bin/campi_safe_run.sh
 
