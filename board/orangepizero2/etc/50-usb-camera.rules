@@ -1,0 +1,5 @@
+# Sonix Technology Co., Ltd. USB Camera
+SUBSYSTEM=="usb", KERNEL=="usb2", ATTR{idVendor}=="280d", ATTR{idProduct}=="40a6", SYMLINK+="video1"
+
+# Microdia Webcam Vitade AF
+SUBSYSTEM=="usb", KERNEL=="usb2", ATTR{idVendor}=="0c45", ATTR{idProduct}=="6366", SYMLINK+="video1

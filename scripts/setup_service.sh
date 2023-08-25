@@ -86,4 +86,7 @@ then
     echo "Asia/Shanghai" > /etc/timezone
 fi
 
+# not work, see v4l rules
+# cp ${TOP_DIR}/board/${BOARD}/etc/50-usb-camera.rules /etc/udev/rules.d/50-usb-camera.rules
+
 echo "${ADDRESS}" > /etc/hostname
