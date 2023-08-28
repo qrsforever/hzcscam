@@ -165,7 +165,7 @@ class SysMessageHandler(MessageHandler):
         self.send_message(TCloud.EVENTS_HEARTBEAT, {
             'ping_host': message.get('ping_host', ''),
             'ping_port': message.get('ping_port', -1),
-            'ping_time_ms': '%.1f' % (sum(self.conn_times) / MAX_TIMER_BUFLEN)
+            'ping_time_ms': round(sum(self.conn_times) / MAX_TIMER_BUFLEN, 2)
         })
 # }}}
 
