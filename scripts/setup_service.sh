@@ -56,7 +56,7 @@ then
     __pip_install quart
     __pip_install paho-mqtt paho.mqtt
     __pip_install PyEmail smtplib
-    __pip_install cos-python-sdk-v5 qcloud_cos
+    __pip_install cos-python-sdk-v5
 fi
 
 chmod +x ${TOP_DIR}/board/${BOARD}/bin/*
