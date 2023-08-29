@@ -63,17 +63,27 @@ then
         compat=$(cat ${otafile} | jq -r ".compatible")
         rsetup=$(cat ${otafile} | jq -r ".execsetup")
         unzip -qo ${MNTDIR}/campi/${zipfil} -d ${ARCHIVES_ROOT_PATH}/${md5sum}
-        __led_blink green 2
-        if [ $compat == "true" ] && [ -f ${RUNTIME_PATH} ]
+        if [ $? -ne 0 ]
         then
-            cp -aprf ${RUNTIME_PATH} ${ARCHIVES_ROOT_PATH}/${md5sum}
+            echo "unzip ${MNTDIR}/campi/${zipfil} fail!!!" >> ${SAFE_RUN_LOG}
+        else
+            __led_blink green 2
+            if [ $compat == "true" ] && [ -f ${RUNTIME_PATH} ]
+            then
+                cp -aprf ${RUNTIME_PATH} ${ARCHIVES_ROOT_PATH}/${md5sum}
+            fi
+            if [ $rsetup == "true" ]
+            then
+                ${ARCHIVES_ROOT_PATH}/${md5sum}/scripts/setup_service.sh
+            fi
+            if [ -d  ${ARCHIVES_ROOT_PATH}/${md5sum} ]
+            then
+                rm -f /campi; ln -s ${ARCHIVES_ROOT_PATH}/${md5sum} /campi
+            else
+                echo "make soft link fail!!!" >> ${SAFE_RUN_LOG}
+            fi
+            __led_blink green 2
         fi
-        if [ $rsetup == "true" ]
-        then
-            ${ARCHIVES_ROOT_PATH}/${md5sum}/scripts/setup_service.sh
-        fi
-        rm -f /campi; ln -s ${ARCHIVES_ROOT_PATH}/${md5sum} /campi
-        __led_blink green 2
     fi
 
     # set remote control
