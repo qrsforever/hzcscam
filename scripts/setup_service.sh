@@ -66,6 +66,12 @@ then
     ln -s ${TOP_DIR} /campi
 fi
 
+ARCHIVES_PATH=${ARCHIVES_PATH:-/var/campi/archives}
+if [[ ! -d ${ARCHIVES_PATH} ]]
+then
+    mkdir -p ${ARCHIVES_PATH} 
+fi
+
 # install service
 for install_svc_script in `find ${CUR_DIR} -name "install_*_service.sh"`
 do

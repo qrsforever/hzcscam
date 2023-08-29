@@ -152,6 +152,9 @@ fi
 
 PLAY_TEST="http://101.42.139.3:30808/players/rtc_player.html?${RTMP_VHOST}&ip=192.168.152.185&api=31985&app=live&stream=${ADDRESS}&autostart=true"
 
+gst_log_path=${LOGS_PATH}/campi_gst.log
+rm -f ${gst_log_path}
+
 while (( 1 ))
 do
     if [[ -e ${VIDEO_DEVICE} ]]
@@ -161,14 +164,14 @@ do
             netok=$(ping -c 1 -W 2 ${RTMP_DOMAIN} 2>/dev/null | grep -o "received")
             if [[ x${netok} != x ]]
             then
-                if [ -f ${LOGS_PATH}/campi_gst.log ]
+                if [ -f ${gst_log_path} ] && [ $(stat -c%s ${gst_log_path}) -gt 66 ]
                 then
-                    python3 ${CUR_DIR}/send_log.py ${LOGS_PATH}/campi_gst.log
-                    rm -f ${LOGS_PATH}/campi_gst.log
+                    python3 ${CUR_DIR}/send_log.py ${gst_log_path}
+                    rm -f ${gst_log_path}
                 fi
                 echo ${PLAY_TEST} > /tmp/campi_gst_rtmp.log
                 __echo_and_run ${GST_CMD} ${GSTSRC} ${VIDEO_CONVERT} ${GSTSINK} ${AUDIO_CONVERT}
-                journalctl -u campi_gst.service -n 200 > ${LOGS_PATH}/campi_gst.log
+                journalctl -u campi_gst.service -n 200 > ${gst_log_path}
             else
                 echo "ping ${RTMP_DOMAIN} not received!"
             fi

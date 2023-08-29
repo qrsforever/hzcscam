@@ -25,4 +25,4 @@ if __name__ == "__main__":
         with open('/sys/class/net/eth0/address', 'r') as fr:
             cid = fr.readline().strip().replace(':', '')
     filename = os.path.basename(log_src_file)
-    coss3_put(log_src_file, [log_src_file, f'logs/{nd}/{cid}/{nt}_{filename}'])
+    coss3_put(log_src_file, [log_src_file, f'logs/{cid}/{nd}/{nt}_{filename}'])

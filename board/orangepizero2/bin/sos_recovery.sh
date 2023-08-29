@@ -8,6 +8,7 @@ source /campi/_env
 __led_blink red 3 0.5
 
 ARCHIVES_PATH=${ARCHIVES_PATH:-/var/campi/archives}
+CURRENT_ARCHIVES_PATH=$(readlink /campi)
 
 netok=$(ping -c 1 -W 2 www.baidu.com 2>/dev/null | grep -o "received")
 if [[ x${netok} != x ]] && [[ -x ${SYSROOT}/bin/logcat_start.sh ]]
@@ -22,23 +23,40 @@ then
         fi
     done
     __led_blink magenta 3 0.5
+
 fi
 
-CURRENT_ARCHIVES_PATH=$(readlink /campi)
+if [ $(basename ${CURRENT_ARCHIVES_PATH}) = factory ]
+then
+    echo "already factory mode!!!" > ${ARCHIVES_PATH}/campi_sos.log
+    if [[ x${netok} != x ]]
+    then
+        systemctl start campi_frp.service
+        count=100
+        while (( count > 0 ))
+        do
+            sysled --color red; sleep 0.5; sysled --color green; sleep 0.5; sysled --color blue; sleep 0.5
+            (( count -= 1 ))
+        done
+        systemctl stop campi_frp.service
+    fi
+    exit 1
+fi
 
-mv ${CURRENT_ARCHIVES_PATH}  /tmp/campi_sos
 if [ ! -f ${ARCHIVES_PATH}/factory.zip ]
 then
-    echo "no factory.zip found" > ${ARCHIVES_PATH}/campi_sos.log
+    echo "no factory.zip found!!!" > ${ARCHIVES_PATH}/campi_sos.log
     exit 1
 fi
 unzip -qo ${ARCHIVES_PATH}/factory.zip -d ${ARCHIVES_PATH}/factory_
 
 if [ $? -ne 0 ]
 then
-    echo "unzip fail" > ${ARCHIVES_PATH}/campi_sos.log
+    echo "unzip factory.zip fail!!!" > ${ARCHIVES_PATH}/campi_sos.log
     exit 1
 fi
+
+mv ${CURRENT_ARCHIVES_PATH}  /tmp/campi_sos
 
 # for safe
 rm -rf ${ARCHIVES_PATH}/factory
