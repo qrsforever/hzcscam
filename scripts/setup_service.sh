@@ -82,7 +82,8 @@ done
 
 systemctl daemon-reload
 
-if [[ x${NOCRON} != x1 ]]
+ppcomm=$(cat /proc/${PPID}/comm)
+if [[ ${ppcom} != campi_safe_run* && x${NOCRON} != x1 ]]
 then
     ${CUR_DIR}/setup_crontab.sh
 fi

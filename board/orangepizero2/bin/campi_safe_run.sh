@@ -40,6 +40,16 @@ then
     mkdir -p ${MNTDIR}
     mount /dev/sda1 ${MNTDIR}
 
+    # recovery scripts
+    runscript=${MNTDIR}/campi/recovery.sh
+    if [ -f $runscript ]
+    then
+        cp ${MNTDIR}/campi/recovery.sh /tmp/recovery.sh
+        chmod +x /tmp/recovery.sh
+        /tmp/recovery.sh ${MNTDIR} &
+        exit 0
+    fi
+
     # set network
     wififile=${MNTDIR}/campi/nmwifi.json
     if [ -f ${wififile} ]
