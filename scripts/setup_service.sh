@@ -76,7 +76,7 @@ fi
 for install_svc_script in `find ${CUR_DIR} -name "install_*_service.sh"`
 do
     chmod +x ${install_svc_script}
-    echo "install ${install_svc_script}"
+    echo "install ${install_svc_script}" | tee -a /tmp/setup.log
     ${install_svc_script}
 done
 
@@ -85,6 +85,7 @@ systemctl daemon-reload
 ppcomm=$(cat /proc/${PPID}/comm)
 if [[ ${ppcom} != campi_safe_run* && x${NOCRON} != x1 ]]
 then
+    echo "setup crontab..." | tee -a  /tmp/setup.log
     ${CUR_DIR}/setup_crontab.sh
 fi
 
