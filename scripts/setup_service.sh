@@ -82,7 +82,10 @@ done
 
 systemctl daemon-reload
 
-${CUR_DIR}/setup_crontab.sh
+if [[ x${NOCRON} != x1 ]]
+then
+    ${CUR_DIR}/setup_crontab.sh
+fi
 
 LT=$(readlink /etc/localtime)
 if [[ ${LT##*/} != Shanghai ]]

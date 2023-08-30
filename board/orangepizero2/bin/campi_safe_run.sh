@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SAFE_RUN_LOG='/var/campi_safe_run.log'
+SAFE_RUN_LOG='/var/campi/campi_safe_run.log'
 BOARD=$(cat /etc/orangepi-release | grep BOARD= | cut -d= -f2)
 BINDIR=/campi/board/${BOARD}/bin
 
@@ -74,7 +74,7 @@ then
             fi
             if [ $rsetup == "true" ]
             then
-                ${ARCHIVES_ROOT_PATH}/${md5sum}/scripts/setup_service.sh
+                NOCRON=1 ${ARCHIVES_ROOT_PATH}/${md5sum}/scripts/setup_service.sh
             fi
             if [ -d  ${ARCHIVES_ROOT_PATH}/${md5sum} ]
             then
@@ -119,3 +119,4 @@ fi
 
 echo "start main program" >> ${SAFE_RUN_LOG}
 systemctl start campi_boot.service
+systemctl status campi_boot.service >> ${SAFE_RUN_LOG}
