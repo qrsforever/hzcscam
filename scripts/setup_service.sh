@@ -13,6 +13,8 @@ fi
 
 source ${TOP_DIR}/_env
 
+echo "setup service..." > /tmp/setup.log
+
 [[ ! -d ${TOP_DIR}/runtime/logs ]] &&  mkdir -p ${TOP_DIR}/runtime/logs
 
 [ ! -f ${TOP_DIR}/runtime/nmwifi.json ] && cp ${TOP_DIR}/board/${BOARD}/etc/nmwifi.json ${TOP_DIR}/runtime/nmwifi.json
@@ -83,9 +85,10 @@ done
 systemctl daemon-reload
 
 ppcomm=$(cat /proc/${PPID}/comm)
-if [[ ${ppcom} != campi_safe_run* && x${NOCRON} != x1 ]]
+echo "parent process comm: [${ppcomm}] ${NOCRON}" | tee -a /tmp/setup.log
+if [[ ${ppcomm} != campi_safe_run* && x${NOCRON} != x1 ]]
 then
-    echo "setup crontab..." | tee -a  /tmp/setup.log
+    echo "setup crontab..." | tee -a /tmp/setup.log
     ${CUR_DIR}/setup_crontab.sh
 fi
 

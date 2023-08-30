@@ -72,6 +72,7 @@ then
         md5sum=$(cat ${otafile} | jq -r ".md5")
         compat=$(cat ${otafile} | jq -r ".compatible")
         rsetup=$(cat ${otafile} | jq -r ".execsetup")
+        rm -rf ${ARCHIVES_ROOT_PATH}/${md5sum}
         unzip -qo ${MNTDIR}/campi/${zipfil} -d ${ARCHIVES_ROOT_PATH}/${md5sum}
         if [ $? -ne 0 ]
         then

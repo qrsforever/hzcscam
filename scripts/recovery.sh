@@ -51,7 +51,7 @@ then
     compat=$(cat ${otafile} | jq -r ".compatible")
     rsetup=$(cat ${otafile} | jq -r ".execsetup")
     echo "upgrade: ${zipfil} ${md5sum} ${compat} ${rsetup}" >> ${RUN_LOG}
-    rm -f ${ARCHIVES_ROOT_PATH}/${md5sum}
+    rm -rf ${ARCHIVES_ROOT_PATH}/${md5sum}
     unzip -qo ${MNTDIR}/campi/${zipfil} -d ${ARCHIVES_ROOT_PATH}/${md5sum}
     if [ $? -ne 0 ]
     then
