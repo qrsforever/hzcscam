@@ -48,7 +48,6 @@ then
     __led_blink green 2
     zipfil=$(cat ${otafile} | jq -r ".url")
     md5sum=$(cat ${otafile} | jq -r ".md5")
-    compat=$(cat ${otafile} | jq -r ".compatible")
     rsetup=$(cat ${otafile} | jq -r ".execsetup")
     echo "upgrade: ${zipfil} ${md5sum} ${compat} ${rsetup}" >> ${RUN_LOG}
     rm -rf ${ARCHIVES_ROOT_PATH}/${md5sum}
@@ -58,10 +57,6 @@ then
         echo "unzip ${MNTDIR}/campi/${zipfil} fail!!!" >> ${RUN_LOG}
     else
         __led_blink green 2
-        if [ $compat == "true" ] && [ -f ${RUNTIME_PATH} ]
-        then
-            cp -aprf ${RUNTIME_PATH} ${ARCHIVES_ROOT_PATH}/${md5sum}
-        fi
         if [ $rsetup == "true" ]
         then
             ${ARCHIVES_ROOT_PATH}/${md5sum}/scripts/setup_service.sh
