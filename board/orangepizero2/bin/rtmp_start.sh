@@ -88,12 +88,12 @@ then
     then
         PROPS="${PROPS} tune=${TUNE}"
     fi
-    SPEED_PRESET=${VIDEO_SPEED_PRESET:-faster}
+    SPEED_PRESET=${VIDEO_SPEED_PRESET:-ultrafast}
     if [[ x${SPEED_PRESET} != xnone ]]
     then
         PROPS="${PROPS} speed-preset=${SPEED_PRESET}"
     fi
-    PROFILE=${VIDOE_PROFILE:-none}
+    PROFILE=${VIDEO_PROFILE:-none}
     if [[ x${PROFILE} != xnone ]]
     then
         PROPS="${PROPS} ! video/x-h264,profile=${PROFILE}"
@@ -111,7 +111,7 @@ then
     VIDEO_CONVERT="${VIDEO_CONVERT} videoflip method=${FLIP_METHOD} !"
 fi
 
-VIDEO_CONVERT="${VIDEO_CONVERT} videoscale ! video/x-raw, width=${FRAME_WIDTH}, height=${FRAME_HEIGHT}, framerate=${FRAME_RATE}/1 ! videoconvert !"
+VIDEO_CONVERT="${VIDEO_CONVERT} videoscale ! videoconvert ! video/x-raw, width=${FRAME_WIDTH}, height=${FRAME_HEIGHT}, framerate=${FRAME_RATE}/1, format=I420 !"
 
 if [[ x${TIME_FORMAT} != x && x${TIME_FORMAT} != xnone ]]
 then

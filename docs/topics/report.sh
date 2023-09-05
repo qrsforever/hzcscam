@@ -4,6 +4,13 @@ CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 
 source ${CUR_DIR}/env.sh
 
+dir=`basename $PWD`
+
+if [[ ${dir} == 0200* ]]
+then
+    ID=${dir}
+fi
+
 if [[ -z $1 ]]
 then
     cat > /tmp/about.json <<EOF

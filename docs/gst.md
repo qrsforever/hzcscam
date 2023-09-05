@@ -68,3 +68,19 @@ gst-launch-1.0 v4l2src device=/dev/video1 io-mode=4 brightness=0 contrast=0 hue=
     ! x264enc bframes=0 speed-preset=veryfast key-int-max=30 ! flvmux streamable=true \
     ! rtmpsink location=rtmp://srs.hzcsdata.com/live/orangezero2?vhost=seg.300s
 ```
+
+
+# filesink
+
+```
+gst-launch-1.0 -e v4l2src device=/dev/video1 num-buffers=1000 ! videoconvert ! x264enc ! mp4mux ! filesink location=output.mp4
+```
+
+```
+gst-launch-1.0 v4l2src device=/dev/video1 io-mode=4 extra-controls="c,brightness=100,contrast=50,hue=50,
+    saturation=50" ! videoscale ! video/x-raw, width=640, height=352, framerate=15/1 ! videoconvert !
+    clockoverlay time-format="%Y/%m/%d %H:%M:%S" halignment=right valignment=top font-desc="normal 12" !
+    textoverlay text="02001c41fa64" halignment=left valignment=top font-desc="normal 12" ! x264enc !
+    flvmux streamable=true name=mux ! rtmpsink location=rtmp://srs.hzcsdata.com/live/02001c41fa64?
+    vhost=seg.60s
+```
