@@ -4,6 +4,11 @@ SAFE_RUN_LOG='/var/campi/campi_safe_run.log'
 BOARD=$(cat /etc/orangepi-release | grep BOARD= | cut -d= -f2)
 BINDIR=/campi/board/${BOARD}/bin
 
+if [ -e ${SAFE_RUN_LOG} ]
+then
+    mv ${SAFE_RUN_LOG} ${SAFE_RUN_LOG}.pre
+fi
+
 echo "=======SAFE RUN========" > ${SAFE_RUN_LOG}
 
 __led_blink() {

@@ -9,6 +9,11 @@ rm -rf ${TOP_DIR}/*-1883
 RUNTIME_PATH=${RUNTIME_PATH:-/campi/runtime}
 LOGS_PATH=${LOGS_PATH:-/campi/logs}
 
+if [ -e ${LOGS_PATH}/campi_reboot.log ]
+then
+    mv ${LOGS_PATH}/campi_reboot.log ${LOGS_PATH}/campi_reboot.log.pre
+fi
+
 echo "===============SYS REBOOT==============" > ${LOGS_PATH}/campi_reboot.log
 
 __led_blink red 3
@@ -55,6 +60,7 @@ __run_and_log ls -l ${TOP_DIR}/runtime
     wifissid=$(cat ${TOP_DIR}/runtime/nmwifi.json | jq -r ".wifissid")
     password=$(cat ${TOP_DIR}/runtime/nmwifi.json | jq -r ".password")
     expbssid=$(cat ${TOP_DIR}/runtime/nmwifi.json | jq -r ".expbssid" | grep -v "null")
+    echo "${wifissid}:[${password}]" >> ${LOGS_PATH}/campi_reboot.log
     if [[ -z $(nmcli --fields NAME connection | grep ${wifissid}) ]]
     then
         __run_and_log ${SYSROOT}/bin/set_wifi.sh ${wifissid} ${password} ${expbssid}
@@ -89,7 +95,9 @@ __run_and_log ls -l ${TOP_DIR}/runtime
     then
         # TODO some orangepizero2 cannot boot
         # reboot -f
-        ${SYSROOT}/bin/campi_safe_run.sh
+        echo "${wifissid}:[${password}] try connect fail!" >> ${LOGS_PATH}/campi_reboot.log
+        ${SYSROOT}/bin/campi_safe_run.sh &
+        exit 0
     fi
 # fi
 
