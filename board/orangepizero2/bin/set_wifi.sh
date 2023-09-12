@@ -29,14 +29,14 @@ __echo_and_run nmcli device disconnect $WIRELESS_ADAPTER 2>/dev/null
 __echo_and_run nmcli connection delete ${SSID} 2>/dev/null
 __echo_and_run nmcli device wifi rescan;
 
-__led_blink yellow 2
+__led_blink yellow 2 1
 if [[ x${BSSID} != x ]] && [[ x$(nmcli -f bssid device wifi list | grep ${BSSID}) != x ]]
 then
     __echo_and_run nmcli device wifi connect "${SSID}" password "${PSWD}" bssid ${BSSID}
 else
     __echo_and_run nmcli device wifi connect "${SSID}" password "${PSWD}"
 fi
-__led_blink yellow 2
+__led_blink cyan 2 1
 
 netok=$(nmcli --fields STATE,DEVICE device status | grep "^connected" | grep "$WIRELESS_ADAPTER")
 if [[ x${netok} != x ]]

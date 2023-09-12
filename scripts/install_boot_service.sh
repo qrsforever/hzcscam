@@ -15,8 +15,6 @@ cat > ${TMP_DIR}/$SERVICE <<EOF
 [Unit]
     Description=System Boot Service
     Documentation=http://campi.hzcsai.com
-    Before=network-pre.target
-    Wants=network-pre.target
 
 [Service]
     Type=oneshot

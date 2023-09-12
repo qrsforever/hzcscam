@@ -66,11 +66,11 @@ __run_and_log ls -l ${TOP_DIR}/runtime
         __run_and_log ${SYSROOT}/bin/set_wifi.sh ${wifissid} ${password} ${expbssid}
     else
         __run_and_log nmcli device wifi rescan
-        __led_blink green 2 0.3
+        __led_blink green 2 0.5
         __run_and_log nmcli connection down ${wifissid}
-        __led_blink green 2 0.3
+        __led_blink green 2 0.5
         __run_and_log nmcli connection up ${wifissid}
-        __led_blink green 2 0.3
+        __led_blink green 2 0.5
         if [[ x$expbssid != x ]]
         then
             __run_and_log nmcli device wifi connect ${wifissid} password "${password}" bssid=${expbssid}
@@ -95,8 +95,9 @@ __run_and_log ls -l ${TOP_DIR}/runtime
     then
         # TODO some orangepizero2 cannot boot
         # reboot -f
+        nmcli --fields STATE,DEVICE device status  >> ${LOGS_PATH}/campi_reboot.log
         echo "${wifissid}:[${password}] try connect fail!" >> ${LOGS_PATH}/campi_reboot.log
-        ${SYSROOT}/bin/campi_safe_run.sh &
+        nohup ${SYSROOT}/bin/campi_safe_run.sh &
         exit 0
     fi
 # fi
