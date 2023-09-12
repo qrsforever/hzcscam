@@ -4,7 +4,7 @@ CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 
 source ${CUR_DIR}/../../env.sh
 
-CLIENTID=0200b27901c5
+CLIENTID=`basename $CUR_DIR`
 PUB_TOPIC=cloud/${CLIENTID}/sensor/config
 
 cat > /tmp/neza.json <<EOF
@@ -14,9 +14,9 @@ cat > /tmp/neza.json <<EOF
   "current_sensor": 1,
   "count": 0,
   "trigger_pulse": 1,
-  "calm_step_ms": 25,
-  "calm_down_ms": 200,
-  "read_sleep_ms": 200
+  "calm_step_ms": 30,
+  "calm_down_ms": 120,
+  "read_sleep_ms": 50
 }
 EOF
 

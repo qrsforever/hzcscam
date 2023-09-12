@@ -122,5 +122,7 @@ EOF
 fi
 
 echo "start main program" >> ${SAFE_RUN_LOG}
+systemctl is-system-running >> ${SAFE_RUN_LOG}
+systemctl list-unit-files | grep "campi" | tee -a ${SAFE_RUN_LOG}
 systemctl start campi_boot.service
 systemctl status campi_boot.service >> ${SAFE_RUN_LOG}
