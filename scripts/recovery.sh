@@ -68,6 +68,7 @@ then
             then
                 cp ${wififile} /campi/runtime/
             fi
+            sync
         else
             echo "make soft link fail!!!" >> ${RUN_LOG}
         fi
@@ -108,3 +109,4 @@ __led_blink white 5
 echo "start main program" >> ${RUN_LOG}
 systemctl start campi_boot.service
 systemctl status campi_boot.service >> ${RUN_LOG}
+sync

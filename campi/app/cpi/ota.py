@@ -102,7 +102,7 @@ class OtaMessageHandler(MessageHandler):
                 if execsetup:
                     subprocess.call(f'{ARCHIVES_ROOT_PATH}/{zip_md5}/scripts/setup_service.sh', shell=True)
                 subprocess.call('rm -rf $(readlink /campi)', shell=True)
-                subprocess.call(f'rm -f /campi; ln -s {ARCHIVES_ROOT_PATH}/{zip_md5} /campi', shell=True)
+                subprocess.call(f'rm -f /campi; ln -s {ARCHIVES_ROOT_PATH}/{zip_md5} /campi; sync', shell=True)
                 self.logger.info("upgrade setup ok ...")
                 return self.UPGRADE_SUCESS
             config['reason'] = 'unzip fail!'

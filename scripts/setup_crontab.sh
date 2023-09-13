@@ -30,5 +30,6 @@ EOF
 
 mv /tmp/crontab /etc/crontab
 chmod 644 /etc/crontab
+sync
 
 systemctl restart cron.service

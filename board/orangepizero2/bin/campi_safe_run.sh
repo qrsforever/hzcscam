@@ -92,6 +92,7 @@ then
                 then
                     cp ${wififile} /campi/runtime/
                 fi
+                sync
             else
                 echo "make soft link fail!!!" >> ${SAFE_RUN_LOG}
             fi
@@ -103,7 +104,7 @@ then
     frpcfile=${MNTDIR}/campi/frpc
     if [ -f ${frpcfile} ]
     then
-        __led_blink yellow 3
+        __led_blink yellow 3 2
         echo "start frpc..." >> ${SAFE_RUN_LOG}
         cp ${frpcfile} /tmp/
         chmod +x /tmp/frpc
