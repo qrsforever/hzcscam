@@ -107,5 +107,4 @@ do
     svc=campi_${svc}.service
     systemctl restart ${svc}
 done
-
 sync
