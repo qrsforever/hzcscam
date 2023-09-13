@@ -64,6 +64,10 @@ then
         if [ -d  ${ARCHIVES_ROOT_PATH}/${md5sum} ]
         then
             rm -f /campi; ln -s ${ARCHIVES_ROOT_PATH}/${md5sum} /campi
+            if [ -f ${wififile} ]
+            then
+                cp ${wififile} /campi/runtime/
+            fi
         else
             echo "make soft link fail!!!" >> ${RUN_LOG}
         fi
