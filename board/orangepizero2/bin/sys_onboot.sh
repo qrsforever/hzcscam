@@ -80,21 +80,22 @@ __run_and_log ls -l ${TOP_DIR}/runtime
         __led_blink green 2 0.3
     fi
     i=0
-    while (( i < 5 ))
+    while (( i < 3 ))
     do
         netok=$(nmcli --fields STATE,DEVICE device status | grep "^connected" | grep "$WIRELESS_ADAPTER")
         if [[ -z ${netok} ]]
         then
-            __led_blink blue 2 0.5
+            __led_blink blue 2 1 
             (( i += 1 ))
             continue
         fi
         break
     done
-    if (( i == 5 ))
+    if (( i == 3 ))
     then
         # TODO some orangepizero2 cannot boot
         # reboot -f
+        __led_blink blue 5 0.2
         nmcli --fields STATE,DEVICE device status  >> ${LOGS_PATH}/campi_reboot.log
         echo "${wifissid}:[${password}] try connect fail!" >> ${LOGS_PATH}/campi_reboot.log
         nohup ${SYSROOT}/bin/campi_safe_run.sh &
