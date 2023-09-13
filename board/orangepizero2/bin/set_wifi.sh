@@ -25,18 +25,24 @@ __echo_and_run() {
     /bin/bash -c "$*"
 }
 
+__led_blink green 3 1
+
 __echo_and_run nmcli device disconnect $WIRELESS_ADAPTER 2>/dev/null
-__echo_and_run nmcli connection delete ${SSID} 2>/dev/null
+for uuid in $(nmcli --terse --fields UUID connection show)
+do 
+    __echo_and_run nmcli connection delete ${uuid} 2>/dev/null
+done
 __echo_and_run nmcli device wifi rescan;
 
-__led_blink yellow 2 1
+__led_blink green 5 0.5
+
 if [[ x${BSSID} != x ]] && [[ x$(nmcli -f bssid device wifi list | grep ${BSSID}) != x ]]
 then
     __echo_and_run nmcli device wifi connect "${SSID}" password "${PSWD}" bssid ${BSSID}
 else
     __echo_and_run nmcli device wifi connect "${SSID}" password "${PSWD}"
 fi
-__led_blink cyan 2 1
+__led_blink green 7 0.2
 
 netok=$(nmcli --fields STATE,DEVICE device status | grep "^connected" | grep "$WIRELESS_ADAPTER")
 if [[ x${netok} != x ]]

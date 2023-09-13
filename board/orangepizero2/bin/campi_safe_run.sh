@@ -4,13 +4,6 @@ SAFE_RUN_LOG='/var/campi/campi_safe_run.log'
 BOARD=$(cat /etc/orangepi-release | grep BOARD= | cut -d= -f2)
 BINDIR=/campi/board/${BOARD}/bin
 
-if [ -e ${SAFE_RUN_LOG} ]
-then
-    mv ${SAFE_RUN_LOG} ${SAFE_RUN_LOG}.pre
-fi
-
-echo "=======SAFE RUN========" > ${SAFE_RUN_LOG}
-
 __led_blink() {
     color=$1
     count=${2:-3}
@@ -25,17 +18,22 @@ __led_blink() {
     done
 }
 
-count=5
+count=3
 while (( count > 0 ))
 do
-    sysled --color blue
-    sleep 0.3
     sysled --color white
-    sleep 0.3
-    sysled --color yellow
-    sleep 0.3
+    sleep 0.5
+    sysled --color magenta
+    sleep 0.5
     (( count -= 1 ))
 done
+
+if [ -e ${SAFE_RUN_LOG} ]
+then
+    mv ${SAFE_RUN_LOG} ${SAFE_RUN_LOG}.pre
+fi
+
+echo "=======SAFE RUN========" > ${SAFE_RUN_LOG}
 
 if [ -e /dev/sda1 ]
 then
@@ -133,5 +131,4 @@ fi
 echo "start main program" >> ${SAFE_RUN_LOG}
 systemctl is-system-running >> ${SAFE_RUN_LOG}
 systemctl list-unit-files | grep "campi" | tee -a ${SAFE_RUN_LOG}
-systemctl start campi_boot.service
-systemctl status campi_boot.service >> ${SAFE_RUN_LOG}
+systemctl restart campi_boot.service

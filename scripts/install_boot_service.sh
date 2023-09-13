@@ -15,6 +15,7 @@ cat > ${TMP_DIR}/$SERVICE <<EOF
 [Unit]
     Description=System Boot Service
     Documentation=http://campi.hzcsai.com
+    # OnFailure=/usr/local/bin/campi_safe_run.sh
 
 [Service]
     Type=oneshot
@@ -27,5 +28,5 @@ cat > ${TMP_DIR}/$SERVICE <<EOF
     WantedBy=multi-user.target
 EOF
 
-chmod 644 ${TMP_DIR}/$SERVICE
+chmod 644 ${TMP_DIR}/$ERVICE
 mv ${TMP_DIR}/$SERVICE $DST_DIR
