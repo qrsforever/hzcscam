@@ -11,7 +11,7 @@ else
     ALL_TOPICS=campi/$ID/events/#
 fi
 
-printf "%12s %18s %6s %8s %8s\n" "id" "ip       " "ss " "ping " "rtmp"
+printf "%12s %16s %20s %12s\n" "id" "gw      " "ip        " "version"
 mosquitto_sub -h ${EMQX_HOST} -p ${EMQX_PORT} -u campi -P 123456 -t ${ALL_TOPICS} -i mosquitto_sub_all --pretty -v | while read -r line
 do
     topic=`echo $line | cut -d\  -f1`
@@ -22,26 +22,22 @@ do
         continue
     fi
     ip=''
-    ss=''
-    pt=''
-    re=''
-    echo $jdata | jq | grep -E "\"ip\"|signal_strength|ping_time_ms|rtmp_enable" | while read -r payload
+    gw=''
+    ver=''
+    echo $jdata | jq | grep -E "\"ip\"|gateway|software" | while read -r payload
     do
         if [[ $payload =~ \"ip.* ]]
         then
             ip=`echo $payload | cut -d: -f2 | sed s/\"//g`
-        elif [[ $payload =~ \"signal_.* ]]
+        elif [[ $payload =~ \"gateway.* ]]
         then
-            ss=`echo $payload | cut -d: -f2 | sed s/\"//g`
-        elif [[ $payload =~ \"ping_.* ]]
+            gw=`echo $payload | cut -d: -f2 | sed s/\"//g`
+        elif [[ $payload =~ \"software.* ]]
         then
-            pt=`echo $payload | cut -d: -f2 | sed s/\"//g`
-        elif [[ $payload =~ \"rtmp_.* ]]
-        then
-            re=`echo $payload | cut -d: -f2 | sed s/\"//g`
+            ver=`echo $payload | cut -d: -f2 | sed s/\"//g`
             if [[ x$ip != x ]]
             then
-                printf "%12s %18s %6s %8s %8s\n" $cid ${ip%?} ${ss%?} ${pt%?} ${re%?}
+                printf "%12s %16s %20s %12s\n" $cid ${gw%?} ${ip%?} ${ver%?}
             fi
         fi
     done
