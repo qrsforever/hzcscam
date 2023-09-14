@@ -3,7 +3,7 @@ PREFIX = /campi/board/orangepizero2
 main:
 	rm -rf out
 	mkdir -p out/target
-	gcc -I$(PREFIX)/include -L$(PREFIX)/lib \
+	g++ -I$(PREFIX)/include -L$(PREFIX)/lib \
 		-Wl,-rpath=$(PREFIX)/lib \
 		-O2 -Wall -Wno-unused -Wno-format -DDEBUG \
 		-o $(PREFIX)/bin/emqs \
@@ -11,10 +11,10 @@ main:
 		-lpthread -lpaho-mqtt3c -lwiringPi -lcjson
 
 fifor:
-	gcc -O2 -Wall -Wno-unused -Wno-format -DDEBUG fifor.c -o $(PREFIX)/bin/fifor
+	g++ -O2 -Wall -Wno-unused -Wno-format -DDEBUG fifor.c -o $(PREFIX)/bin/fifor
 
 sysled:
-	gcc -I$(PREFIX)/include -L$(PREFIX)/lib \
+	g++ -I$(PREFIX)/include -L$(PREFIX)/lib \
 		-Wl,-rpath=$(PREFIX)/lib \
 		-O2 -Wall -Wno-unused -Wno-format -DDEBUG \
 		-o $(PREFIX)/bin/sysled sysled.c -lwiringPi 

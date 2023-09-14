@@ -20,8 +20,8 @@ extern void sensor_detect();
 
 int main(int argc, char *argv[])
 {
-    char *emq_host = "tcp://aiot.hzcsdata.com";
-    char *client_id = 0, *username = "campi", *password = "123456";
+    char *emq_host = (char*)"tcp://aiot.hzcsdata.com";
+    char *client_id = (char*)0, *username = (char*)"campi", *password = (char*)"123456";
     int emq_port = 1883;
 
     int opt;

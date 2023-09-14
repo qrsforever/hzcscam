@@ -93,6 +93,7 @@ static int g_current_color = COLOR_WHITE;
 static int g_current_sensor = SENSOR_UNIVERSAL;
 static int g_repeat_counter = 0;
 static int g_trigger_pulse = 1;
+static int g_chkrnd_count = 0;
 static int g_calm_step_ms = 20;
 static int g_calm_down_ms = 1000;
 static int g_read_sleep_ms = 100;
@@ -125,6 +126,9 @@ void _sensor_parse_config(const char* config)/*{{{*/
     cJSON* jtrigger_pulse = cJSON_GetObjectItem(cjson, "trigger_pulse");
     if (cJSON_IsNumber(jtrigger_pulse))
         g_trigger_pulse = jtrigger_pulse->valueint;
+    cJSON* jchkrnd_count = cJSON_GetObjectItem(cjson, "chkrnd_count");
+    if (cJSON_IsNumber(jchkrnd_count))
+        g_chkrnd_count = jchkrnd_count->valueint;
     cJSON* jcaml_step = cJSON_GetObjectItem(cjson, "calm_step_ms");
     if (cJSON_IsNumber(jcaml_step))
         g_calm_step_ms = jcaml_step->valueint;
@@ -141,8 +145,8 @@ const char* _sensor_get_config(char* config, int size, const char* extra)/*{{{*/
 {
     char buff[MAX_BUF] = { 0 };
     snprintf(buff, size,
-             "\"debug_mode\": %d, \"current_color\": %d, \"current_sensor\": %d, \"sensor\": \"%s\", \"count\": %d, \"trigger_pulse\": %d, \"calm_step_ms\": %d, \"calm_down_ms\": %d, \"read_sleep_ms\": %d",
-             g_sensor_debug, g_current_color, g_current_sensor, SENSOR_NAMES[g_current_sensor], g_repeat_counter, g_trigger_pulse, g_calm_step_ms, g_calm_down_ms, g_read_sleep_ms);
+             "\"debug_mode\": %d, \"current_color\": %d, \"current_sensor\": %d, \"sensor\": \"%s\", \"count\": %d, \"trigger_pulse\": %d, \"chkrnd_count\": %d, \"calm_step_ms\": %d, \"calm_down_ms\": %d, \"read_sleep_ms\": %d",
+             g_sensor_debug, g_current_color, g_current_sensor, SENSOR_NAMES[g_current_sensor], g_repeat_counter, g_trigger_pulse, g_chkrnd_count, g_calm_step_ms, g_calm_down_ms, g_read_sleep_ms);
     if (NULL != extra && strlen(extra) > 0)
         snprintf(buff + strlen(buff), MAX_BUF, ", %s", extra);
     memset(config, 0, size);
@@ -241,88 +245,48 @@ void _emq_on_campi_message(const char* topic, const char* payload)/*{{{*/
 
 static void _sensor_universal_task(int s)/*{{{*/
 {
-    int value, sumtimer, len = 0;
+    int value, chkcnt = 0, sumtimer, len = 0;
     char buff[MAX_BUF] = { 0 };
     while (g_current_sensor == s) {
         value = digitalRead(TSKPIN);
-        /*
-         * trigger pulse
-         * vibratsw: 1
-         * pir: 0
-         */
         if (g_trigger_pulse == value) {
-            _change_color_to(g_current_color);
-            sumtimer = 0;
-            if (g_sensor_debug) {
-                memset(buff, 0, MAX_BUF);
-                strcpy(buff, "\"_calm_disturb_serial_\": [0");
+            chkcnt = 0;
+            if (g_chkrnd_count > 0) {
+                /* read again, optimize off the random 0/1 value */
+                for(int i = 0; i < g_chkrnd_count; i++)
+                    if (g_trigger_pulse == digitalRead(TSKPIN)) chkcnt++; else chkcnt--;
             }
-            do {
-                if (value == digitalRead(TSKPIN)) {
-                    if (g_sensor_debug && sumtimer > 0) {
-                        len = strlen(buff);
-                        if (len < MAX_BUF)
-                            snprintf(buff + len, MAX_BUF - len - 1, ",%d", sumtimer);
-                    }
-                    sumtimer = 0;
-                } else {
-                    sumtimer += g_calm_step_ms;
+            if (chkcnt >= 0) {
+                _change_color_to(g_current_color);
+                sumtimer = 0;
+                if (g_sensor_debug) {
+                    memset(buff, 0, MAX_BUF);
+                    strcpy(buff, "\"_calm_disturb_serial_\": [0");
                 }
-                delay(g_calm_step_ms);
-            } while(g_current_sensor == s && sumtimer < g_calm_down_ms);
-            g_repeat_counter += 1;
-            _change_color_to(COLOR_BLACK);
-            if (g_sensor_debug) {
-                buff[strlen(buff)] = ']';
-                _emq_report(buff);
-            } else {
-                _emq_report(NULL);
+                do {
+                    if (value == digitalRead(TSKPIN)) {
+                        if (g_sensor_debug && sumtimer > 0) {
+                            len = strlen(buff);
+                            if (len < MAX_BUF)
+                                snprintf(buff + len, MAX_BUF - len - 1, ",%d", sumtimer);
+                        }
+                        sumtimer = 0;
+                    } else {
+                        sumtimer += g_calm_step_ms;
+                    }
+                    delay(g_calm_step_ms);
+                } while(g_current_sensor == s && sumtimer < g_calm_down_ms);
+                g_repeat_counter += 1;
+                _change_color_to(COLOR_BLACK);
+                if (g_sensor_debug) {
+                    buff[strlen(buff)] = ']';
+                    _emq_report(buff);
+                } else {
+                    _emq_report(NULL);
+                }
             }
         }
         delay(g_read_sleep_ms);
-    }
-}/*}}}*/
-
-static void _sensor_passive_infrared(int s)/*{{{*/
-{
-    syslog(LOG_DEBUG, "sensor passive infrared detection\n");
-    pinMode(TSKPIN, INPUT);
-    int value = 0, sumtimer = 0;
-    char buff[64] = { 0 };
-    int thresh_quiet = 3500;
-    while (g_current_sensor == s) {
-        value = digitalRead(TSKPIN);
-        if (0 == value) { // motion detect
-            sumtimer = 0;
-            _change_color_to(g_current_color);
-            do {
-                if (value == digitalRead(TSKPIN))
-                    sumtimer = 0;
-                else
-                    sumtimer += 100;
-                delay(100);
-            } while(g_current_sensor == s && sumtimer < thresh_quiet);
-            g_repeat_counter += 1;
-            _change_color_to(COLOR_BLACK);
-            _emq_report(NULL);
-        }
-        delay(500);
-    }
-}/*}}}*/
-
-static void _sensor_photoelectric_or_magnet(int s)/*{{{*/
-{
-    syslog(LOG_DEBUG, "sensor photo electirc or magnat\n");
-	pinMode(TSKPIN, INPUT);
-    while (g_current_sensor == s) {
-        if (0 == digitalRead(TSKPIN)) {
-            _change_color_to(COLOR_BLACK);
-            while (g_current_sensor == s && 0 == digitalRead(TSKPIN)) delay(200);
-            _change_color_to(g_current_color);
-            g_repeat_counter++;
-            _emq_report(NULL);
-        }
-        delay(200);
     }
 }/*}}}*/
 
@@ -343,16 +307,12 @@ static void *_sensor_worker(void *arg)
         }
 
         switch (s) {
-            case SENSOR_VIBRATSW:
             case SENSOR_UNIVERSAL:
-                _sensor_universal_task(s);
-                break;
+            case SENSOR_VIBRATSW:
             case SENSOR_PIR:
-                _sensor_passive_infrared(s);
-                break;
             case SENSOR_PHOTOELE:
             case SENSOR_MAGNETSW:
-                _sensor_photoelectric_or_magnet(s);
+                _sensor_universal_task(s);
                 break;
             default:
                 while (g_current_sensor == s) {
@@ -386,10 +346,14 @@ int sensor_init(const char* client_id)
     }
 
     pinMode(TSKPIN, INPUT);
+    pinMode(TSKPIN, INPUT);
     pinMode(BTNPIN, INPUT);
     pinMode(REDLED, OUTPUT);
     pinMode(BLUELED, OUTPUT);
     pinMode(GREENLED, OUTPUT);
+
+    pullUpDnControl(TSKPIN, PUD_UP);
+    pullUpDnControl(BTNPIN, PUD_UP);
 
     pthread_create(&g_thread_id, NULL, _sensor_worker, NULL);
     _load_current_state();

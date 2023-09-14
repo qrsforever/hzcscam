@@ -59,7 +59,7 @@ then
         __led_blink green 2
         if [ $rsetup == "true" ]
         then
-            ${ARCHIVES_ROOT_PATH}/${md5sum}/scripts/setup_service.sh
+            ${ARCHIVES_ROOT_PATH}/${md5sum}/scripts/setup_service.sh >> ${RUN_LOG}
         fi
         if [ -d  ${ARCHIVES_ROOT_PATH}/${md5sum} ]
         then
