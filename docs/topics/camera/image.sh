@@ -8,7 +8,7 @@ PUB_TOPIC=cloud/${CLIENTID}/camera/image
 CLOUD_REPORT=cloud/${CLIENTID}/events/report
 
 width=640
-height=352
+height=480
 
 # width=1280
 # height=720

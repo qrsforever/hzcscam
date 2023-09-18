@@ -17,7 +17,7 @@ cat > /tmp/camera_video.json <<EOF
     "video_bitrate": 600,
     "video_quantizer": 30,
     "video_tune": "zerolatency",
-    "video_speed_preset": "faster",
+    "video_speed_preset": "ultrafast",
     "video_pass": "qual",
     "video_profile": "main"
 }
