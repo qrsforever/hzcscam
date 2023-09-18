@@ -1,8 +1,9 @@
 #!/bin/bash
 
 CUR_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
-
-source ${CUR_DIR}/../../env.sh
+TOP_DIR=$(git rev-parse --show-toplevel)
+MQTT_DIR=${TOP_DIR}/docs/topics
+source ${MQTT_DIR}/../../env.sh
 
 CLIENTID=`basename $CUR_DIR`
 PUB_TOPIC=cloud/${CLIENTID}/sensor/config

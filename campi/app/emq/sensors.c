@@ -248,45 +248,46 @@ static void _sensor_universal_task(int s)/*{{{*/
     int value, chkcnt = 0, sumtimer, len = 0;
     char buff[MAX_BUF] = { 0 };
     while (g_current_sensor == s) {
-        value = digitalRead(TSKPIN);
-        if (g_trigger_pulse == value) {
-            chkcnt = 0;
-            if (g_chkrnd_count > 0) {
-                /* read again, optimize off the random 0/1 value */
-                for(int i = 0; i < g_chkrnd_count; i++)
-                    if (g_trigger_pulse == digitalRead(TSKPIN)) chkcnt++; else chkcnt--;
-            }
-            if (chkcnt >= 0) {
-                _change_color_to(g_current_color);
-                sumtimer = 0;
-                if (g_sensor_debug) {
-                    memset(buff, 0, MAX_BUF);
-                    strcpy(buff, "\"_calm_disturb_serial_\": [0");
-                }
-                do {
-                    if (value == digitalRead(TSKPIN)) {
-                        if (g_sensor_debug && sumtimer > 0) {
-                            len = strlen(buff);
-                            if (len < MAX_BUF)
-                                snprintf(buff + len, MAX_BUF - len - 1, ",%d", sumtimer);
-                        }
-                        sumtimer = 0;
-                    } else {
-                        sumtimer += g_calm_step_ms;
-                    }
-                    delay(g_calm_step_ms);
-                } while(g_current_sensor == s && sumtimer < g_calm_down_ms);
-                g_repeat_counter += 1;
-                _change_color_to(COLOR_BLACK);
-                if (g_sensor_debug) {
-                    buff[strlen(buff)] = ']';
-                    _emq_report(buff);
-                } else {
-                    _emq_report(NULL);
-                }
-            }
-        }
         delay(g_read_sleep_ms);
+        value = digitalRead(TSKPIN);
+        if (g_trigger_pulse != value)
+            continue;
+
+        if (g_chkrnd_count > 0) {
+            chkcnt = 0;
+            /* read again, optimize off the random 0/1 value */
+            for(int i = 0; i < g_chkrnd_count; i++)
+                if (g_trigger_pulse == digitalRead(TSKPIN)) chkcnt++; else chkcnt--;
+            if (chkcnt < 0)
+                continue;
+        }
+        _change_color_to(g_current_color);
+        sumtimer = 0;
+        if (g_sensor_debug) {
+            memset(buff, 0, MAX_BUF);
+            strcpy(buff, "\"_calm_disturb_serial_\": [0");
+        }
+        do {
+            if (value == digitalRead(TSKPIN)) {
+                if (g_sensor_debug && sumtimer > 0) {
+                    len = strlen(buff);
+                    if (len < MAX_BUF)
+                        snprintf(buff + len, MAX_BUF - len - 1, ",%d", sumtimer);
+                }
+                sumtimer = 0;
+            } else {
+                sumtimer += g_calm_step_ms;
+            }
+            delay(g_calm_step_ms);
+        } while(g_current_sensor == s && sumtimer < g_calm_down_ms);
+        g_repeat_counter += 1;
+        _change_color_to(COLOR_BLACK);
+        if (g_sensor_debug) {
+            buff[strlen(buff)] = ']';
+            _emq_report(buff);
+        } else {
+            _emq_report(NULL);
+        }
     }
 }/*}}}*/
 

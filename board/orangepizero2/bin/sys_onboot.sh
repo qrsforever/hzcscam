@@ -66,12 +66,29 @@ echo "==============Connect Network==================" >> ${LOGS_PATH}/campi_reb
     netok=$(nmcli --fields STATE,DEVICE device status | grep "^connected" | grep "$WIRELESS_ADAPTER")
     if [[ -z ${netok} ]]
     then
+        reset=1
         # TODO some orangepizero2 cannot boot
         # reboot -f
         __led_blink yellow 5 0.2
         echo "${wifissid}:[${password}] try connect fail!" >> ${LOGS_PATH}/campi_reboot.log
-        /usr/local/bin/campi_safe_run.sh
-        exit -1
+        # default wifi
+        if [[ $wifissid != "hzcsdata" ]]
+        then
+            echo "set wifi hzcsdata Hzcsai@123" >> ${LOGS_PATH}/campi_reboot.log
+            __run_and_log ${SYSROOT}/bin/set_wifi.sh hzcsdata Hzcsai@123
+            netok=$(nmcli --fields STATE,DEVICE device status | grep "^connected" | grep "$WIRELESS_ADAPTER")
+            if [[ -z ${netok} ]]
+            then
+                echo "hzcsdata:Hzcsai@123 try connect fail!" >> ${LOGS_PATH}/campi_reboot.log
+            else
+                reset=0
+            fi
+        fi
+        if (( $reset == 1 ))
+        then
+            /usr/local/bin/campi_safe_run.sh
+            exit -1
+        fi
     fi
     __run_and_log nmcli device status
     __run_and_log nmcli connection

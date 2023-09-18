@@ -17,11 +17,15 @@ case "$1" in
     188)
         BSSID="20:C8:F7:63:EA:FE"
         ;;
+    155)
+        BSSID="B4:77:48:B4:0D:DC"
+        ;;
+    144)
+        BSSID="20:F6:4E:B5:4A:48"
+        ;;
     *)
         BSSID="$1"
 esac
-
-echo $BSSID
 
 cat > /tmp/setwifi.json <<EOF
 {
@@ -30,6 +34,8 @@ cat > /tmp/setwifi.json <<EOF
     "expbssid": "${BSSID}"
 }
 EOF
+
+cat /tmp/setwifi.json
 
 # not work
 mosquitto_pub -h ${EMQX_HOST} -p ${EMQX_PORT} -u campi -P 123456 -t ${PUB_TOPIC} -i mosquitto_pub -d -f /tmp/setwifi.json
