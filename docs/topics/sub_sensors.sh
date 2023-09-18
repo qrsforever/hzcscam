@@ -11,7 +11,7 @@ else
     ALL_TOPICS=campi/$ID/sensor/report
 fi
 
-printf "%12s %5s %5s %5s %5s %5s %5s %-20s\n" "id" "Count" "Pulse" "Check" "CalmS" "CalmD" "Read" "   Name"
+printf "%12s %5s %5s %5s %5s %5s %5s\t%-20s\n" "id" "count" "pulse" "check" "calms" "calmd" "read" "name"
 mosquitto_sub -h ${EMQX_HOST} -p ${EMQX_PORT} -u campi -P 123456 -t ${ALL_TOPICS} -i mosquitto_sub_sensor --pretty -v | while read -r line
 do
     topic=`echo $line | cut -d\  -f1`
@@ -54,7 +54,7 @@ do
             then
                 sread=${sread%?}
             fi
-            printf "%12s %5d %5d %5d %5d %5d %5d %20s\n" $cid ${count%?} ${pulse%?} ${check%?} ${calms%?} ${calmd%?} ${sread} $cname
+            printf "%12s %5d %5d %5d %5d %5d %5d\t%-20s\n" $cid ${count%?} ${pulse%?} ${check%?} ${calms%?} ${calmd%?} ${sread} $cname
         fi
     done
 done

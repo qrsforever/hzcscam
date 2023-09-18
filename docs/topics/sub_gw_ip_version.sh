@@ -11,7 +11,7 @@ else
     ALL_TOPICS=campi/$ID/events/#
 fi
 
-printf "%12s %16s %20s %12s\n" "id" "gw      " "ip        " "version"
+printf "%12s %16s %20s %12s\t%-20s\n" "id" "gw      " "ip        " "version" "name"
 mosquitto_sub -h ${EMQX_HOST} -p ${EMQX_PORT} -u campi -P 123456 -t ${ALL_TOPICS} -i mosquitto_sub_all --pretty -v | while read -r line
 do
     topic=`echo $line | cut -d\  -f1`
@@ -21,6 +21,7 @@ do
     then
         continue
     fi
+    cname=$(cat ./neza/neza.txt | grep "$cid" | cut -d@ -f2)
     ip=''
     gw=''
     ver=''
@@ -37,7 +38,7 @@ do
             ver=`echo $payload | cut -d: -f2 | sed s/\"//g`
             if [[ x$ip != x ]]
             then
-                printf "%12s %16s %20s %12s\n" $cid ${gw%?} ${ip%?} ${ver%?}
+                printf "%12s %16s %20s %12s\t%-20s\n" $cid ${gw%?} ${ip%?} ${ver%?} ${cname}
             fi
         fi
     done
