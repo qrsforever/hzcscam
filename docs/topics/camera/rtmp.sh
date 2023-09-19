@@ -20,7 +20,7 @@ cat > /tmp/camera_rtmp.json <<EOF
     "rtmp_domain": "srs.hzcsdata.com",
     "rtmp_room": "live",
     "rtmp_stream": "auto",
-    "rtmp_vhost": "seg.300s"
+    "rtmp_vhost": "seg.900s"
 }
 EOF
 

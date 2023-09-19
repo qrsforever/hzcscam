@@ -3,27 +3,13 @@
 TOP_DIR=$(git rev-parse --show-toplevel)
 source ${TOP_DIR}/docs/topics/env.sh
 
-devices=(
-    02001433f69e
-    0200acfb85cf
-    020025caf79a
-    0200483d86b8
-    020021c51db8
-    020030793c0c
-    02009d9dfd23
-    020094d0a425
-    02004d3aee9c
-    02003cf0c324
-    02003814c4c8
-)
-
 sw=true
 if [ x$1 == xfalse ] || [ x$1 == x0 ]
 then
     sw=false
 fi
 
-for d in ${devices[@]}
+for d in ${SENSOR_CAMERA_IDS[@]}
 do
     echo "set $d"
     mosquitto_pub -h ${EMQX_HOST} -p ${EMQX_PORT} \

@@ -23,7 +23,7 @@ cat > /tmp/camera_image.json <<EOF
     "contrast": 50,
     "hue": 50,
     "saturation": 50,
-    "flip_method": ""
+    "flip_method": "vertical-flip"
 }
 EOF
 
