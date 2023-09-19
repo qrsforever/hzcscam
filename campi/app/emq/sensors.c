@@ -347,13 +347,12 @@ int sensor_init(const char* client_id)
     }
 
     pinMode(TSKPIN, INPUT);
-    pinMode(TSKPIN, INPUT);
     pinMode(BTNPIN, INPUT);
     pinMode(REDLED, OUTPUT);
     pinMode(BLUELED, OUTPUT);
     pinMode(GREENLED, OUTPUT);
 
-    pullUpDnControl(TSKPIN, PUD_UP);
+    pullUpDnControl(TSKPIN, PUD_DOWN);
     pullUpDnControl(BTNPIN, PUD_UP);
 
     pthread_create(&g_thread_id, NULL, _sensor_worker, NULL);

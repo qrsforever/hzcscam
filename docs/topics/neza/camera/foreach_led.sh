@@ -19,6 +19,7 @@ devices=(
 
 for d in ${devices[@]}
 do
+    echo "set $d"
     mosquitto_pub -h ${EMQX_HOST} -p ${EMQX_PORT} \
         -u campi -P 123456 \
         -t cloud/${d}/sensor/config \
