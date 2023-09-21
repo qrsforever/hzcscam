@@ -7,11 +7,26 @@ source ${CUR_DIR}/../env.sh
 PUB_TOPIC=cloud/${CLIENTID}/net/setwifi
 CLOUD_REPORT=cloud/${CLIENTID}/events/report
 
+case "$1" in
+    ED3F)
+        WSSID="TP-LINK_ED3F"
+        BSSID="58:41:20:C1:ED:3F"
+        ;;
+    F069)
+        WSSID="TP-LINK_F069"
+        BSSID="58:41:20:C1:F0:69"
+        ;;
+    *)
+        WSSID="TP-LINK_ED3F"
+        BSSID="58:41:20:C1:ED:3F"
+esac
+
+  
 cat > /tmp/setwifi.json <<EOF
 {
-    "wifissid": "TP-LINK_ED3F",
+    "wifissid": "${WSSID}",
     "password": "12345678910",
-    "expbssid": "58:41:20:C1:ED:3F"
+    "expbssid": "${BSSID}"
 }
 EOF
 

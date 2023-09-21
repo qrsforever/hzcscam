@@ -14,13 +14,13 @@ then
     sw=false
 fi
 
+    # "rtmp_domain": "srs.hzcsdata.com",
+    # "rtmp_room": "live",
+    # "rtmp_stream": "auto",
+    # "rtmp_vhost": "seg.900s",
 cat > /tmp/camera_rtmp.json <<EOF
 {
-    "rtmp_enable": ${sw},
-    "rtmp_domain": "srs.hzcsdata.com",
-    "rtmp_room": "live",
-    "rtmp_stream": "auto",
-    "rtmp_vhost": "seg.900s"
+    "rtmp_enable": ${sw}
 }
 EOF
 
@@ -34,6 +34,7 @@ EOF
 # }
 # EOF
 
+cat /tmp/camera_rtmp.json | jq
 mosquitto_pub -h ${EMQX_HOST} -p ${EMQX_PORT} -u campi -P 123456 -t ${PUB_TOPIC} -i mosquitto_pub -d -f /tmp/camera_rtmp.json
 sleep 1
 mosquitto_pub -h ${EMQX_HOST} -p ${EMQX_PORT} -u campi -P 123456 -t ${CLOUD_REPORT} -i mosquitto_pub -m "{\"gst\": true}"
